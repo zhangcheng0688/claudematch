@@ -172,3 +172,73 @@
       0 0 60px oklch(0.85 0.17 90 / 0.25);
   }
 }
+
+/* Lively animated aurora background blobs */
+.aurora {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+.aurora::before,
+.aurora::after {
+  content: "";
+  position: absolute;
+  width: 60vw;
+  height: 60vw;
+  border-radius: 50%;
+  filter: blur(120px);
+  opacity: 0.55;
+  will-change: transform;
+}
+.aurora::before {
+  top: -20%;
+  left: -10%;
+  background: radial-gradient(circle, oklch(0.85 0.17 90 / 0.45), transparent 70%);
+  animation: aurora-float-a 22s ease-in-out infinite alternate;
+}
+.aurora::after {
+  bottom: -25%;
+  right: -15%;
+  background: radial-gradient(circle, oklch(0.55 0.20 280 / 0.45), transparent 70%);
+  animation: aurora-float-b 28s ease-in-out infinite alternate;
+}
+.aurora-extra {
+  position: absolute;
+  top: 40%;
+  left: 50%;
+  width: 45vw;
+  height: 45vw;
+  border-radius: 50%;
+  filter: blur(140px);
+  opacity: 0.35;
+  background: radial-gradient(circle, oklch(0.65 0.18 200 / 0.5), transparent 70%);
+  animation: aurora-float-c 32s ease-in-out infinite alternate;
+}
+
+@keyframes aurora-float-a {
+  0%   { transform: translate(0, 0) scale(1); }
+  100% { transform: translate(15vw, 10vh) scale(1.15); }
+}
+@keyframes aurora-float-b {
+  0%   { transform: translate(0, 0) scale(1.05); }
+  100% { transform: translate(-12vw, -8vh) scale(0.95); }
+}
+@keyframes aurora-float-c {
+  0%   { transform: translate(-50%, -50%) scale(1); }
+  100% { transform: translate(-35%, -65%) scale(1.2); }
+}
+
+/* Polaroid tilt photos */
+.polaroid {
+  background: oklch(0.98 0.01 90);
+  padding: 10px 10px 36px;
+  box-shadow:
+    0 1px 0 oklch(0 0 0 / 0.1),
+    0 20px 40px -12px oklch(0 0 0 / 0.55);
+  transition: transform 0.4s ease;
+}
+.polaroid:hover {
+  transform: translateY(-6px) rotate(0deg) scale(1.02);
+}
