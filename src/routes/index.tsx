@@ -249,21 +249,21 @@ function WeeklyDate() {
 }
 
 function SendRealYou() {
+  const { t } = useLang();
   return (
     <section id="send" className="relative overflow-hidden border-b border-border/60">
       <div className="mx-auto max-w-6xl px-5 py-20 sm:px-6 sm:py-24 md:py-32">
         <div className="mx-auto max-w-3xl text-center">
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs text-primary">
-            <Sparkles className="h-3.5 w-3.5" /> One tap. Zero forms.
+            <Sparkles className="h-3.5 w-3.5" /> {t("send_badge")}
           </div>
           <h2 className="text-[2.25rem] sm:text-4xl font-semibold leading-[1.1] tracking-tight md:text-6xl">
-            <span className="text-gold-glow">Send the real you</span>
+            <span className="text-gold-glow">{t("send_title1")}</span>
             <br />
-            <span className="font-display italic text-muted-foreground">to your match.</span>
+            <span className="font-display italic text-muted-foreground">{t("send_title2")}</span>
           </h2>
           <p className="mx-auto mt-5 sm:mt-6 max-w-xl text-[15px] leading-[1.75] text-muted-foreground sm:text-sm sm:leading-relaxed md:text-base">
-            No curated bio. No filtered selfies. Claude packages the honest signals — how you think,
-            what you care about, how you actually show up — and delivers them to the person on the other side.
+            {t("send_desc")}
           </p>
 
           <div className="mt-12 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
@@ -274,11 +274,11 @@ function SendRealYou() {
               <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground">
                 <MessageCircle className="h-5 w-5" />
               </span>
-              Send Real You to Match
+              {t("send_cta")}
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
             </a>
           </div>
-          <p className="mt-4 text-xs text-muted-foreground">By continuing, you agree to our Terms & Privacy.</p>
+          <p className="mt-4 text-xs text-muted-foreground">{t("send_terms")}</p>
         </div>
       </div>
     </section>
