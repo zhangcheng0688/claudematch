@@ -309,24 +309,38 @@ function escapeHtml(s: string): string {
   );
 }
 
-function renderPlanHtml(p: {
+type PlanForEmail = {
   when?: string;
   where?: string;
+  location_intro?: string;
   dress_code?: string;
   icebreakers?: string[];
-}): string {
-  const ice = (p.icebreakers ?? [])
+  duration?: string;
+  budget?: string;
+  pitfalls?: string[];
+  highlights?: string[];
+};
+
+function liList(items?: string[]): string {
+  return (items ?? [])
     .map((s) => `<li style="margin:4px 0">${escapeHtml(s)}</li>`)
     .join("");
+}
+
+function renderPlanHtml(p: PlanForEmail): string {
   return `<!doctype html><html lang="zh"><body style="margin:0;padding:24px;background:#f7f7f8;font-family:-apple-system,Helvetica,Arial,sans-serif;color:#111">
   <div style="max-width:560px;margin:0 auto;background:#fff;border:1px solid #e5e5e7;border-radius:10px;padding:32px">
     <h2 style="margin:0 0 12px;font-size:20px">【linQ】您的专属见面方案已生成</h2>
     <p style="margin:0 0 16px;line-height:1.7">恭喜您匹配成功！根据双方画像，linQ 为您定制完整赴约计划：</p>
     <ol style="line-height:1.9;padding-left:20px;margin:0 0 16px">
-      <li><b>建议会面时间：</b>${escapeHtml(p.when ?? "")}</li>
-      <li><b>推荐碰面地点：</b>${escapeHtml(p.where ?? "")}</li>
+      <li><b>推荐会面时间：</b>${escapeHtml(p.when ?? "")}</li>
+      <li><b>精准碰面地点：</b>${escapeHtml(p.where ?? "")}${p.location_intro ? `<div style="color:#666;font-size:13px;margin-top:2px">${escapeHtml(p.location_intro)}</div>` : ""}</li>
       <li><b>着装 Dress Code：</b>${escapeHtml(p.dress_code ?? "")}</li>
-      <li><b>破冰聊天话术：</b><ul style="padding-left:18px;margin:6px 0">${ice}</ul></li>
+      <li><b>破冰开场话术：</b><ul style="padding-left:18px;margin:6px 0">${liList(p.icebreakers)}</ul></li>
+      <li><b>建议会面时长：</b>${escapeHtml(p.duration ?? "")}</li>
+      <li><b>人均消费参考：</b>${escapeHtml(p.budget ?? "")}</li>
+      <li><b>沟通避坑提醒：</b><ul style="padding-left:18px;margin:6px 0">${liList(p.pitfalls)}</ul></li>
+      <li><b>双方适配亮点：</b><ul style="padding-left:18px;margin:6px 0">${liList(p.highlights)}</ul></li>
     </ol>
     <p style="margin:0 0 16px;line-height:1.7">可依托方案轻松线下见面，开启事业 / 恋爱 / 兴趣新联结。</p>
     <hr style="border:none;border-top:1px solid #eee;margin:24px 0"/>
@@ -334,23 +348,25 @@ function renderPlanHtml(p: {
   </div></body></html>`;
 }
 
-function renderPlanText(p: {
-  when?: string;
-  where?: string;
-  dress_code?: string;
-  icebreakers?: string[];
-}): string {
-  const ice = (p.icebreakers ?? [])
-    .map((s, i) => `   ${i + 1}) ${s}`)
-    .join("\n");
+function numList(items?: string[]): string {
+  return (items ?? []).map((s, i) => `   ${i + 1}) ${s}`).join("\n");
+}
+
+function renderPlanText(p: PlanForEmail): string {
   return `【linQ】您的专属见面方案已生成
 
 恭喜您匹配成功！根据双方画像，linQ 为您定制完整赴约计划：
-1. 建议会面时间：${p.when ?? ""}
-2. 推荐碰面地点：${p.where ?? ""}
+1. 推荐会面时间：${p.when ?? ""}
+2. 精准碰面地点：${p.where ?? ""}${p.location_intro ? `（${p.location_intro}）` : ""}
 3. 着装 Dress Code：${p.dress_code ?? ""}
-4. 破冰聊天话术：
-${ice}
+4. 破冰开场话术：
+${numList(p.icebreakers)}
+5. 建议会面时长：${p.duration ?? ""}
+6. 人均消费参考：${p.budget ?? ""}
+7. 沟通避坑提醒：
+${numList(p.pitfalls)}
+8. 双方适配亮点：
+${numList(p.highlights)}
 
 可依托方案轻松线下见面，开启事业 / 恋爱 / 兴趣新联结。
 来自：linQ | claudematch.com`;
