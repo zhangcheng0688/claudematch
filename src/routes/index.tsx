@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ArrowRight, Check, Minus, Headphones, Instagram, Twitter, Github, Linkedin, Mail } from "lucide-react";
+import { ArrowRight, Check, Minus, Headphones, Instagram, Twitter, Github, Linkedin, Mail, MessageCircle, Sparkles } from "lucide-react";
+import { useEffect, useState } from "react";
 import moment1 from "@/assets/moment-1.jpg";
 import moment2 from "@/assets/moment-2.jpg";
 import moment3 from "@/assets/moment-3.jpg";
@@ -458,6 +459,8 @@ function Index() {
       <Nav />
       <main>
         <Hero />
+        <WeeklyDate />
+        <SendRealYou />
         <Values />
         <HowItWorks />
         <Moments />
