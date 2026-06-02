@@ -56,14 +56,14 @@ function AuthPage() {
       return;
     }
     setStage("code");
-    setMsg(t("Check your email — paste the 6-digit code below.", "请查收邮件，把 6 位验证码粘贴到下方。"));
+    setMsg(t("Check your email — paste the verification code below.", "请查收邮件，把验证码粘贴到下方。"));
   };
 
   const verifyCode = async (e: React.FormEvent) => {
     e.preventDefault();
     setErr(null);
-    if (!/^\d{6}$/.test(otp)) {
-      setErr(t("The code is 6 digits.", "验证码是 6 位数字。"));
+    if (!/^\d{6,10}$/.test(otp)) {
+      setErr(t("Enter the numeric code from the email.", "请输入邮件中的数字验证码。"));
       return;
     }
     setLoading(true);
@@ -99,8 +99,8 @@ function AuthPage() {
           </h1>
           <p className="mt-3 text-sm text-muted-foreground">
             {t(
-              "We'll email you a one-time 6-digit code. No password needed.",
-              "我们会给你发一封带 6 位验证码的邮件，无需密码。",
+              "We'll email you a one-time verification code. No password needed.",
+              "我们会给你发一封一次性验证码邮件，无需密码。",
             )}
           </p>
         </div>
@@ -141,7 +141,7 @@ function AuthPage() {
         ) : (
           <form onSubmit={verifyCode} className="space-y-4">
             <label className="block text-xs uppercase tracking-wider text-muted-foreground">
-              {t("6-digit code", "6 位验证码")}
+              {t("Verification code", "验证码")}
             </label>
             <div className="flex items-center gap-2 rounded-sm border border-border bg-background/60 px-3">
               <KeyRound className="h-4 w-4 text-muted-foreground" />
@@ -149,9 +149,9 @@ function AuthPage() {
                 inputMode="numeric"
                 autoComplete="one-time-code"
                 value={otp}
-                onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                onChange={(e) => setOtp(e.target.value.replace(/\D/g, "").slice(0, 10))}
                 placeholder="••••••"
-                className="h-12 w-full bg-transparent text-center text-lg tracking-[0.6em] outline-none placeholder:text-muted-foreground/40"
+                className="h-12 w-full bg-transparent text-center text-lg tracking-[0.5em] outline-none placeholder:text-muted-foreground/40"
               />
             </div>
             <button
