@@ -300,10 +300,11 @@ const moments = [
 ];
 
 function Moments() {
+  const loop = [...moments, ...moments];
   return (
     <section id="moments" className="border-b border-border/60">
-      <div className="mx-auto max-w-7xl px-6 py-24 md:py-32">
-        <div className="max-w-2xl">
+      <div className="py-24 md:py-32">
+        <div className="mx-auto max-w-7xl px-6 max-w-2xl">
           <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Moments</p>
           <h2 className="mt-4 text-3xl font-semibold tracking-tight md:text-5xl">
             <span className="font-display text-gold-glow">Unforgettable</span> great times.
@@ -312,24 +313,37 @@ function Moments() {
             Real people. Real meet-ups. Curated by Claude, lived by you.
           </p>
         </div>
-        <div className="mt-16 grid grid-cols-2 gap-6 md:grid-cols-3 md:gap-8">
-          {moments.map((m, i) => (
-            <figure key={i} className={`polaroid ${m.rotate}`}>
-              <img
-                src={m.src}
-                alt={`${m.name} — ${m.tag}`}
-                loading="lazy"
-                width={1024}
-                height={1024}
-                className="aspect-square w-full object-cover"
-              />
-              <figcaption className="mt-3 px-1 text-left text-foreground/90">
-                <div className="text-[10px] font-medium uppercase tracking-wider text-foreground/50">{m.tag}</div>
-                <div className="mt-1 text-sm font-medium" style={{ color: "oklch(0.2 0.03 260)" }}>{m.name}</div>
-                <p className="mt-1 text-xs leading-snug" style={{ color: "oklch(0.35 0.03 260)" }}>"{m.quote}"</p>
-              </figcaption>
-            </figure>
-          ))}
+        <div
+          className="marquee-wrap mt-16 overflow-hidden"
+          style={{
+            maskImage:
+              "linear-gradient(to right, transparent, black 6%, black 94%, transparent)",
+            WebkitMaskImage:
+              "linear-gradient(to right, transparent, black 6%, black 94%, transparent)",
+          }}
+        >
+          <div className="marquee px-6">
+            {loop.map((m, i) => (
+              <figure
+                key={i}
+                className={`polaroid ${m.rotate} w-[220px] shrink-0 md:w-[260px]`}
+              >
+                <img
+                  src={m.src}
+                  alt={`${m.name} — ${m.tag}`}
+                  loading="lazy"
+                  width={1024}
+                  height={1024}
+                  className="aspect-square w-full object-cover"
+                />
+                <figcaption className="mt-3 px-1 text-left">
+                  <div className="text-[10px] font-medium uppercase tracking-wider" style={{ color: "oklch(0.45 0.03 260)" }}>{m.tag}</div>
+                  <div className="mt-1 text-sm font-medium" style={{ color: "oklch(0.2 0.03 260)" }}>{m.name}</div>
+                  <p className="mt-1 text-xs leading-snug" style={{ color: "oklch(0.35 0.03 260)" }}>"{m.quote}"</p>
+                </figcaption>
+              </figure>
+            ))}
+          </div>
         </div>
       </div>
     </section>
