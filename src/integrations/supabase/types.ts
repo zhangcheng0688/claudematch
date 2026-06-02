@@ -17,6 +17,7 @@ export type Database = {
       matches: {
         Row: {
           created_at: string
+          details: Json
           id: string
           match_score: number
           matched_user_id: string
@@ -25,6 +26,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          details?: Json
           id?: string
           match_score?: number
           matched_user_id: string
@@ -33,6 +35,7 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          details?: Json
           id?: string
           match_score?: number
           matched_user_id?: string
