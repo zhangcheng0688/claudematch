@@ -484,7 +484,7 @@ function Moments() {
 }
 
 function Footer() {
-  const { t } = useLang();
+  const { lang, t } = useLang();
   return (
     <footer id="support" className="relative overflow-hidden border-t border-border/60">
       <div className="mx-auto max-w-6xl px-6 pt-20 pb-10">
