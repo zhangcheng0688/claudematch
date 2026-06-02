@@ -285,29 +285,16 @@ function SendRealYou() {
   );
 }
 
-const values = [
-  {
-    title: "Effortless AI profile",
-    body: "No forms, no tags. AI quietly learns who you really are from the way you act — not the way you self-describe.",
-  },
-  {
-    title: "Three scenarios, one platform",
-    body: "Business collaboration, dating, and local companions. One account covers every kind of human connection you need.",
-  },
-  {
-    title: "AI meeting co-pilot",
-    body: "From match to meet-up — linQ plans the entire encounter. No awkward chats, no flaked plans, just real-world results.",
-  },
-];
-
 function Values() {
+  const { lang, t } = useLang();
+  const values = valuesI18n[lang];
   return (
     <section id="values" className="border-b border-border/60">
       <div className="mx-auto max-w-6xl px-5 py-20 sm:px-6 sm:py-24 md:py-32">
         <div className="max-w-2xl">
-          <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Why linQ</p>
+          <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">{t("values_kicker")}</p>
           <h2 className="mt-4 text-[1.75rem] sm:text-3xl font-semibold leading-[1.2] tracking-tight md:text-5xl">
-            A new kind of matching, built on real behavior.
+            {t("values_title")}
           </h2>
         </div>
         <div className="mt-12 sm:mt-16 grid gap-px overflow-hidden rounded-sm border border-border bg-border md:grid-cols-3">
