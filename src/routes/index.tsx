@@ -103,7 +103,7 @@ function Nav() {
             {t("nav_support")}
           </a>
           <a
-            href="#cta"
+            href="/auth"
             className="inline-flex h-9 items-center rounded-sm bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
             {t("nav_getStarted")}
@@ -141,7 +141,7 @@ function Hero() {
           </p>
           <div className="mt-10 sm:mt-12 flex items-center justify-center">
             <a
-              href="#cta"
+              href="/auth"
               className="group relative inline-flex h-14 items-center gap-3 rounded-sm bg-primary pl-3 pr-6 text-sm font-medium text-primary-foreground shadow-[0_20px_60px_-12px_oklch(0.85_0.17_90/0.65),0_0_0_1px_oklch(0.85_0.17_90/0.4),inset_0_1px_0_oklch(1_0_0/0.35)] transition-all hover:-translate-y-0.5 hover:shadow-[0_28px_80px_-12px_oklch(0.85_0.17_90/0.8),0_0_0_1px_oklch(0.85_0.17_90/0.6),inset_0_1px_0_oklch(1_0_0/0.45)]"
             >
               <span className="font-display text-2xl leading-none tabular-nums text-primary-foreground/95 drop-shadow-[0_1px_0_oklch(0.30_0.10_80)]">
@@ -268,7 +268,7 @@ function SendRealYou() {
 
           <div className="mt-12 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
             <a
-              href="#cta"
+              href="/auth"
               className="group inline-flex h-14 w-full max-w-sm items-center justify-center gap-3 rounded-full bg-background pr-7 pl-3 text-base font-semibold text-primary shadow-[0_8px_40px_-8px_oklch(0.85_0.17_90/0.55)] ring-1 ring-primary/30 transition-all hover:ring-primary/60 sm:w-auto"
             >
               <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground">
@@ -416,7 +416,7 @@ function FinalCTA() {
         </h2>
         <div className="mt-12 flex items-center justify-center">
           <a
-            href="#"
+            href="/auth"
             className="group inline-flex h-12 items-center gap-2 rounded-sm bg-primary px-7 text-sm font-medium text-primary-foreground shadow-[0_8px_40px_-8px_oklch(0.85_0.17_90/0.55)] transition-colors hover:bg-primary/90"
           >
             {t("cta_btn")}
