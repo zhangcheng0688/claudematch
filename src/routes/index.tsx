@@ -115,29 +115,29 @@ function Nav() {
 }
 
 function Hero() {
+  const { t } = useLang();
   return (
     <section className="relative border-b border-border/60 overflow-hidden">
       <div className="mx-auto max-w-6xl px-5 py-20 sm:px-6 sm:py-28 md:py-40">
         <div className="mx-auto max-w-4xl text-center">
           <div className="mb-6 sm:mb-8 inline-flex items-center gap-2 rounded-full border border-border bg-background/40 px-3 py-1 text-[11px] sm:text-xs text-muted-foreground backdrop-blur">
             <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-            The Claude-native matching platform
+            {t("hero_badge")}
           </div>
           <h1 className="text-[2.5rem] sm:text-5xl font-semibold leading-[1.1] sm:leading-[1.05] tracking-tight md:text-7xl">
-            <span className="font-display text-gold-glow">Claude-powered</span>{" "}
-            <span className="font-display text-gold-glow">connections</span>
+            <span className="font-display text-gold-glow">{t("hero_claude")}</span>{" "}
+            <span className="font-display text-gold-glow">{t("hero_connections")}</span>
             <br />
-            <span className="font-display text-foreground/50">for</span>{" "}
-            <span className="font-display text-[#3b82f6]">work</span>
+            <span className="font-display text-foreground/50">{t("hero_for")}</span>{" "}
+            <span className="font-display text-[#3b82f6]">{t("hero_work")}</span>
             <span className="font-display text-foreground/30">,</span>{" "}
-            <span className="font-display text-[#ef4444]">love</span>
+            <span className="font-display text-[#ef4444]">{t("hero_love")}</span>
             <span className="font-display text-foreground/30">,</span>{" "}
-            <span className="font-display text-[#22c55e]">life</span>
+            <span className="font-display text-[#22c55e]">{t("hero_life")}</span>
             <span className="font-display text-foreground/30">.</span>
           </h1>
           <p className="mx-auto mt-6 sm:mt-8 max-w-2xl text-[15px] leading-[1.75] sm:leading-relaxed text-muted-foreground sm:text-base md:text-lg whitespace-pre-line">
-            Less effort, more meaningful links.{"\n"}Business partners, dating, local friends —
-            one AI connection covers them all. No forms. No tags. Just the real you.
+            {t("hero_desc")}
           </p>
           <div className="mt-10 sm:mt-12 flex items-center justify-center">
             <a
@@ -148,7 +148,7 @@ function Hero() {
                 156,070
               </span>
               <span className="h-6 w-px bg-primary-foreground/25" />
-              <span className="tracking-wide uppercase">Join now</span>
+              <span className="tracking-wide uppercase">{t("hero_joinNow")}</span>
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
             </a>
           </div>
