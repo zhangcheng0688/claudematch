@@ -482,6 +482,35 @@ function Moments() {
 
 function Footer() {
   const { lang, t } = useLang();
+  const [email, setEmail] = useState("");
+  const [state, setState] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [msg, setMsg] = useState<string | null>(null);
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setMsg(null);
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setState("error");
+      setMsg(lang === "zh" ? "请输入有效邮箱。" : "Please enter a valid email.");
+      return;
+    }
+    setState("loading");
+    try {
+      const res = await fetch("/api/waitlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim().toLowerCase() }),
+      });
+      if (!res.ok) throw new Error("failed");
+      setState("success");
+      setMsg(lang === "zh" ? "感谢！已加入列表。" : "Thanks! You're on the list.");
+      setEmail("");
+    } catch {
+      setState("error");
+      setMsg(lang === "zh" ? "提交失败，请稍后再试。" : "Something went wrong. Try again.");
+    }
+  };
+
   return (
     <footer id="support" className="relative overflow-hidden border-t border-border/60">
       <div className="mx-auto max-w-6xl px-6 pt-20 pb-10">
@@ -531,7 +560,7 @@ function Footer() {
                   {t("footer_chat")}
                 </li>
                 <li><a href="mailto:hi@linq.app" className="inline-flex items-center gap-1.5 text-foreground/80 transition-colors hover:text-primary"><Mail className="h-3.5 w-3.5" /> {lang === "zh" ? "vip专属会员中心" : "hi@linq.app"}</a></li>
-                <li><a href="#trust" className="text-foreground/80 transition-colors hover:text-primary">{t("footer_trust")}</a></li>
+                <li><Link to="/trust" className="text-foreground/80 transition-colors hover:text-primary">{t("footer_trust")}</Link></li>
                 <li><a href="#" className="text-foreground/80 transition-colors hover:text-primary">{t("footer_help")}</a></li>
               </ul>
             </div>
@@ -544,18 +573,34 @@ function Footer() {
             <p className="font-display text-xl text-foreground">{t("footer_news_title")}</p>
             <p className="mt-1 text-sm text-muted-foreground">{t("footer_news_desc")}</p>
           </div>
-          <form className="flex w-full max-w-sm items-center gap-2">
-            <input
-              type="email"
-              required
-              aria-label="Email address"
-              placeholder={t("footer_news_placeholder")}
-              className="h-10 flex-1 rounded-sm border border-border bg-background px-3 text-sm outline-none focus:border-primary"
-            />
-            <button type="submit" className="inline-flex h-10 items-center gap-1 rounded-sm bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90">
-              {t("footer_news_join")} <ArrowRight className="h-3.5 w-3.5" />
-            </button>
-          </form>
+          <div className="w-full md:max-w-sm">
+            <form onSubmit={submit} className="flex w-full items-center gap-2">
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                aria-label="Email address"
+                placeholder="your@email.com"
+                className="h-10 flex-1 rounded-sm border border-border bg-background px-3 text-sm outline-none focus:border-primary"
+                disabled={state === "loading"}
+              />
+              <button
+                type="submit"
+                disabled={state === "loading"}
+                className="inline-flex h-10 items-center gap-1 rounded-sm bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-60"
+              >
+                {state === "loading" ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <>{t("footer_news_join")} <ArrowRight className="h-3.5 w-3.5" /></>
+                )}
+              </button>
+            </form>
+            {msg && (
+              <p className={`mt-2 text-xs ${state === "success" ? "text-primary" : "text-destructive"}`}>{msg}</p>
+            )}
+          </div>
         </div>
       </div>
 
@@ -570,10 +615,10 @@ function Footer() {
           </div>
           <p>© {new Date().getFullYear()} {t("footer_copy")}</p>
           <div className="flex items-center gap-5">
-            <a href="#" className="transition-colors hover:text-primary">{t("footer_terms")}</a>
-            <a href="#" className="transition-colors hover:text-primary">{t("footer_privacy")}</a>
-            <a href="#" className="transition-colors hover:text-primary">{t("footer_cookies")}</a>
-            <a href="#" className="transition-colors hover:text-primary">{t("footer_dpa")}</a>
+            <Link to="/terms" className="transition-colors hover:text-primary">{t("footer_terms")}</Link>
+            <Link to="/privacy" className="transition-colors hover:text-primary">{t("footer_privacy")}</Link>
+            <Link to="/cookies" className="transition-colors hover:text-primary">{t("footer_cookies")}</Link>
+            <Link to="/dpa" className="transition-colors hover:text-primary">{t("footer_dpa")}</Link>
           </div>
         </div>
       </div>
@@ -610,6 +655,7 @@ function Index() {
         <FinalCTA />
       </main>
       <Footer />
+      <CookieBanner />
     </div>
     </LanguageProvider>
   );
