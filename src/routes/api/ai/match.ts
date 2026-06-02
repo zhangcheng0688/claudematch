@@ -129,11 +129,26 @@ ${candidates.map((c, i) => `[${i}] ${JSON.stringify(c.profile_data)}`).join("\n"
   "meet_plan": {
     "when": string,
     "where": string,
+    "location_intro": string,
     "dress_code": string,
-    "icebreakers": string[]
+    "icebreakers": string[],
+    "duration": string,
+    "budget": string,
+    "pitfalls": string[],
+    "highlights": string[]
   }
 }
-全部用中文表达。match_score 在 60-99 之间，两位小数。meet_plan.when 在未来 7 天内，含星期与具体时段；where 含城市与场所类型；icebreakers 提供 3 条破冰开场话术。`;
+全部用中文表达。match_score 在 60-99 之间，两位小数。
+meet_plan 详细要求：
+- when：未来 7 天内，含星期与具体时段；
+- where：精准碰面地点（城市 + 具体场所类型/名称示例）；
+- location_intro：30 字以内简介该场所；
+- dress_code：着装建议；
+- icebreakers：3 条破冰开场话术；
+- duration：建议会面时长，如"60-90 分钟"；
+- budget：人均消费参考，如"人均 80-150 元"；
+- pitfalls：3 条沟通避坑提醒；
+- highlights：3 条双方适配亮点（匹配理由）。`;
 
         const raw = await deepseekChat(
           [
@@ -153,8 +168,13 @@ ${candidates.map((c, i) => `[${i}] ${JSON.stringify(c.profile_data)}`).join("\n"
           meet_plan?: {
             when?: string;
             where?: string;
+            location_intro?: string;
             dress_code?: string;
             icebreakers?: string[];
+            duration?: string;
+            budget?: string;
+            pitfalls?: string[];
+            highlights?: string[];
           };
         };
         const parsed = safeParseJSON<ParsedT>(raw) ?? {};
@@ -169,11 +189,24 @@ ${candidates.map((c, i) => `[${i}] ${JSON.stringify(c.profile_data)}`).join("\n"
         const plan = parsed.meet_plan ?? {
           when: "本周六下午 3:00",
           where: "市中心一家安静的精品咖啡馆",
+          location_intro: "环境安静、便于深度交谈的独立精品咖啡馆。",
           dress_code: "简洁舒适的休闲风",
           icebreakers: [
             "最近让你感到兴奋的一件事是什么？",
             "如果可以教别人一小时课，你会教什么？",
             "你最近做过的最满意的事是什么？",
+          ],
+          duration: "60-90 分钟",
+          budget: "人均 80-150 元",
+          pitfalls: [
+            "避免一上来就聊敏感隐私话题",
+            "避免长时间单方面输出，多倾听",
+            "避免过早讨论金钱与得失评价",
+          ],
+          highlights: [
+            "节奏与生活方式高度契合",
+            "兴趣与价值观存在天然交集",
+            "彼此能在对方擅长领域获得启发",
           ],
         };
 
