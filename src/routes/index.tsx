@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ArrowRight, Check, Minus, Headphones, Instagram, Twitter, Github, Linkedin, Mail, MessageCircle, Sparkles } from "lucide-react";
+import { ArrowRight, Check, Minus, Headphones, Instagram, Twitter, Github, Linkedin, Mail, MessageCircle, Sparkles, Globe } from "lucide-react";
 import { useEffect, useState } from "react";
 import moment1 from "@/assets/moment-1.jpg";
 import moment2 from "@/assets/moment-2.jpg";
@@ -7,6 +7,15 @@ import moment3 from "@/assets/moment-3.jpg";
 import moment4 from "@/assets/moment-4.jpg";
 import moment5 from "@/assets/moment-5.jpg";
 import moment6 from "@/assets/moment-6.jpg";
+import {
+  LanguageProvider,
+  useLang,
+  valuesI18n,
+  stepsI18n,
+  compareRowsI18n,
+  trustI18n,
+  momentsI18n,
+} from "@/lib/i18n";
 
 export const Route = createFileRoute("/")({
   head: () => ({
