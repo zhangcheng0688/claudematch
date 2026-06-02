@@ -10,7 +10,7 @@ import moment6 from "@/assets/moment-6.jpg";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "linQ — The AI-native matching platform" },
+      { title: "linQ — The Claude-native matching platform" },
       { name: "description", content: "AI-powered matching for work, love, and life. Business, dating, and local friends — one AI connection covers them all." },
       { property: "og:title", content: "linQ — The AI-native matching platform" },
       { property: "og:description", content: "AI-powered matching for work, love, and life." },
@@ -64,7 +64,7 @@ function Hero() {
         <div className="mx-auto max-w-4xl text-center">
           <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-border bg-background/40 px-3 py-1 text-xs text-muted-foreground backdrop-blur">
             <span className="h-1.5 w-1.5 rounded-full bg-primary" />
-            The AI-native matching platform
+            The Claude-native matching platform
           </div>
           <h1 className="text-5xl font-semibold leading-[1.05] tracking-tight md:text-7xl">
             <span className="text-gold-glow">Claude-powered</span>{" "}
@@ -354,12 +354,12 @@ function Footer() {
   return (
     <footer>
       <div className="mx-auto grid max-w-6xl gap-12 px-6 py-16 md:grid-cols-4">
-        <div className="md:col-span-2">
+        <div className="md:col-span-2 text-base">
           <div className="text-lg font-semibold tracking-tight">
             lin<span className="font-display text-primary text-2xl align-middle">Q</span>
           </div>
           <p className="mt-4 max-w-sm text-sm leading-relaxed text-muted-foreground">
-            The AI-native matching platform for business, dating, and local life.
+            The Claude-native matching platform for business, dating, and local life.
           </p>
         </div>
         <div>
