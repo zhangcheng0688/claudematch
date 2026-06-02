@@ -54,8 +54,8 @@ function Hero() {
             <span className="font-display text-gold-glow">love</span>,{" "}
             <span className="font-display text-gold-glow">life</span>.
           </h1>
-          <p className="mx-auto mt-8 max-w-2xl text-base leading-relaxed text-muted-foreground md:text-lg">
-            Less effort, more meaningful links. Business partners, dating, local friends —
+          <p className="mx-auto mt-8 max-w-2xl leading-relaxed text-muted-foreground md:text-lg text-base whitespace-pre-line">
+            Less effort, more meaningful links.{"\n"}Business partners, dating, local friends —
             one AI connection covers them all. No forms. No tags. Just the real you.
           </p>
           <div className="mt-12 flex items-center justify-center">
