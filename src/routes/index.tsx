@@ -184,9 +184,10 @@ function nextWednesday() {
 }
 
 function WeeklyDate() {
+  const { lang, t } = useLang();
   const target = nextWednesday();
   const { d, h, m, s } = useCountdown(target);
-  const dateLabel = target.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  const dateLabel = target.toLocaleDateString(lang === "zh" ? "zh-CN" : "en-US", { month: "short", day: "numeric", year: "numeric" });
   return (
     <section id="weekly" className="relative overflow-hidden border-b border-border/60 bg-secondary/30">
       <div className="absolute inset-0 -z-10 opacity-40" aria-hidden="true"
@@ -194,23 +195,22 @@ function WeeklyDate() {
       <div className="mx-auto max-w-6xl px-5 py-20 sm:px-6 sm:py-24 md:py-32">
         <div className="grid items-center gap-14 sm:gap-12 md:grid-cols-2">
           <div>
-            <p className="text-xs font-medium uppercase tracking-[0.18em] text-primary">Every Wednesday</p>
+            <p className="text-xs font-medium uppercase tracking-[0.18em] text-primary">{t("weekly_kicker")}</p>
             <h2 className="mt-4 font-display text-[2.75rem] sm:text-5xl leading-[1.05] sm:leading-[0.95] tracking-tight md:text-7xl">
-              <span className="text-gold-glow">Get a date</span>
+              <span className="text-gold-glow">{t("weekly_title1")}</span>
               <br />
-              <span className="italic">every week.</span>
+              <span className="italic">{t("weekly_title2")}</span>
             </h2>
             <p className="mt-5 sm:mt-6 max-w-md text-[15px] leading-[1.75] text-muted-foreground sm:text-sm sm:leading-relaxed md:text-base">
-              One curated match. One ready-to-go plan. Delivered every Wednesday at 7pm —
-              like a standing reservation with someone you'll actually want to meet.
+              {t("weekly_desc")}
             </p>
 
             <div className="mt-8 sm:mt-10 flex items-end gap-2 sm:gap-3 font-display text-4xl sm:text-5xl tracking-tight text-gold-glow md:text-6xl">
               {[
-                { v: d, l: "days" },
-                { v: h, l: "hrs" },
-                { v: m, l: "min" },
-                { v: s, l: "sec" },
+                { v: d, l: t("weekly_days") },
+                { v: h, l: t("weekly_hrs") },
+                { v: m, l: t("weekly_min") },
+                { v: s, l: t("weekly_sec") },
               ].map((c, i) => (
                 <div key={c.l} className="flex items-end gap-3">
                   <div className="flex flex-col items-center">
@@ -223,8 +223,8 @@ function WeeklyDate() {
             </div>
 
             <div className="mt-6 space-y-1 text-sm text-muted-foreground">
-              <p>Next Match Day: <span className="text-foreground">{dateLabel}</span></p>
-              <p>Already Joined: <span className="text-foreground">156,070</span></p>
+              <p>{t("weekly_next")} <span className="text-foreground">{dateLabel}</span></p>
+              <p>{t("weekly_joined")} <span className="text-foreground">156,070</span></p>
             </div>
           </div>
 
