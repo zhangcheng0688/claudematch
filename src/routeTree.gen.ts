@@ -14,6 +14,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiWaitlistRouteImport } from './routes/api/waitlist'
 import { Route as ApiStatsRouteImport } from './routes/api/stats'
 import { Route as ApiLoginRouteImport } from './routes/api/login'
+import { Route as ApiUserMeRouteImport } from './routes/api/user/me'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
@@ -40,6 +41,11 @@ const ApiLoginRoute = ApiLoginRouteImport.update({
   path: '/api/login',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiUserMeRoute = ApiUserMeRouteImport.update({
+  id: '/api/user/me',
+  path: '/api/user/me',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -47,6 +53,7 @@ export interface FileRoutesByFullPath {
   '/api/login': typeof ApiLoginRoute
   '/api/stats': typeof ApiStatsRoute
   '/api/waitlist': typeof ApiWaitlistRoute
+  '/api/user/me': typeof ApiUserMeRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -54,6 +61,7 @@ export interface FileRoutesByTo {
   '/api/login': typeof ApiLoginRoute
   '/api/stats': typeof ApiStatsRoute
   '/api/waitlist': typeof ApiWaitlistRoute
+  '/api/user/me': typeof ApiUserMeRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -62,6 +70,7 @@ export interface FileRoutesById {
   '/api/login': typeof ApiLoginRoute
   '/api/stats': typeof ApiStatsRoute
   '/api/waitlist': typeof ApiWaitlistRoute
+  '/api/user/me': typeof ApiUserMeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -71,8 +80,15 @@ export interface FileRouteTypes {
     | '/api/login'
     | '/api/stats'
     | '/api/waitlist'
+    | '/api/user/me'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/sitemap.xml' | '/api/login' | '/api/stats' | '/api/waitlist'
+  to:
+    | '/'
+    | '/sitemap.xml'
+    | '/api/login'
+    | '/api/stats'
+    | '/api/waitlist'
+    | '/api/user/me'
   id:
     | '__root__'
     | '/'
@@ -80,6 +96,7 @@ export interface FileRouteTypes {
     | '/api/login'
     | '/api/stats'
     | '/api/waitlist'
+    | '/api/user/me'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -88,6 +105,7 @@ export interface RootRouteChildren {
   ApiLoginRoute: typeof ApiLoginRoute
   ApiStatsRoute: typeof ApiStatsRoute
   ApiWaitlistRoute: typeof ApiWaitlistRoute
+  ApiUserMeRoute: typeof ApiUserMeRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -127,6 +145,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiLoginRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/user/me': {
+      id: '/api/user/me'
+      path: '/api/user/me'
+      fullPath: '/api/user/me'
+      preLoaderRoute: typeof ApiUserMeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -136,6 +161,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiLoginRoute: ApiLoginRoute,
   ApiStatsRoute: ApiStatsRoute,
   ApiWaitlistRoute: ApiWaitlistRoute,
+  ApiUserMeRoute: ApiUserMeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
