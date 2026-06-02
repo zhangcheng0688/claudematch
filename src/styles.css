@@ -146,9 +146,29 @@
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
     letter-spacing: -0.01em;
+    background-image:
+      radial-gradient(ellipse 80% 50% at 50% -10%, oklch(0.85 0.17 90 / 0.12), transparent 60%),
+      radial-gradient(ellipse 60% 40% at 90% 10%, oklch(0.55 0.18 270 / 0.18), transparent 60%),
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'><path d='M0 39.5H40M39.5 0V40' stroke='white' stroke-opacity='0.035' stroke-width='1'/></svg>");
+    background-attachment: fixed, fixed, fixed;
   }
 
   h1, h2, h3, h4 {
     letter-spacing: -0.035em;
+  }
+
+  .font-display {
+    font-family: "Instrument Serif", "Times New Roman", ui-serif, Georgia, serif;
+    letter-spacing: -0.02em;
+    font-style: italic;
+    font-weight: 400;
+  }
+
+  .text-gold-glow {
+    color: oklch(0.88 0.18 92);
+    text-shadow:
+      0 1px 0 oklch(0.30 0.10 80),
+      0 2px 24px oklch(0.85 0.17 90 / 0.45),
+      0 0 60px oklch(0.85 0.17 90 / 0.25);
   }
 }
