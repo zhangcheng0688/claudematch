@@ -13,43 +13,35 @@ import {
 } from '@react-email/components'
 
 interface SignupEmailProps {
-  siteName: string
-  siteUrl: string
-  recipient: string
-  confirmationUrl: string
+  siteName?: string
+  siteUrl?: string
+  recipient?: string
+  confirmationUrl?: string
+  token?: string
 }
 
 export const SignupEmail = ({
-  siteName,
-  siteUrl,
-  recipient,
-  confirmationUrl,
+  token = '------',
 }: SignupEmailProps) => (
-  <Html lang="en" dir="ltr">
+  <Html lang="zh" dir="ltr">
     <Head />
-    <Preview>Confirm your email for {siteName}</Preview>
+    <Preview>您的 linQ 登录验证码</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Heading style={h1}>Confirm your email</Heading>
+        <Heading style={h1}>您的登录验证码</Heading>
         <Text style={text}>
-          Thanks for signing up for{' '}
-          <Link href={siteUrl} style={link}>
-            <strong>{siteName}</strong>
-          </Link>
-          !
+          您好，欢迎使用 linQ AI 智能匹配平台！
         </Text>
+        <Text style={text}>本次登录验证码：</Text>
+        <Text style={codeStyle}>{token}</Text>
         <Text style={text}>
-          Please confirm your email address (
-          <Link href={`mailto:${recipient}`} style={link}>
-            {recipient}
-          </Link>
-          ) by clicking the button below:
+          验证码 5 分钟内有效，请勿向他人泄露。若非本人操作，请忽略本邮件。
         </Text>
-        <Button style={button} href={confirmationUrl}>
-          Verify Email
-        </Button>
         <Text style={footer}>
-          If you didn't create an account, you can safely ignore this email.
+          linQ 官网 ·{' '}
+          <Link href="https://claudematch.com" style={link}>
+            claudematch.com
+          </Link>
         </Text>
       </Container>
     </Body>
@@ -73,12 +65,12 @@ const text = {
   margin: '0 0 25px',
 }
 const link = { color: 'inherit', textDecoration: 'underline' }
-const button = {
-  backgroundColor: '#000000',
-  color: '#ffffff',
-  fontSize: '14px',
-  borderRadius: '8px',
-  padding: '12px 20px',
-  textDecoration: 'none',
+const codeStyle = {
+  fontFamily: 'Courier, monospace',
+  fontSize: '32px',
+  letterSpacing: '8px',
+  fontWeight: 'bold' as const,
+  color: '#000000',
+  margin: '0 0 25px',
 }
 const footer = { fontSize: '12px', color: '#999999', margin: '30px 0 0' }

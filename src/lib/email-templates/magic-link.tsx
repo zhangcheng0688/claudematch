@@ -2,39 +2,41 @@ import * as React from 'react'
 
 import {
   Body,
-  Button,
   Container,
   Head,
   Heading,
   Html,
+  Link,
   Preview,
   Text,
 } from '@react-email/components'
 
 interface MagicLinkEmailProps {
-  siteName: string
-  confirmationUrl: string
+  siteName?: string
+  confirmationUrl?: string
+  token?: string
 }
 
-export const MagicLinkEmail = ({
-  siteName,
-  confirmationUrl,
-}: MagicLinkEmailProps) => (
-  <Html lang="en" dir="ltr">
+export const MagicLinkEmail = ({ token = '------' }: MagicLinkEmailProps) => (
+  <Html lang="zh" dir="ltr">
     <Head />
-    <Preview>Your login link for {siteName}</Preview>
+    <Preview>您的 linQ 登录验证码</Preview>
     <Body style={main}>
       <Container style={container}>
-        <Heading style={h1}>Your login link</Heading>
+        <Heading style={h1}>您的登录验证码</Heading>
         <Text style={text}>
-          Click the button below to log in to {siteName}. This link will expire
-          shortly.
+          您好，欢迎使用 linQ AI 智能匹配平台！
         </Text>
-        <Button style={button} href={confirmationUrl}>
-          Log In
-        </Button>
+        <Text style={text}>本次登录验证码：</Text>
+        <Text style={codeStyle}>{token}</Text>
+        <Text style={text}>
+          验证码 5 分钟内有效，请勿向他人泄露。若非本人操作，请忽略本邮件。
+        </Text>
         <Text style={footer}>
-          If you didn't request this link, you can safely ignore this email.
+          linQ 官网 ·{' '}
+          <Link href="https://claudematch.com" style={link}>
+            claudematch.com
+          </Link>
         </Text>
       </Container>
     </Body>
@@ -57,12 +59,13 @@ const text = {
   lineHeight: '1.5',
   margin: '0 0 25px',
 }
-const button = {
-  backgroundColor: '#000000',
-  color: '#ffffff',
-  fontSize: '14px',
-  borderRadius: '8px',
-  padding: '12px 20px',
-  textDecoration: 'none',
+const link = { color: 'inherit', textDecoration: 'underline' }
+const codeStyle = {
+  fontFamily: 'Courier, monospace',
+  fontSize: '32px',
+  letterSpacing: '8px',
+  fontWeight: 'bold' as const,
+  color: '#000000',
+  margin: '0 0 25px',
 }
 const footer = { fontSize: '12px', color: '#999999', margin: '30px 0 0' }
