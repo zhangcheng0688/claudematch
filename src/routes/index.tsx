@@ -484,6 +484,7 @@ function Moments() {
 }
 
 function Footer() {
+  const { t } = useLang();
   return (
     <footer id="support" className="relative overflow-hidden border-t border-border/60">
       <div className="mx-auto max-w-6xl px-6 pt-20 pb-10">
@@ -491,50 +492,50 @@ function Footer() {
           {/* Brand + tagline bubble */}
           <div className="md:col-span-5">
             <div className="relative inline-block max-w-xs rounded-2xl rounded-bl-sm bg-foreground px-5 py-4 text-sm font-medium leading-snug text-background shadow-lg">
-              A Claude-powered friend that texts you ready-to-go matches.
+              {t("footer_bubble")}
               <span className="absolute -bottom-2 left-4 h-4 w-4 rotate-45 bg-foreground" />
             </div>
             <div className="mt-10 font-display text-6xl leading-none text-gold-glow md:text-7xl">
               lin<span className="italic">Q</span>
             </div>
             <p className="mt-6 max-w-sm text-sm leading-relaxed text-muted-foreground">
-              The Claude-native matching platform for business, dating, and local life.
+              {t("footer_tag")}
             </p>
           </div>
 
           {/* Link columns */}
           <div className="md:col-span-7 grid grid-cols-2 gap-10 sm:grid-cols-3">
             <div>
-              <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Product</p>
+              <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">{t("footer_product")}</p>
               <ul className="mt-5 space-y-3 text-sm">
-                <li><a href="#values" className="text-foreground/80 transition-colors hover:text-primary">Why linQ</a></li>
-                <li><a href="#how" className="text-foreground/80 transition-colors hover:text-primary">How it works</a></li>
-                <li><a href="#moments" className="text-foreground/80 transition-colors hover:text-primary">Moments</a></li>
-                <li><a href="#compare" className="text-foreground/80 transition-colors hover:text-primary">Compare</a></li>
+                <li><a href="#values" className="text-foreground/80 transition-colors hover:text-primary">{t("nav_why")}</a></li>
+                <li><a href="#how" className="text-foreground/80 transition-colors hover:text-primary">{t("nav_how")}</a></li>
+                <li><a href="#moments" className="text-foreground/80 transition-colors hover:text-primary">{t("nav_moments")}</a></li>
+                <li><a href="#compare" className="text-foreground/80 transition-colors hover:text-primary">{t("nav_compare")}</a></li>
               </ul>
             </div>
             <div>
-              <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Resources</p>
+              <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">{t("footer_resources")}</p>
               <ul className="mt-5 space-y-3 text-sm">
-                <li><a href="#" className="inline-flex items-center gap-1 text-foreground/80 transition-colors hover:text-primary">Careers <ArrowRight className="h-3 w-3 -rotate-45" /></a></li>
-                <li><a href="#" className="inline-flex items-center gap-1 text-foreground/80 transition-colors hover:text-primary">Manifesto <ArrowRight className="h-3 w-3 -rotate-45" /></a></li>
-                <li><a href="#" className="inline-flex items-center gap-1 text-foreground/80 transition-colors hover:text-primary">Press kit <ArrowRight className="h-3 w-3 -rotate-45" /></a></li>
-                <li><a href="#" className="inline-flex items-center gap-1 text-foreground/80 transition-colors hover:text-primary">Blog <ArrowRight className="h-3 w-3 -rotate-45" /></a></li>
+                <li><a href="#" className="inline-flex items-center gap-1 text-foreground/80 transition-colors hover:text-primary">{t("footer_careers")} <ArrowRight className="h-3 w-3 -rotate-45" /></a></li>
+                <li><a href="#" className="inline-flex items-center gap-1 text-foreground/80 transition-colors hover:text-primary">{t("footer_manifesto")} <ArrowRight className="h-3 w-3 -rotate-45" /></a></li>
+                <li><a href="#" className="inline-flex items-center gap-1 text-foreground/80 transition-colors hover:text-primary">{t("footer_press")} <ArrowRight className="h-3 w-3 -rotate-45" /></a></li>
+                <li><a href="#" className="inline-flex items-center gap-1 text-foreground/80 transition-colors hover:text-primary">{t("footer_blog")} <ArrowRight className="h-3 w-3 -rotate-45" /></a></li>
               </ul>
             </div>
             <div>
-              <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Support</p>
+              <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">{t("footer_support")}</p>
               <ul className="mt-5 space-y-3 text-sm">
                 <li className="flex items-center gap-2 text-foreground/80">
                   <span className="relative flex h-2 w-2">
                     <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-60" />
                     <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
                   </span>
-                  24/7 Live chat
+                  {t("footer_chat")}
                 </li>
                 <li><a href="mailto:hi@linq.app" className="inline-flex items-center gap-1.5 text-foreground/80 transition-colors hover:text-primary"><Mail className="h-3.5 w-3.5" /> hi@linq.app</a></li>
-                <li><a href="#trust" className="text-foreground/80 transition-colors hover:text-primary">Trust & safety</a></li>
-                <li><a href="#" className="text-foreground/80 transition-colors hover:text-primary">Help center</a></li>
+                <li><a href="#trust" className="text-foreground/80 transition-colors hover:text-primary">{t("footer_trust")}</a></li>
+                <li><a href="#" className="text-foreground/80 transition-colors hover:text-primary">{t("footer_help")}</a></li>
               </ul>
             </div>
           </div>
@@ -543,19 +544,19 @@ function Footer() {
         {/* Newsletter strip */}
         <div className="mt-16 flex flex-col gap-4 rounded-2xl border border-border/60 bg-secondary/40 p-6 md:flex-row md:items-center md:justify-between">
           <div>
-            <p className="font-display text-xl text-foreground">Get matched, not marketed at.</p>
-            <p className="mt-1 text-sm text-muted-foreground">One short note a month. No spam. Unsubscribe anytime.</p>
+            <p className="font-display text-xl text-foreground">{t("footer_news_title")}</p>
+            <p className="mt-1 text-sm text-muted-foreground">{t("footer_news_desc")}</p>
           </div>
           <form className="flex w-full max-w-sm items-center gap-2">
             <input
               type="email"
               required
               aria-label="Email address"
-              placeholder="you@somewhere.com"
+              placeholder={t("footer_news_placeholder")}
               className="h-10 flex-1 rounded-sm border border-border bg-background px-3 text-sm outline-none focus:border-primary"
             />
             <button type="submit" className="inline-flex h-10 items-center gap-1 rounded-sm bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90">
-              Join <ArrowRight className="h-3.5 w-3.5" />
+              {t("footer_news_join")} <ArrowRight className="h-3.5 w-3.5" />
             </button>
           </form>
         </div>
@@ -570,12 +571,12 @@ function Footer() {
             <a href="#" aria-label="LinkedIn" className="transition-colors hover:text-primary"><Linkedin className="h-4 w-4" /></a>
             <a href="#" aria-label="GitHub" className="transition-colors hover:text-primary"><Github className="h-4 w-4" /></a>
           </div>
-          <p>© {new Date().getFullYear()} linQ Labs Inc. · Made for real connections.</p>
+          <p>© {new Date().getFullYear()} {t("footer_copy")}</p>
           <div className="flex items-center gap-5">
-            <a href="#" className="transition-colors hover:text-primary">Terms</a>
-            <a href="#" className="transition-colors hover:text-primary">Privacy</a>
-            <a href="#" className="transition-colors hover:text-primary">Cookies</a>
-            <a href="#" className="transition-colors hover:text-primary">DPA</a>
+            <a href="#" className="transition-colors hover:text-primary">{t("footer_terms")}</a>
+            <a href="#" className="transition-colors hover:text-primary">{t("footer_privacy")}</a>
+            <a href="#" className="transition-colors hover:text-primary">{t("footer_cookies")}</a>
+            <a href="#" className="transition-colors hover:text-primary">{t("footer_dpa")}</a>
           </div>
         </div>
       </div>
