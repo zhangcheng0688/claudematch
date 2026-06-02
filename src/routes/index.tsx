@@ -96,7 +96,7 @@ function Hero() {
           </div>
           <h1 className="text-5xl font-semibold leading-[1.05] tracking-tight md:text-7xl">
             <span className="font-display text-gold-glow">Claude-powered</span>{" "}
-            <span className="font-display text-[#c90db3]">connections</span>
+            <span className="font-display text-gold-glow">connections</span>
             <br />
             <span className="font-display text-foreground/50">for</span>{" "}
             <span className="font-display text-[#3b82f6]">work</span>
