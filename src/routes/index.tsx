@@ -13,8 +13,35 @@ export const Route = createFileRoute("/")({
     meta: [
       { title: "linQ — The Claude-native matching platform" },
       { name: "description", content: "AI-powered matching for work, love, and life. Business, dating, and local friends — one AI connection covers them all." },
-      { property: "og:title", content: "linQ — The AI-native matching platform" },
+      { property: "og:title", content: "linQ — The Claude-native matching platform" },
       { property: "og:description", content: "AI-powered matching for work, love, and life." },
+      { property: "og:url", content: "https://claudematch.lovable.app/" },
+      { property: "og:type", content: "website" },
+    ],
+    links: [
+      { rel: "canonical", href: "https://claudematch.lovable.app/" },
+    ],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Organization",
+          name: "linQ",
+          url: "https://claudematch.lovable.app/",
+          description: "The Claude-native matching platform for business, dating, and local life.",
+        }),
+      },
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "WebSite",
+          name: "linQ",
+          url: "https://claudematch.lovable.app/",
+          description: "AI-powered matching for work, love, and life. Business, dating, and local friends — one Claude-native connection covers them all.",
+        }),
+      },
     ],
   }),
   component: Index,
@@ -545,6 +572,7 @@ function Footer() {
             <input
               type="email"
               required
+              aria-label="Email address"
               placeholder="you@somewhere.com"
               className="h-10 flex-1 rounded-sm border border-border bg-background px-3 text-sm outline-none focus:border-primary"
             />
