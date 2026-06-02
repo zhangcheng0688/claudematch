@@ -22,6 +22,7 @@ import { Route as ApiUserMeRouteImport } from './routes/api/user/me'
 import { Route as ApiAiMeetPlanRouteImport } from './routes/api/ai/meet-plan'
 import { Route as ApiAiMatchRouteImport } from './routes/api/ai/match'
 import { Route as ApiAiGenerateProfileRouteImport } from './routes/api/ai/generate-profile'
+import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
@@ -87,6 +88,12 @@ const ApiAiGenerateProfileRoute = ApiAiGenerateProfileRouteImport.update({
   path: '/api/ai/generate-profile',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LovableEmailQueueProcessRoute =
+  LovableEmailQueueProcessRouteImport.update({
+    id: '/lovable/email/queue/process',
+    path: '/lovable/email/queue/process',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -101,6 +108,7 @@ export interface FileRoutesByFullPath {
   '/api/ai/match': typeof ApiAiMatchRoute
   '/api/ai/meet-plan': typeof ApiAiMeetPlanRoute
   '/api/user/me': typeof ApiUserMeRoute
+  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -115,6 +123,7 @@ export interface FileRoutesByTo {
   '/api/ai/match': typeof ApiAiMatchRoute
   '/api/ai/meet-plan': typeof ApiAiMeetPlanRoute
   '/api/user/me': typeof ApiUserMeRoute
+  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -131,6 +140,7 @@ export interface FileRoutesById {
   '/api/ai/match': typeof ApiAiMatchRoute
   '/api/ai/meet-plan': typeof ApiAiMeetPlanRoute
   '/api/user/me': typeof ApiUserMeRoute
+  '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -147,6 +157,7 @@ export interface FileRouteTypes {
     | '/api/ai/match'
     | '/api/ai/meet-plan'
     | '/api/user/me'
+    | '/lovable/email/queue/process'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -161,6 +172,7 @@ export interface FileRouteTypes {
     | '/api/ai/match'
     | '/api/ai/meet-plan'
     | '/api/user/me'
+    | '/lovable/email/queue/process'
   id:
     | '__root__'
     | '/'
@@ -176,6 +188,7 @@ export interface FileRouteTypes {
     | '/api/ai/match'
     | '/api/ai/meet-plan'
     | '/api/user/me'
+    | '/lovable/email/queue/process'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -191,6 +204,7 @@ export interface RootRouteChildren {
   ApiAiMatchRoute: typeof ApiAiMatchRoute
   ApiAiMeetPlanRoute: typeof ApiAiMeetPlanRoute
   ApiUserMeRoute: typeof ApiUserMeRoute
+  LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -286,6 +300,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAiGenerateProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/lovable/email/queue/process': {
+      id: '/lovable/email/queue/process'
+      path: '/lovable/email/queue/process'
+      fullPath: '/lovable/email/queue/process'
+      preLoaderRoute: typeof LovableEmailQueueProcessRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -313,7 +334,18 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAiMatchRoute: ApiAiMatchRoute,
   ApiAiMeetPlanRoute: ApiAiMeetPlanRoute,
   ApiUserMeRoute: ApiUserMeRoute,
+  LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
