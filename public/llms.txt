@@ -1,0 +1,9 @@
+# linQ
+
+> The Claude-native matching platform for business, dating, and local life. AI-powered matching that uses real behavioral signals — no forms, no tags, no filtered selves.
+
+linQ delivers one curated, ready-to-meet match every Wednesday. Claude reads how you actually behave (not how you self-describe), builds a multi-dimensional profile, then plans the entire meet-up — time, place, ice-breakers. One account covers business collaboration, dating, and local friends.
+
+## Pages
+
+- [Home](/): Product overview, how it works, weekly match day, moments, and comparison with traditional matching apps.
