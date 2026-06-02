@@ -130,11 +130,11 @@ function Hero() {
             <br />
             <span className="font-display text-foreground/50">{t("hero_for")}</span>{" "}
             <span className="font-display text-[#3b82f6]">{t("hero_work")}</span>
-            <span className="font-display text-foreground/30">,</span>{" "}
+            <span className="font-display text-foreground/30">​</span>{" "}
             <span className="font-display text-[#ef4444]">{t("hero_love")}</span>
-            <span className="font-display text-foreground/30">,</span>{" "}
+            <span className="font-display text-foreground/30">​</span>{" "}
             <span className="font-display text-[#22c55e]">{t("hero_life")}</span>
-            <span className="font-display text-foreground/30">.</span>
+            <span className="font-display text-foreground/30">​</span>
           </h1>
           <p className="mx-auto mt-6 sm:mt-8 max-w-2xl text-[15px] leading-[1.75] sm:leading-relaxed text-muted-foreground sm:text-base md:text-lg whitespace-pre-line">
             {t("hero_desc")}
