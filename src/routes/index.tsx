@@ -64,7 +64,7 @@ export const Route = createFileRoute("/")({
 });
 
 function Nav() {
-  const { t } = useLang();
+  const { t, lang, setLang } = useLang();
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/60 bg-background/70 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
@@ -79,6 +79,14 @@ function Nav() {
           <a href="#trust" className="transition-colors hover:text-foreground">{t("nav_trust")}</a>
         </nav>
         <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setLang(lang === "zh" ? "en" : "zh")}
+            aria-label="Toggle language"
+            className="inline-flex h-9 items-center rounded-sm border border-border bg-background/40 px-3 text-xs font-medium text-muted-foreground transition-colors hover:text-foreground hover:border-primary/40"
+          >
+            {lang === "zh" ? "EN" : "中文"}
+          </button>
           <a
             href="#support"
             className="hidden md:inline-flex h-9 items-center gap-2 rounded-sm border border-primary/40 bg-primary/10 px-3 text-xs font-medium text-primary transition-colors hover:bg-primary/20"
