@@ -11,6 +11,14 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ApiWaitlistRouteImport } from './routes/api/waitlist'
+import { Route as ApiStatsRouteImport } from './routes/api/stats'
+import { Route as ApiLoginRouteImport } from './routes/api/login'
+import { Route as ApiAuthorizeRouteImport } from './routes/api/authorize'
+import { Route as ApiUserMeRouteImport } from './routes/api/user/me'
+import { Route as ApiAiMeetPlanRouteImport } from './routes/api/ai/meet-plan'
+import { Route as ApiAiMatchRouteImport } from './routes/api/ai/match'
+import { Route as ApiAiGenerateProfileRouteImport } from './routes/api/ai/generate-profile'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
@@ -22,31 +30,134 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiWaitlistRoute = ApiWaitlistRouteImport.update({
+  id: '/api/waitlist',
+  path: '/api/waitlist',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiStatsRoute = ApiStatsRouteImport.update({
+  id: '/api/stats',
+  path: '/api/stats',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiLoginRoute = ApiLoginRouteImport.update({
+  id: '/api/login',
+  path: '/api/login',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAuthorizeRoute = ApiAuthorizeRouteImport.update({
+  id: '/api/authorize',
+  path: '/api/authorize',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiUserMeRoute = ApiUserMeRouteImport.update({
+  id: '/api/user/me',
+  path: '/api/user/me',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAiMeetPlanRoute = ApiAiMeetPlanRouteImport.update({
+  id: '/api/ai/meet-plan',
+  path: '/api/ai/meet-plan',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAiMatchRoute = ApiAiMatchRouteImport.update({
+  id: '/api/ai/match',
+  path: '/api/ai/match',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAiGenerateProfileRoute = ApiAiGenerateProfileRouteImport.update({
+  id: '/api/ai/generate-profile',
+  path: '/api/ai/generate-profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/api/authorize': typeof ApiAuthorizeRoute
+  '/api/login': typeof ApiLoginRoute
+  '/api/stats': typeof ApiStatsRoute
+  '/api/waitlist': typeof ApiWaitlistRoute
+  '/api/ai/generate-profile': typeof ApiAiGenerateProfileRoute
+  '/api/ai/match': typeof ApiAiMatchRoute
+  '/api/ai/meet-plan': typeof ApiAiMeetPlanRoute
+  '/api/user/me': typeof ApiUserMeRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/api/authorize': typeof ApiAuthorizeRoute
+  '/api/login': typeof ApiLoginRoute
+  '/api/stats': typeof ApiStatsRoute
+  '/api/waitlist': typeof ApiWaitlistRoute
+  '/api/ai/generate-profile': typeof ApiAiGenerateProfileRoute
+  '/api/ai/match': typeof ApiAiMatchRoute
+  '/api/ai/meet-plan': typeof ApiAiMeetPlanRoute
+  '/api/user/me': typeof ApiUserMeRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/api/authorize': typeof ApiAuthorizeRoute
+  '/api/login': typeof ApiLoginRoute
+  '/api/stats': typeof ApiStatsRoute
+  '/api/waitlist': typeof ApiWaitlistRoute
+  '/api/ai/generate-profile': typeof ApiAiGenerateProfileRoute
+  '/api/ai/match': typeof ApiAiMatchRoute
+  '/api/ai/meet-plan': typeof ApiAiMeetPlanRoute
+  '/api/user/me': typeof ApiUserMeRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/sitemap.xml'
+  fullPaths:
+    | '/'
+    | '/sitemap.xml'
+    | '/api/authorize'
+    | '/api/login'
+    | '/api/stats'
+    | '/api/waitlist'
+    | '/api/ai/generate-profile'
+    | '/api/ai/match'
+    | '/api/ai/meet-plan'
+    | '/api/user/me'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/sitemap.xml'
-  id: '__root__' | '/' | '/sitemap.xml'
+  to:
+    | '/'
+    | '/sitemap.xml'
+    | '/api/authorize'
+    | '/api/login'
+    | '/api/stats'
+    | '/api/waitlist'
+    | '/api/ai/generate-profile'
+    | '/api/ai/match'
+    | '/api/ai/meet-plan'
+    | '/api/user/me'
+  id:
+    | '__root__'
+    | '/'
+    | '/sitemap.xml'
+    | '/api/authorize'
+    | '/api/login'
+    | '/api/stats'
+    | '/api/waitlist'
+    | '/api/ai/generate-profile'
+    | '/api/ai/match'
+    | '/api/ai/meet-plan'
+    | '/api/user/me'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  ApiAuthorizeRoute: typeof ApiAuthorizeRoute
+  ApiLoginRoute: typeof ApiLoginRoute
+  ApiStatsRoute: typeof ApiStatsRoute
+  ApiWaitlistRoute: typeof ApiWaitlistRoute
+  ApiAiGenerateProfileRoute: typeof ApiAiGenerateProfileRoute
+  ApiAiMatchRoute: typeof ApiAiMatchRoute
+  ApiAiMeetPlanRoute: typeof ApiAiMeetPlanRoute
+  ApiUserMeRoute: typeof ApiUserMeRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -65,12 +176,76 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/waitlist': {
+      id: '/api/waitlist'
+      path: '/api/waitlist'
+      fullPath: '/api/waitlist'
+      preLoaderRoute: typeof ApiWaitlistRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/stats': {
+      id: '/api/stats'
+      path: '/api/stats'
+      fullPath: '/api/stats'
+      preLoaderRoute: typeof ApiStatsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/login': {
+      id: '/api/login'
+      path: '/api/login'
+      fullPath: '/api/login'
+      preLoaderRoute: typeof ApiLoginRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/authorize': {
+      id: '/api/authorize'
+      path: '/api/authorize'
+      fullPath: '/api/authorize'
+      preLoaderRoute: typeof ApiAuthorizeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/user/me': {
+      id: '/api/user/me'
+      path: '/api/user/me'
+      fullPath: '/api/user/me'
+      preLoaderRoute: typeof ApiUserMeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/ai/meet-plan': {
+      id: '/api/ai/meet-plan'
+      path: '/api/ai/meet-plan'
+      fullPath: '/api/ai/meet-plan'
+      preLoaderRoute: typeof ApiAiMeetPlanRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/ai/match': {
+      id: '/api/ai/match'
+      path: '/api/ai/match'
+      fullPath: '/api/ai/match'
+      preLoaderRoute: typeof ApiAiMatchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/ai/generate-profile': {
+      id: '/api/ai/generate-profile'
+      path: '/api/ai/generate-profile'
+      fullPath: '/api/ai/generate-profile'
+      preLoaderRoute: typeof ApiAiGenerateProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  ApiAuthorizeRoute: ApiAuthorizeRoute,
+  ApiLoginRoute: ApiLoginRoute,
+  ApiStatsRoute: ApiStatsRoute,
+  ApiWaitlistRoute: ApiWaitlistRoute,
+  ApiAiGenerateProfileRoute: ApiAiGenerateProfileRoute,
+  ApiAiMatchRoute: ApiAiMatchRoute,
+  ApiAiMeetPlanRoute: ApiAiMeetPlanRoute,
+  ApiUserMeRoute: ApiUserMeRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
