@@ -582,7 +582,16 @@ function Index() {
     <div className="min-h-screen bg-background text-foreground">
       <div className="aurora" aria-hidden="true">
         <div className="aurora-extra" />
+        <div className="aurora-extra-2" />
+        <div className="aurora-extra-3" />
       </div>
+      <div className="stars" aria-hidden="true" />
+      <span className="orb orb-1" aria-hidden="true" />
+      <span className="orb orb-2" aria-hidden="true" />
+      <span className="orb orb-3" aria-hidden="true" />
+      <span className="orb orb-4" aria-hidden="true" />
+      <span className="orb orb-5" aria-hidden="true" />
+      <div className="grain" aria-hidden="true" />
       <Nav />
       <main>
         <Hero />
