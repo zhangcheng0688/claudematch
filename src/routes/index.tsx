@@ -311,37 +311,16 @@ function Values() {
   );
 }
 
-const steps = [
-  {
-    n: "01",
-    title: "Sign up & authorize",
-    body: "Register and grant scenario-level permissions. Privacy stays in your control from day one.",
-  },
-  {
-    n: "02",
-    title: "AI profile builds",
-    body: "Behavioral signals are analyzed silently. A multi-dimensional profile of the real you is generated.",
-  },
-  {
-    n: "03",
-    title: "Smart matching",
-    body: "AI dynamically weights each scenario and surfaces the highest-fit people for what you need now.",
-  },
-  {
-    n: "04",
-    title: "Meet with AI plan",
-    body: "Get a full meet-up plan — time, place, ice-breakers. Just show up. linQ handles the rest.",
-  },
-];
-
 function HowItWorks() {
+  const { lang, t } = useLang();
+  const steps = stepsI18n[lang];
   return (
     <section id="how" className="border-b border-border/60 bg-secondary/40">
       <div className="mx-auto max-w-6xl px-5 py-20 sm:px-6 sm:py-24 md:py-32">
         <div className="max-w-2xl">
-          <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">How it works</p>
+          <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">{t("how_kicker")}</p>
           <h2 className="mt-4 text-[1.75rem] sm:text-3xl font-semibold leading-[1.2] tracking-tight md:text-5xl">
-            From sign-up to sitting across the table.
+            {t("how_title")}
           </h2>
         </div>
         <div className="mt-12 sm:mt-16 grid gap-10 sm:gap-12 md:grid-cols-4 md:gap-8">
