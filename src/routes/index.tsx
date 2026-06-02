@@ -376,11 +376,15 @@ function Footer() {
 function Index() {
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <div className="aurora" aria-hidden="true">
+        <div className="aurora-extra" />
+      </div>
       <Nav />
       <main>
         <Hero />
         <Values />
         <HowItWorks />
+        <Moments />
         <Compare />
         <Trust />
         <FinalCTA />
