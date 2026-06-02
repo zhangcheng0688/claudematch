@@ -16,6 +16,7 @@ import { Route as ApiStatsRouteImport } from './routes/api/stats'
 import { Route as ApiLoginRouteImport } from './routes/api/login'
 import { Route as ApiAuthorizeRouteImport } from './routes/api/authorize'
 import { Route as ApiUserMeRouteImport } from './routes/api/user/me'
+import { Route as ApiAiMeetPlanRouteImport } from './routes/api/ai/meet-plan'
 import { Route as ApiAiMatchRouteImport } from './routes/api/ai/match'
 import { Route as ApiAiGenerateProfileRouteImport } from './routes/api/ai/generate-profile'
 
@@ -54,6 +55,11 @@ const ApiUserMeRoute = ApiUserMeRouteImport.update({
   path: '/api/user/me',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAiMeetPlanRoute = ApiAiMeetPlanRouteImport.update({
+  id: '/api/ai/meet-plan',
+  path: '/api/ai/meet-plan',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiAiMatchRoute = ApiAiMatchRouteImport.update({
   id: '/api/ai/match',
   path: '/api/ai/match',
@@ -74,6 +80,7 @@ export interface FileRoutesByFullPath {
   '/api/waitlist': typeof ApiWaitlistRoute
   '/api/ai/generate-profile': typeof ApiAiGenerateProfileRoute
   '/api/ai/match': typeof ApiAiMatchRoute
+  '/api/ai/meet-plan': typeof ApiAiMeetPlanRoute
   '/api/user/me': typeof ApiUserMeRoute
 }
 export interface FileRoutesByTo {
@@ -85,6 +92,7 @@ export interface FileRoutesByTo {
   '/api/waitlist': typeof ApiWaitlistRoute
   '/api/ai/generate-profile': typeof ApiAiGenerateProfileRoute
   '/api/ai/match': typeof ApiAiMatchRoute
+  '/api/ai/meet-plan': typeof ApiAiMeetPlanRoute
   '/api/user/me': typeof ApiUserMeRoute
 }
 export interface FileRoutesById {
@@ -97,6 +105,7 @@ export interface FileRoutesById {
   '/api/waitlist': typeof ApiWaitlistRoute
   '/api/ai/generate-profile': typeof ApiAiGenerateProfileRoute
   '/api/ai/match': typeof ApiAiMatchRoute
+  '/api/ai/meet-plan': typeof ApiAiMeetPlanRoute
   '/api/user/me': typeof ApiUserMeRoute
 }
 export interface FileRouteTypes {
@@ -110,6 +119,7 @@ export interface FileRouteTypes {
     | '/api/waitlist'
     | '/api/ai/generate-profile'
     | '/api/ai/match'
+    | '/api/ai/meet-plan'
     | '/api/user/me'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -121,6 +131,7 @@ export interface FileRouteTypes {
     | '/api/waitlist'
     | '/api/ai/generate-profile'
     | '/api/ai/match'
+    | '/api/ai/meet-plan'
     | '/api/user/me'
   id:
     | '__root__'
@@ -132,6 +143,7 @@ export interface FileRouteTypes {
     | '/api/waitlist'
     | '/api/ai/generate-profile'
     | '/api/ai/match'
+    | '/api/ai/meet-plan'
     | '/api/user/me'
   fileRoutesById: FileRoutesById
 }
@@ -144,6 +156,7 @@ export interface RootRouteChildren {
   ApiWaitlistRoute: typeof ApiWaitlistRoute
   ApiAiGenerateProfileRoute: typeof ApiAiGenerateProfileRoute
   ApiAiMatchRoute: typeof ApiAiMatchRoute
+  ApiAiMeetPlanRoute: typeof ApiAiMeetPlanRoute
   ApiUserMeRoute: typeof ApiUserMeRoute
 }
 
@@ -198,6 +211,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiUserMeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/ai/meet-plan': {
+      id: '/api/ai/meet-plan'
+      path: '/api/ai/meet-plan'
+      fullPath: '/api/ai/meet-plan'
+      preLoaderRoute: typeof ApiAiMeetPlanRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/ai/match': {
       id: '/api/ai/match'
       path: '/api/ai/match'
@@ -224,6 +244,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiWaitlistRoute: ApiWaitlistRoute,
   ApiAiGenerateProfileRoute: ApiAiGenerateProfileRoute,
   ApiAiMatchRoute: ApiAiMatchRoute,
+  ApiAiMeetPlanRoute: ApiAiMeetPlanRoute,
   ApiUserMeRoute: ApiUserMeRoute,
 }
 export const routeTree = rootRouteImport
