@@ -128,9 +128,15 @@ function AuthPage() {
               className="group inline-flex h-12 w-full items-center justify-center gap-2 rounded-sm bg-primary text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-60"
             >
               {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-              {t("Send me a code", "发送验证码")}
+              {loading ? t("Sending…", "发送中…") : t("Send me a code", "发送验证码")}
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
             </button>
+            <p className="text-center text-xs text-muted-foreground">
+              {t("New here?", "还没账号？")}{" "}
+              <span className="text-primary">
+                {t("Just enter your email — we'll create your account automatically.", "直接输入邮箱即可，我们会自动创建账号。")}
+              </span>
+            </p>
           </form>
         ) : (
           <form onSubmit={verifyCode} className="space-y-4">
