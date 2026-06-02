@@ -288,6 +288,52 @@ function FinalCTA() {
   );
 }
 
+const moments = [
+  { src: moment1, name: "Leo & Maya", tag: "Coffee Chat · SF", quote: "AI nailed our vibe. Two hours flew by.", rotate: "-rotate-3" },
+  { src: moment2, name: "Jay & Priya", tag: "Rooftop · NYC", quote: "Way better than juggling 10 Hinge chats.", rotate: "rotate-2" },
+  { src: moment3, name: "Founders Dinner", tag: "Business · Shanghai", quote: "Met my co-founder on linQ. Closed seed in 6 weeks.", rotate: "-rotate-2" },
+  { src: moment4, name: "Alex & Jordan", tag: "Partnership · London", quote: "Skipped 20 LinkedIn DMs. Just met. Just clicked.", rotate: "rotate-1" },
+  { src: moment5, name: "Mia & Daniel", tag: "First Date · Tokyo", quote: "AI picked the place. We picked each other.", rotate: "-rotate-1" },
+  { src: moment6, name: "Game Night Crew", tag: "Local Friends · Austin", quote: "Found my Sunday people in one tap.", rotate: "rotate-3" },
+];
+
+function Moments() {
+  return (
+    <section id="moments" className="border-b border-border/60">
+      <div className="mx-auto max-w-7xl px-6 py-24 md:py-32">
+        <div className="max-w-2xl">
+          <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Moments</p>
+          <h2 className="mt-4 text-3xl font-semibold tracking-tight md:text-5xl">
+            <span className="font-display text-gold-glow">Unforgettable</span> great times.
+          </h2>
+          <p className="mt-4 text-sm leading-relaxed text-muted-foreground md:text-base">
+            Real people. Real meet-ups. Curated by Claude, lived by you.
+          </p>
+        </div>
+        <div className="mt-16 grid grid-cols-2 gap-6 md:grid-cols-3 md:gap-8">
+          {moments.map((m, i) => (
+            <figure key={i} className={`polaroid ${m.rotate}`}>
+              <img
+                src={m.src}
+                alt={`${m.name} — ${m.tag}`}
+                loading="lazy"
+                width={1024}
+                height={1024}
+                className="aspect-square w-full object-cover"
+              />
+              <figcaption className="mt-3 px-1 text-left text-foreground/90">
+                <div className="text-[10px] font-medium uppercase tracking-wider text-foreground/50">{m.tag}</div>
+                <div className="mt-1 text-sm font-medium" style={{ color: "oklch(0.2 0.03 260)" }}>{m.name}</div>
+                <p className="mt-1 text-xs leading-snug" style={{ color: "oklch(0.35 0.03 260)" }}>"{m.quote}"</p>
+              </figcaption>
+            </figure>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function Footer() {
   return (
     <footer>
