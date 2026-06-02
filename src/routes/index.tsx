@@ -96,11 +96,15 @@ function Hero() {
           </div>
           <h1 className="text-5xl font-semibold leading-[1.05] tracking-tight md:text-7xl">
             <span className="text-gold-glow">Claude-powered</span>{" "}
-            <span className="font-display text-gold-glow">connections</span>
+            <span className="font-display text-foreground/95">connections</span>
             <br />
-            for <span className="font-display text-gold-glow">work</span>,{" "}
-            <span className="font-display text-gold-glow">love</span>,{" "}
-            <span className="font-display text-gold-glow">life</span>.
+            <span className="text-foreground/95">for</span>{" "}
+            <span className="font-display text-gold-glow">work</span>
+            <span className="text-foreground/60">,</span>{" "}
+            <span className="font-display text-gold-glow">love</span>
+            <span className="text-foreground/60">,</span>{" "}
+            <span className="font-display text-gold-glow">life</span>
+            <span className="text-foreground/95">.</span>
           </h1>
           <p className="mx-auto mt-8 max-w-2xl leading-relaxed text-muted-foreground md:text-lg text-base whitespace-pre-line">
             Less effort, more meaningful links.{"\n"}Business partners, dating, local friends —
@@ -109,10 +113,14 @@ function Hero() {
           <div className="mt-12 flex items-center justify-center">
             <a
               href="#cta"
-              className="group inline-flex h-12 items-center gap-2 rounded-sm bg-primary px-7 text-sm font-medium text-primary-foreground shadow-[0_8px_40px_-8px_oklch(0.85_0.17_90/0.55)] transition-colors hover:bg-primary/90"
+              className="group relative inline-flex h-14 items-center gap-3 rounded-sm bg-primary pl-3 pr-6 text-sm font-medium text-primary-foreground shadow-[0_20px_60px_-12px_oklch(0.85_0.17_90/0.65),0_0_0_1px_oklch(0.85_0.17_90/0.4),inset_0_1px_0_oklch(1_0_0/0.35)] transition-all hover:-translate-y-0.5 hover:shadow-[0_28px_80px_-12px_oklch(0.85_0.17_90/0.8),0_0_0_1px_oklch(0.85_0.17_90/0.6),inset_0_1px_0_oklch(1_0_0/0.45)]"
             >
-              Get Started
-              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+              <span className="font-display text-2xl leading-none tabular-nums text-primary-foreground/95 drop-shadow-[0_1px_0_oklch(0.30_0.10_80)]">
+                156,070
+              </span>
+              <span className="h-6 w-px bg-primary-foreground/25" />
+              <span className="tracking-wide uppercase">Join now</span>
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
             </a>
           </div>
         </div>
