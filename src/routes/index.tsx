@@ -572,6 +572,7 @@ function Footer() {
             <input
               type="email"
               required
+              aria-label="Email address"
               placeholder="you@somewhere.com"
               className="h-10 flex-1 rounded-sm border border-border bg-background px-3 text-sm outline-none focus:border-primary"
             />
