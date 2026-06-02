@@ -183,6 +183,8 @@ function HowItWorks() {
 const compareRows = [
   ["Profile building", "Tinder / Hinge — endless swiping & curated personas", "Effortless Claude-powered behavioral profile"],
   ["Authenticity", "RedNote · Coffee Chat — performative posts & filtered selves", "Honest signals from how you actually behave"],
+  ["Onboarding", "RedNote / WeChat — fill bio, tags, MBTI, hobbies, photos, voice intro…", "Zero forms. Claude reads your real behavior."],
+  ["Getting a reply", "WeChat — add friend, wait for accept, send 50 messages, maybe meet", "One tap. AI sends a ready-to-go invite to both sides."],
   ["Scenarios", "Siloed apps: LinkedIn for work, Hinge for love, Meetup for friends", "Business, dating & local — one unified graph"],
   ["Effort to meet", "Match, then 100+ messages of small talk", "AI plans the meet-up. Just show up."],
   ["Outcome", "Ghosting, flakes, and dead chats", "Real-world dates, deals, and friendships"],
