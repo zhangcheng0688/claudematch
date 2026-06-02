@@ -1,6 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { ArrowRight, Check, Minus, Headphones, Instagram, Twitter, Github, Linkedin, Mail, MessageCircle, Sparkles, Globe } from "lucide-react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { ArrowRight, Check, Minus, Headphones, Instagram, Twitter, Github, Linkedin, Mail, MessageCircle, Sparkles, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { CookieBanner } from "@/components/CookieBanner";
+import ogImageUrl from "../../public/og-image.jpg?url";
 import moment1 from "@/assets/moment-1.jpg";
 import moment2 from "@/assets/moment-2.jpg";
 import moment3 from "@/assets/moment-3.jpg";
@@ -24,11 +26,16 @@ export const Route = createFileRoute("/")({
       { name: "description", content: "AI-powered matching for work, love, and life. Business, dating, and local friends — one AI connection covers them all." },
       { property: "og:title", content: "linQ — The Claude-native matching platform" },
       { property: "og:description", content: "AI-powered matching for work, love, and life." },
-      { property: "og:url", content: "https://claudematch.lovable.app/" },
+      { property: "og:url", content: "https://claudematch.com" },
       { property: "og:type", content: "website" },
+      { property: "og:image", content: `https://claudematch.com${ogImageUrl}` },
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "linQ — Claude-powered connections" },
+      { name: "twitter:description", content: "No forms. No tags. Just the real you." },
+      { name: "twitter:image", content: `https://claudematch.com${ogImageUrl}` },
     ],
     links: [
-      { rel: "canonical", href: "https://claudematch.lovable.app/" },
+      { rel: "canonical", href: "https://claudematch.com" },
     ],
     scripts: [
       {
@@ -37,7 +44,7 @@ export const Route = createFileRoute("/")({
           "@context": "https://schema.org",
           "@type": "Organization",
           name: "linQ",
-          url: "https://claudematch.lovable.app/",
+          url: "https://claudematch.com",
           description: "The Claude-native matching platform for business, dating, and local life.",
         }),
       },
@@ -47,7 +54,7 @@ export const Route = createFileRoute("/")({
           "@context": "https://schema.org",
           "@type": "WebSite",
           name: "linQ",
-          url: "https://claudematch.lovable.app/",
+          url: "https://claudematch.com",
           description: "AI-powered matching for work, love, and life. Business, dating, and local friends — one Claude-native connection covers them all.",
         }),
       },
@@ -57,7 +64,7 @@ export const Route = createFileRoute("/")({
 });
 
 function Nav() {
-  const { lang, setLang, t } = useLang();
+  const { t } = useLang();
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/60 bg-background/70 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
@@ -72,25 +79,6 @@ function Nav() {
           <a href="#trust" className="transition-colors hover:text-foreground">{t("nav_trust")}</a>
         </nav>
         <div className="flex items-center gap-3">
-          <div className="inline-flex h-9 items-center rounded-sm border border-border bg-background/60 p-0.5 text-xs">
-            <Globe className="ml-1.5 mr-1 h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
-            <button
-              type="button"
-              onClick={() => setLang("en")}
-              className={`h-7 rounded-[3px] px-2 font-medium transition-colors ${lang === "en" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
-              aria-pressed={lang === "en"}
-            >
-              EN
-            </button>
-            <button
-              type="button"
-              onClick={() => setLang("zh")}
-              className={`h-7 rounded-[3px] px-2 font-medium transition-colors ${lang === "zh" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
-              aria-pressed={lang === "zh"}
-            >
-              中文
-            </button>
-          </div>
           <a
             href="#support"
             className="hidden md:inline-flex h-9 items-center gap-2 rounded-sm border border-primary/40 bg-primary/10 px-3 text-xs font-medium text-primary transition-colors hover:bg-primary/20"
