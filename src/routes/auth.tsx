@@ -52,7 +52,7 @@ function AuthPage() {
     });
     setLoading(false);
     if (error) {
-      setErr(error.message);
+      setErr(t("Failed to send code. Please try again.", "发送验证码失败，请稍后再试。"));
       return;
     }
     setStage("code");
