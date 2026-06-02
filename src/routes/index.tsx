@@ -378,29 +378,16 @@ function Compare() {
   );
 }
 
-const trust = [
-  {
-    title: "Three-tier privacy",
-    body: "Granular authorization with physically isolated data layers across scenarios.",
-  },
-  {
-    title: "No data misuse",
-    body: "Nothing is sold. Nothing is force-collected. Compliance is the floor, not the goal.",
-  },
-  {
-    title: "Explainable AI",
-    body: "Every match comes with reasoning. Fair, auditable, and accountable by design.",
-  },
-];
-
 function Trust() {
+  const { lang, t } = useLang();
+  const trust = trustI18n[lang];
   return (
     <section id="trust" className="border-b border-border/60 bg-secondary/40">
       <div className="mx-auto max-w-6xl px-5 py-20 sm:px-6 sm:py-24 md:py-32">
         <div className="max-w-2xl">
-          <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Trust & Compliance</p>
+          <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">{t("trust_kicker")}</p>
           <h2 className="mt-4 text-[1.75rem] sm:text-3xl font-semibold leading-[1.2] tracking-tight md:text-5xl">
-            Privacy is the product.
+            {t("trust_title")}
           </h2>
         </div>
         <div className="mt-12 sm:mt-16 grid gap-8 sm:gap-10 md:grid-cols-3">
@@ -417,21 +404,22 @@ function Trust() {
 }
 
 function FinalCTA() {
+  const { t } = useLang();
   return (
     <section id="cta" className="border-b border-border/60">
       <div className="mx-auto max-w-5xl px-5 py-20 text-center sm:px-6 sm:py-28 md:py-40">
         <h2 className="text-[2.25rem] sm:text-4xl font-semibold leading-[1.1] tracking-tight md:text-6xl">
-          <span className="text-gold-glow">Start</span>{" "}
-          <span className="font-display text-gold-glow">matching</span>.
+          <span className="text-gold-glow">{t("cta_start")}</span>{" "}
+          <span className="font-display text-gold-glow">{t("cta_matching")}</span>.
           <br />
-          <span className="text-muted-foreground">For real this time.</span>
+          <span className="text-muted-foreground">{t("cta_real")}</span>
         </h2>
         <div className="mt-12 flex items-center justify-center">
           <a
             href="#"
             className="group inline-flex h-12 items-center gap-2 rounded-sm bg-primary px-7 text-sm font-medium text-primary-foreground shadow-[0_8px_40px_-8px_oklch(0.85_0.17_90/0.55)] transition-colors hover:bg-primary/90"
           >
-            Start Matching
+            {t("cta_btn")}
             <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
           </a>
         </div>
