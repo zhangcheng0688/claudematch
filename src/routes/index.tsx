@@ -47,7 +47,7 @@ function Hero() {
             The AI-native matching platform
           </div>
           <h1 className="text-5xl font-semibold leading-[1.05] tracking-tight md:text-7xl">
-            <span className="text-gold-glow">AI-powered</span>{" "}
+            <span className="text-gold-glow">Claude-powered</span>{" "}
             <span className="font-display text-gold-glow">connections</span>
             <br />
             for <span className="font-display text-gold-glow">work</span>,{" "}
