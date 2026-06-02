@@ -1,5 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ArrowRight, Check, Minus } from "lucide-react";
+import { ArrowRight, Check, Minus, Headphones } from "lucide-react";
+import moment1 from "@/assets/moment-1.jpg";
+import moment2 from "@/assets/moment-2.jpg";
+import moment3 from "@/assets/moment-3.jpg";
+import moment4 from "@/assets/moment-4.jpg";
+import moment5 from "@/assets/moment-5.jpg";
+import moment6 from "@/assets/moment-6.jpg";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -23,15 +29,29 @@ function Nav() {
         <nav className="hidden items-center gap-8 text-sm text-muted-foreground md:flex">
           <a href="#values" className="transition-colors hover:text-foreground">Why linQ</a>
           <a href="#how" className="transition-colors hover:text-foreground">How it works</a>
+          <a href="#moments" className="transition-colors hover:text-foreground">Moments</a>
           <a href="#compare" className="transition-colors hover:text-foreground">Compare</a>
           <a href="#trust" className="transition-colors hover:text-foreground">Trust</a>
         </nav>
-        <a
-          href="#cta"
-          className="inline-flex h-9 items-center rounded-sm bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-        >
-          Get Started
-        </a>
+        <div className="flex items-center gap-3">
+          <a
+            href="#support"
+            className="hidden md:inline-flex h-9 items-center gap-2 rounded-sm border border-primary/40 bg-primary/10 px-3 text-xs font-medium text-primary transition-colors hover:bg-primary/20"
+          >
+            <span className="relative flex h-2 w-2">
+              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-60" />
+              <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
+            </span>
+            <Headphones className="h-3.5 w-3.5" />
+            24/7 Support
+          </a>
+          <a
+            href="#cta"
+            className="inline-flex h-9 items-center rounded-sm bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+          >
+            Get Started
+          </a>
+        </div>
       </div>
     </header>
   );
