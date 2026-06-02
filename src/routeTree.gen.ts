@@ -9,7 +9,12 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as TrustRouteImport } from './routes/trust'
+import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as DpaRouteImport } from './routes/dpa'
+import { Route as CookiesRouteImport } from './routes/cookies'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
@@ -26,9 +31,34 @@ import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/e
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
 
+const TrustRoute = TrustRouteImport.update({
+  id: '/trust',
+  path: '/trust',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TermsRoute = TermsRouteImport.update({
+  id: '/terms',
+  path: '/terms',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PrivacyRoute = PrivacyRouteImport.update({
+  id: '/privacy',
+  path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DpaRoute = DpaRouteImport.update({
+  id: '/dpa',
+  path: '/dpa',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const CookiesRoute = CookiesRouteImport.update({
+  id: '/cookies',
+  path: '/cookies',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -110,7 +140,12 @@ const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/cookies': typeof CookiesRoute
+  '/dpa': typeof DpaRoute
+  '/privacy': typeof PrivacyRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/terms': typeof TermsRoute
+  '/trust': typeof TrustRoute
   '/start': typeof AuthenticatedStartRoute
   '/api/authorize': typeof ApiAuthorizeRoute
   '/api/login': typeof ApiLoginRoute
@@ -127,7 +162,12 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
+  '/cookies': typeof CookiesRoute
+  '/dpa': typeof DpaRoute
+  '/privacy': typeof PrivacyRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/terms': typeof TermsRoute
+  '/trust': typeof TrustRoute
   '/start': typeof AuthenticatedStartRoute
   '/api/authorize': typeof ApiAuthorizeRoute
   '/api/login': typeof ApiLoginRoute
@@ -146,7 +186,12 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
+  '/cookies': typeof CookiesRoute
+  '/dpa': typeof DpaRoute
+  '/privacy': typeof PrivacyRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
+  '/terms': typeof TermsRoute
+  '/trust': typeof TrustRoute
   '/_authenticated/start': typeof AuthenticatedStartRoute
   '/api/authorize': typeof ApiAuthorizeRoute
   '/api/login': typeof ApiLoginRoute
@@ -165,7 +210,12 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/cookies'
+    | '/dpa'
+    | '/privacy'
     | '/sitemap.xml'
+    | '/terms'
+    | '/trust'
     | '/start'
     | '/api/authorize'
     | '/api/login'
@@ -182,7 +232,12 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/cookies'
+    | '/dpa'
+    | '/privacy'
     | '/sitemap.xml'
+    | '/terms'
+    | '/trust'
     | '/start'
     | '/api/authorize'
     | '/api/login'
@@ -200,7 +255,12 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/cookies'
+    | '/dpa'
+    | '/privacy'
     | '/sitemap.xml'
+    | '/terms'
+    | '/trust'
     | '/_authenticated/start'
     | '/api/authorize'
     | '/api/login'
@@ -219,7 +279,12 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
+  CookiesRoute: typeof CookiesRoute
+  DpaRoute: typeof DpaRoute
+  PrivacyRoute: typeof PrivacyRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
+  TermsRoute: typeof TermsRoute
+  TrustRoute: typeof TrustRoute
   ApiAuthorizeRoute: typeof ApiAuthorizeRoute
   ApiLoginRoute: typeof ApiLoginRoute
   ApiStatsRoute: typeof ApiStatsRoute
@@ -235,11 +300,46 @@ export interface RootRouteChildren {
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/trust': {
+      id: '/trust'
+      path: '/trust'
+      fullPath: '/trust'
+      preLoaderRoute: typeof TrustRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/terms': {
+      id: '/terms'
+      path: '/terms'
+      fullPath: '/terms'
+      preLoaderRoute: typeof TermsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/sitemap.xml': {
       id: '/sitemap.xml'
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/privacy': {
+      id: '/privacy'
+      path: '/privacy'
+      fullPath: '/privacy'
+      preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/dpa': {
+      id: '/dpa'
+      path: '/dpa'
+      fullPath: '/dpa'
+      preLoaderRoute: typeof DpaRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/cookies': {
+      id: '/cookies'
+      path: '/cookies'
+      fullPath: '/cookies'
+      preLoaderRoute: typeof CookiesRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -365,7 +465,12 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
+  CookiesRoute: CookiesRoute,
+  DpaRoute: DpaRoute,
+  PrivacyRoute: PrivacyRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
+  TermsRoute: TermsRoute,
+  TrustRoute: TrustRoute,
   ApiAuthorizeRoute: ApiAuthorizeRoute,
   ApiLoginRoute: ApiLoginRoute,
   ApiStatsRoute: ApiStatsRoute,

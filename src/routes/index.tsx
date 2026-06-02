@@ -1,6 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { ArrowRight, Check, Minus, Headphones, Instagram, Twitter, Github, Linkedin, Mail, MessageCircle, Sparkles, Globe } from "lucide-react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { ArrowRight, Check, Minus, Headphones, Instagram, Twitter, Github, Linkedin, Mail, MessageCircle, Sparkles, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { CookieBanner } from "@/components/CookieBanner";
+const ogImageUrl = "/og-image.jpg";
 import moment1 from "@/assets/moment-1.jpg";
 import moment2 from "@/assets/moment-2.jpg";
 import moment3 from "@/assets/moment-3.jpg";
@@ -24,11 +26,16 @@ export const Route = createFileRoute("/")({
       { name: "description", content: "AI-powered matching for work, love, and life. Business, dating, and local friends — one AI connection covers them all." },
       { property: "og:title", content: "linQ — The Claude-native matching platform" },
       { property: "og:description", content: "AI-powered matching for work, love, and life." },
-      { property: "og:url", content: "https://claudematch.lovable.app/" },
+      { property: "og:url", content: "https://claudematch.com" },
       { property: "og:type", content: "website" },
+      { property: "og:image", content: `https://claudematch.com${ogImageUrl}` },
+      { name: "twitter:card", content: "summary_large_image" },
+      { name: "twitter:title", content: "linQ — Claude-powered connections" },
+      { name: "twitter:description", content: "No forms. No tags. Just the real you." },
+      { name: "twitter:image", content: `https://claudematch.com${ogImageUrl}` },
     ],
     links: [
-      { rel: "canonical", href: "https://claudematch.lovable.app/" },
+      { rel: "canonical", href: "https://claudematch.com" },
     ],
     scripts: [
       {
@@ -37,7 +44,7 @@ export const Route = createFileRoute("/")({
           "@context": "https://schema.org",
           "@type": "Organization",
           name: "linQ",
-          url: "https://claudematch.lovable.app/",
+          url: "https://claudematch.com",
           description: "The Claude-native matching platform for business, dating, and local life.",
         }),
       },
@@ -47,7 +54,7 @@ export const Route = createFileRoute("/")({
           "@context": "https://schema.org",
           "@type": "WebSite",
           name: "linQ",
-          url: "https://claudematch.lovable.app/",
+          url: "https://claudematch.com",
           description: "AI-powered matching for work, love, and life. Business, dating, and local friends — one Claude-native connection covers them all.",
         }),
       },
@@ -57,7 +64,7 @@ export const Route = createFileRoute("/")({
 });
 
 function Nav() {
-  const { lang, setLang, t } = useLang();
+  const { t } = useLang();
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/60 bg-background/70 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
@@ -72,25 +79,6 @@ function Nav() {
           <a href="#trust" className="transition-colors hover:text-foreground">{t("nav_trust")}</a>
         </nav>
         <div className="flex items-center gap-3">
-          <div className="inline-flex h-9 items-center rounded-sm border border-border bg-background/60 p-0.5 text-xs">
-            <Globe className="ml-1.5 mr-1 h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
-            <button
-              type="button"
-              onClick={() => setLang("en")}
-              className={`h-7 rounded-[3px] px-2 font-medium transition-colors ${lang === "en" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
-              aria-pressed={lang === "en"}
-            >
-              EN
-            </button>
-            <button
-              type="button"
-              onClick={() => setLang("zh")}
-              className={`h-7 rounded-[3px] px-2 font-medium transition-colors ${lang === "zh" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
-              aria-pressed={lang === "zh"}
-            >
-              中文
-            </button>
-          </div>
           <a
             href="#support"
             className="hidden md:inline-flex h-9 items-center gap-2 rounded-sm border border-primary/40 bg-primary/10 px-3 text-xs font-medium text-primary transition-colors hover:bg-primary/20"
@@ -188,6 +176,8 @@ function WeeklyDate() {
   const target = nextWednesday();
   const { d, h, m, s } = useCountdown(target);
   const dateLabel = target.toLocaleDateString(lang === "zh" ? "zh-CN" : "en-US", { month: "short", day: "numeric", year: "numeric" });
+  const now = new Date();
+  const isMatchDay = now.getUTCDay() === 3 && now.getUTCHours() < 19;
   return (
     <section id="weekly" className="relative overflow-hidden border-b border-border/60 bg-secondary/30">
       <div className="absolute inset-0 -z-10 opacity-40" aria-hidden="true"
@@ -205,6 +195,11 @@ function WeeklyDate() {
               {t("weekly_desc")}
             </p>
 
+            {isMatchDay ? (
+              <p className="mt-8 sm:mt-10 font-display text-2xl sm:text-3xl leading-snug text-gold-glow md:text-4xl">
+                {lang === "zh" ? "今天就是匹配日！你的专属匹配已就绪。" : "Match Day is here! Your curated match is ready."}
+              </p>
+            ) : (
             <div className="mt-8 sm:mt-10 flex items-end gap-2 sm:gap-3 font-display text-4xl sm:text-5xl tracking-tight text-gold-glow md:text-6xl">
               {[
                 { v: d, l: t("weekly_days") },
@@ -221,6 +216,7 @@ function WeeklyDate() {
                 </div>
               ))}
             </div>
+            )}
 
             <div className="mt-6 space-y-1 text-sm text-muted-foreground">
               <p>{t("weekly_next")} <span className="text-foreground">{dateLabel}</span></p>
@@ -267,16 +263,17 @@ function SendRealYou() {
           </p>
 
           <div className="mt-12 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-            <a
-              href="/auth"
-              className="group inline-flex h-14 w-full max-w-sm items-center justify-center gap-3 rounded-full bg-background pr-7 pl-3 text-base font-semibold text-primary shadow-[0_8px_40px_-8px_oklch(0.85_0.17_90/0.55)] ring-1 ring-primary/30 transition-all hover:ring-primary/60 sm:w-auto"
+            <button
+              type="button"
+              disabled
+              aria-disabled="true"
+              className="group inline-flex h-14 w-full max-w-sm cursor-not-allowed items-center justify-center gap-3 rounded-full bg-background pr-7 pl-3 text-base font-semibold text-muted-foreground opacity-70 ring-1 ring-border sm:w-auto"
             >
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground">
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted text-muted-foreground">
                 <MessageCircle className="h-5 w-5" />
               </span>
-              {t("send_cta")}
-              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-            </a>
+              Coming Soon
+            </button>
           </div>
           <p className="mt-4 text-xs text-muted-foreground">{t("send_terms")}</p>
         </div>
@@ -485,6 +482,35 @@ function Moments() {
 
 function Footer() {
   const { lang, t } = useLang();
+  const [email, setEmail] = useState("");
+  const [state, setState] = useState<"idle" | "loading" | "success" | "error">("idle");
+  const [msg, setMsg] = useState<string | null>(null);
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setMsg(null);
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setState("error");
+      setMsg(lang === "zh" ? "请输入有效邮箱。" : "Please enter a valid email.");
+      return;
+    }
+    setState("loading");
+    try {
+      const res = await fetch("/api/waitlist", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: email.trim().toLowerCase() }),
+      });
+      if (!res.ok) throw new Error("failed");
+      setState("success");
+      setMsg(lang === "zh" ? "感谢！已加入列表。" : "Thanks! You're on the list.");
+      setEmail("");
+    } catch {
+      setState("error");
+      setMsg(lang === "zh" ? "提交失败，请稍后再试。" : "Something went wrong. Try again.");
+    }
+  };
+
   return (
     <footer id="support" className="relative overflow-hidden border-t border-border/60">
       <div className="mx-auto max-w-6xl px-6 pt-20 pb-10">
@@ -534,7 +560,7 @@ function Footer() {
                   {t("footer_chat")}
                 </li>
                 <li><a href="mailto:hi@linq.app" className="inline-flex items-center gap-1.5 text-foreground/80 transition-colors hover:text-primary"><Mail className="h-3.5 w-3.5" /> {lang === "zh" ? "vip专属会员中心" : "hi@linq.app"}</a></li>
-                <li><a href="#trust" className="text-foreground/80 transition-colors hover:text-primary">{t("footer_trust")}</a></li>
+                <li><Link to="/trust" className="text-foreground/80 transition-colors hover:text-primary">{t("footer_trust")}</Link></li>
                 <li><a href="#" className="text-foreground/80 transition-colors hover:text-primary">{t("footer_help")}</a></li>
               </ul>
             </div>
@@ -547,18 +573,34 @@ function Footer() {
             <p className="font-display text-xl text-foreground">{t("footer_news_title")}</p>
             <p className="mt-1 text-sm text-muted-foreground">{t("footer_news_desc")}</p>
           </div>
-          <form className="flex w-full max-w-sm items-center gap-2">
-            <input
-              type="email"
-              required
-              aria-label="Email address"
-              placeholder={t("footer_news_placeholder")}
-              className="h-10 flex-1 rounded-sm border border-border bg-background px-3 text-sm outline-none focus:border-primary"
-            />
-            <button type="submit" className="inline-flex h-10 items-center gap-1 rounded-sm bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90">
-              {t("footer_news_join")} <ArrowRight className="h-3.5 w-3.5" />
-            </button>
-          </form>
+          <div className="w-full md:max-w-sm">
+            <form onSubmit={submit} className="flex w-full items-center gap-2">
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                aria-label="Email address"
+                placeholder="your@email.com"
+                className="h-10 flex-1 rounded-sm border border-border bg-background px-3 text-sm outline-none focus:border-primary"
+                disabled={state === "loading"}
+              />
+              <button
+                type="submit"
+                disabled={state === "loading"}
+                className="inline-flex h-10 items-center gap-1 rounded-sm bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-60"
+              >
+                {state === "loading" ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <>{t("footer_news_join")} <ArrowRight className="h-3.5 w-3.5" /></>
+                )}
+              </button>
+            </form>
+            {msg && (
+              <p className={`mt-2 text-xs ${state === "success" ? "text-primary" : "text-destructive"}`}>{msg}</p>
+            )}
+          </div>
         </div>
       </div>
 
@@ -573,10 +615,10 @@ function Footer() {
           </div>
           <p>© {new Date().getFullYear()} {t("footer_copy")}</p>
           <div className="flex items-center gap-5">
-            <a href="#" className="transition-colors hover:text-primary">{t("footer_terms")}</a>
-            <a href="#" className="transition-colors hover:text-primary">{t("footer_privacy")}</a>
-            <a href="#" className="transition-colors hover:text-primary">{t("footer_cookies")}</a>
-            <a href="#" className="transition-colors hover:text-primary">{t("footer_dpa")}</a>
+            <Link to="/terms" className="transition-colors hover:text-primary">{t("footer_terms")}</Link>
+            <Link to="/privacy" className="transition-colors hover:text-primary">{t("footer_privacy")}</Link>
+            <Link to="/cookies" className="transition-colors hover:text-primary">{t("footer_cookies")}</Link>
+            <Link to="/dpa" className="transition-colors hover:text-primary">{t("footer_dpa")}</Link>
           </div>
         </div>
       </div>
@@ -613,6 +655,7 @@ function Index() {
         <FinalCTA />
       </main>
       <Footer />
+      <CookieBanner />
     </div>
     </LanguageProvider>
   );
