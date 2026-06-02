@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ArrowRight, Check, Minus, Headphones } from "lucide-react";
+import { ArrowRight, Check, Minus, Headphones, Instagram, Twitter, Github, Linkedin, Mail } from "lucide-react";
 import moment1 from "@/assets/moment-1.jpg";
 import moment2 from "@/assets/moment-2.jpg";
 import moment3 from "@/assets/moment-3.jpg";
@@ -352,37 +352,97 @@ function Moments() {
 
 function Footer() {
   return (
-    <footer>
-      <div className="mx-auto grid max-w-6xl gap-12 px-6 py-16 md:grid-cols-4">
-        <div className="md:col-span-2 text-base">
-          <div className="text-lg font-semibold tracking-tight">
-            lin<span className="font-display text-primary text-2xl align-middle">Q</span>
+    <footer id="support" className="relative overflow-hidden border-t border-border/60">
+      <div className="mx-auto max-w-6xl px-6 pt-20 pb-10">
+        <div className="grid gap-16 md:grid-cols-12">
+          {/* Brand + tagline bubble */}
+          <div className="md:col-span-5">
+            <div className="relative inline-block max-w-xs rounded-2xl rounded-bl-sm bg-foreground px-5 py-4 text-sm font-medium leading-snug text-background shadow-lg">
+              A Claude-powered friend that texts you ready-to-go matches.
+              <span className="absolute -bottom-2 left-4 h-4 w-4 rotate-45 bg-foreground" />
+            </div>
+            <div className="mt-10 font-display text-6xl leading-none text-gold-glow md:text-7xl">
+              lin<span className="italic">Q</span>
+            </div>
+            <p className="mt-6 max-w-sm text-sm leading-relaxed text-muted-foreground">
+              The Claude-native matching platform for business, dating, and local life.
+            </p>
           </div>
-          <p className="mt-4 max-w-sm text-sm leading-relaxed text-muted-foreground">
-            The Claude-native matching platform for business, dating, and local life.
-          </p>
+
+          {/* Link columns */}
+          <div className="md:col-span-7 grid grid-cols-2 gap-10 sm:grid-cols-3">
+            <div>
+              <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Product</p>
+              <ul className="mt-5 space-y-3 text-sm">
+                <li><a href="#values" className="text-foreground/80 transition-colors hover:text-primary">Why linQ</a></li>
+                <li><a href="#how" className="text-foreground/80 transition-colors hover:text-primary">How it works</a></li>
+                <li><a href="#moments" className="text-foreground/80 transition-colors hover:text-primary">Moments</a></li>
+                <li><a href="#compare" className="text-foreground/80 transition-colors hover:text-primary">Compare</a></li>
+              </ul>
+            </div>
+            <div>
+              <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Resources</p>
+              <ul className="mt-5 space-y-3 text-sm">
+                <li><a href="#" className="inline-flex items-center gap-1 text-foreground/80 transition-colors hover:text-primary">Careers <ArrowRight className="h-3 w-3 -rotate-45" /></a></li>
+                <li><a href="#" className="inline-flex items-center gap-1 text-foreground/80 transition-colors hover:text-primary">Manifesto <ArrowRight className="h-3 w-3 -rotate-45" /></a></li>
+                <li><a href="#" className="inline-flex items-center gap-1 text-foreground/80 transition-colors hover:text-primary">Press kit <ArrowRight className="h-3 w-3 -rotate-45" /></a></li>
+                <li><a href="#" className="inline-flex items-center gap-1 text-foreground/80 transition-colors hover:text-primary">Blog <ArrowRight className="h-3 w-3 -rotate-45" /></a></li>
+              </ul>
+            </div>
+            <div>
+              <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Support</p>
+              <ul className="mt-5 space-y-3 text-sm">
+                <li className="flex items-center gap-2 text-foreground/80">
+                  <span className="relative flex h-2 w-2">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-60" />
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
+                  </span>
+                  24/7 Live chat
+                </li>
+                <li><a href="mailto:hi@linq.app" className="inline-flex items-center gap-1.5 text-foreground/80 transition-colors hover:text-primary"><Mail className="h-3.5 w-3.5" /> hi@linq.app</a></li>
+                <li><a href="#trust" className="text-foreground/80 transition-colors hover:text-primary">Trust & safety</a></li>
+                <li><a href="#" className="text-foreground/80 transition-colors hover:text-primary">Help center</a></li>
+              </ul>
+            </div>
+          </div>
         </div>
-        <div>
-          <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Product</p>
-          <ul className="mt-4 space-y-3 text-sm">
-            <li><a href="#values" className="text-foreground/80 hover:text-foreground">Why linQ</a></li>
-            <li><a href="#how" className="text-foreground/80 hover:text-foreground">How it works</a></li>
-            <li><a href="#compare" className="text-foreground/80 hover:text-foreground">Compare</a></li>
-          </ul>
-        </div>
-        <div>
-          <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Company</p>
-          <ul className="mt-4 space-y-3 text-sm">
-            <li><a href="#trust" className="text-foreground/80 hover:text-foreground">Trust</a></li>
-            <li><a href="#" className="text-foreground/80 hover:text-foreground">Privacy</a></li>
-            <li><a href="#" className="text-foreground/80 hover:text-foreground">Contact</a></li>
-          </ul>
+
+        {/* Newsletter strip */}
+        <div className="mt-16 flex flex-col gap-4 rounded-2xl border border-border/60 bg-secondary/40 p-6 md:flex-row md:items-center md:justify-between">
+          <div>
+            <p className="font-display text-xl text-foreground">Get matched, not marketed at.</p>
+            <p className="mt-1 text-sm text-muted-foreground">One short note a month. No spam. Unsubscribe anytime.</p>
+          </div>
+          <form className="flex w-full max-w-sm items-center gap-2">
+            <input
+              type="email"
+              required
+              placeholder="you@somewhere.com"
+              className="h-10 flex-1 rounded-sm border border-border bg-background px-3 text-sm outline-none focus:border-primary"
+            />
+            <button type="submit" className="inline-flex h-10 items-center gap-1 rounded-sm bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90">
+              Join <ArrowRight className="h-3.5 w-3.5" />
+            </button>
+          </form>
         </div>
       </div>
-      <div className="border-t border-border">
-        <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-2 px-6 py-6 text-xs text-muted-foreground md:flex-row md:items-center">
-          <p>© {new Date().getFullYear()} linQ. All rights reserved.</p>
-          <p>Made for real connections.</p>
+
+      {/* Bottom bar */}
+      <div className="border-t border-border/60">
+        <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-4 px-6 py-6 text-xs text-muted-foreground md:flex-row md:items-center">
+          <div className="flex items-center gap-4">
+            <a href="#" aria-label="Instagram" className="transition-colors hover:text-primary"><Instagram className="h-4 w-4" /></a>
+            <a href="#" aria-label="X / Twitter" className="transition-colors hover:text-primary"><Twitter className="h-4 w-4" /></a>
+            <a href="#" aria-label="LinkedIn" className="transition-colors hover:text-primary"><Linkedin className="h-4 w-4" /></a>
+            <a href="#" aria-label="GitHub" className="transition-colors hover:text-primary"><Github className="h-4 w-4" /></a>
+          </div>
+          <p>© {new Date().getFullYear()} linQ Labs Inc. · Made for real connections.</p>
+          <div className="flex items-center gap-5">
+            <a href="#" className="transition-colors hover:text-primary">Terms</a>
+            <a href="#" className="transition-colors hover:text-primary">Privacy</a>
+            <a href="#" className="transition-colors hover:text-primary">Cookies</a>
+            <a href="#" className="transition-colors hover:text-primary">DPA</a>
+          </div>
         </div>
       </div>
     </footer>
