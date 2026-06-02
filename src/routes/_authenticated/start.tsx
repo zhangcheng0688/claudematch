@@ -61,8 +61,13 @@ type MeetPlan = {
     ai?: {
       when?: string;
       where?: string;
+      location_intro?: string;
       dress_code?: string;
       icebreakers?: string[];
+      duration?: string;
+      budget?: string;
+      pitfalls?: string[];
+      highlights?: string[];
     };
   };
 };
