@@ -88,13 +88,13 @@ function Nav() {
 function Hero() {
   return (
     <section className="relative border-b border-border/60 overflow-hidden">
-      <div className="mx-auto max-w-6xl px-6 py-28 md:py-40">
+      <div className="mx-auto max-w-6xl px-5 py-20 sm:px-6 sm:py-28 md:py-40">
         <div className="mx-auto max-w-4xl text-center">
-          <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-border bg-background/40 px-3 py-1 text-xs text-muted-foreground backdrop-blur">
+          <div className="mb-6 sm:mb-8 inline-flex items-center gap-2 rounded-full border border-border bg-background/40 px-3 py-1 text-[11px] sm:text-xs text-muted-foreground backdrop-blur">
             <span className="h-1.5 w-1.5 rounded-full bg-primary" />
             The Claude-native matching platform
           </div>
-          <h1 className="text-5xl font-semibold leading-[1.05] tracking-tight md:text-7xl">
+          <h1 className="text-[2.5rem] sm:text-5xl font-semibold leading-[1.1] sm:leading-[1.05] tracking-tight md:text-7xl">
             <span className="font-display text-gold-glow">Claude-powered</span>{" "}
             <span className="font-display text-gold-glow">connections</span>
             <br />
@@ -106,11 +106,11 @@ function Hero() {
             <span className="font-display text-[#22c55e]">life</span>
             <span className="font-display text-foreground/30">.</span>
           </h1>
-          <p className="mx-auto mt-8 max-w-2xl leading-relaxed text-muted-foreground md:text-lg text-base whitespace-pre-line">
+          <p className="mx-auto mt-6 sm:mt-8 max-w-2xl text-[15px] leading-[1.75] sm:leading-relaxed text-muted-foreground sm:text-base md:text-lg whitespace-pre-line">
             Less effort, more meaningful links.{"\n"}Business partners, dating, local friends —
             one AI connection covers them all. No forms. No tags. Just the real you.
           </p>
-          <div className="mt-12 flex items-center justify-center">
+          <div className="mt-10 sm:mt-12 flex items-center justify-center">
             <a
               href="#cta"
               className="group relative inline-flex h-14 items-center gap-3 rounded-sm bg-primary pl-3 pr-6 text-sm font-medium text-primary-foreground shadow-[0_20px_60px_-12px_oklch(0.85_0.17_90/0.65),0_0_0_1px_oklch(0.85_0.17_90/0.4),inset_0_1px_0_oklch(1_0_0/0.35)] transition-all hover:-translate-y-0.5 hover:shadow-[0_28px_80px_-12px_oklch(0.85_0.17_90/0.8),0_0_0_1px_oklch(0.85_0.17_90/0.6),inset_0_1px_0_oklch(1_0_0/0.45)]"
@@ -162,21 +162,21 @@ function WeeklyDate() {
     <section id="weekly" className="relative overflow-hidden border-b border-border/60 bg-secondary/30">
       <div className="absolute inset-0 -z-10 opacity-40" aria-hidden="true"
         style={{ background: "radial-gradient(60% 50% at 50% 0%, oklch(0.85 0.17 90 / 0.18), transparent 70%)" }} />
-      <div className="mx-auto max-w-6xl px-6 py-24 md:py-32">
-        <div className="grid items-center gap-12 md:grid-cols-2">
+      <div className="mx-auto max-w-6xl px-5 py-20 sm:px-6 sm:py-24 md:py-32">
+        <div className="grid items-center gap-14 sm:gap-12 md:grid-cols-2">
           <div>
             <p className="text-xs font-medium uppercase tracking-[0.18em] text-primary">Every Wednesday</p>
-            <h2 className="mt-4 font-display text-5xl leading-[0.95] tracking-tight md:text-7xl">
+            <h2 className="mt-4 font-display text-[2.75rem] sm:text-5xl leading-[1.05] sm:leading-[0.95] tracking-tight md:text-7xl">
               <span className="text-gold-glow">Get a date</span>
               <br />
               <span className="italic">every week.</span>
             </h2>
-            <p className="mt-6 max-w-md text-sm leading-relaxed text-muted-foreground md:text-base">
+            <p className="mt-5 sm:mt-6 max-w-md text-[15px] leading-[1.75] text-muted-foreground sm:text-sm sm:leading-relaxed md:text-base">
               One curated match. One ready-to-go plan. Delivered every Wednesday at 7pm —
               like a standing reservation with someone you'll actually want to meet.
             </p>
 
-            <div className="mt-10 flex items-end gap-3 font-display text-5xl tracking-tight text-gold-glow md:text-6xl">
+            <div className="mt-8 sm:mt-10 flex items-end gap-2 sm:gap-3 font-display text-4xl sm:text-5xl tracking-tight text-gold-glow md:text-6xl">
               {[
                 { v: d, l: "days" },
                 { v: h, l: "hrs" },
@@ -222,17 +222,17 @@ function WeeklyDate() {
 function SendRealYou() {
   return (
     <section id="send" className="relative overflow-hidden border-b border-border/60">
-      <div className="mx-auto max-w-6xl px-6 py-24 md:py-32">
+      <div className="mx-auto max-w-6xl px-5 py-20 sm:px-6 sm:py-24 md:py-32">
         <div className="mx-auto max-w-3xl text-center">
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs text-primary">
             <Sparkles className="h-3.5 w-3.5" /> One tap. Zero forms.
           </div>
-          <h2 className="text-4xl font-semibold tracking-tight md:text-6xl">
+          <h2 className="text-[2.25rem] sm:text-4xl font-semibold leading-[1.1] tracking-tight md:text-6xl">
             <span className="text-gold-glow">Send the real you</span>
             <br />
             <span className="font-display italic text-muted-foreground">to your match.</span>
           </h2>
-          <p className="mx-auto mt-6 max-w-xl text-sm leading-relaxed text-muted-foreground md:text-base">
+          <p className="mx-auto mt-5 sm:mt-6 max-w-xl text-[15px] leading-[1.75] text-muted-foreground sm:text-sm sm:leading-relaxed md:text-base">
             No curated bio. No filtered selfies. Claude packages the honest signals — how you think,
             what you care about, how you actually show up — and delivers them to the person on the other side.
           </p>
@@ -274,19 +274,19 @@ const values = [
 function Values() {
   return (
     <section id="values" className="border-b border-border/60">
-      <div className="mx-auto max-w-6xl px-6 py-24 md:py-32">
+      <div className="mx-auto max-w-6xl px-5 py-20 sm:px-6 sm:py-24 md:py-32">
         <div className="max-w-2xl">
           <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Why linQ</p>
-          <h2 className="mt-4 text-3xl font-semibold tracking-tight md:text-5xl">
+          <h2 className="mt-4 text-[1.75rem] sm:text-3xl font-semibold leading-[1.2] tracking-tight md:text-5xl">
             A new kind of matching, built on real behavior.
           </h2>
         </div>
-        <div className="mt-16 grid gap-px overflow-hidden rounded-sm border border-border bg-border md:grid-cols-3">
+        <div className="mt-12 sm:mt-16 grid gap-px overflow-hidden rounded-sm border border-border bg-border md:grid-cols-3">
           {values.map((v, i) => (
-            <div key={i} className="bg-background p-8 md:p-10">
+            <div key={i} className="bg-background p-7 sm:p-8 md:p-10">
               <div className="text-sm font-medium text-primary">0{i + 1}</div>
-              <h3 className="mt-6 text-xl font-semibold tracking-tight">{v.title}</h3>
-              <p className="mt-4 text-sm leading-relaxed text-muted-foreground">{v.body}</p>
+              <h3 className="mt-5 sm:mt-6 text-lg sm:text-xl font-semibold leading-snug tracking-tight">{v.title}</h3>
+              <p className="mt-3 sm:mt-4 text-[15px] leading-[1.7] text-muted-foreground sm:text-sm sm:leading-relaxed">{v.body}</p>
             </div>
           ))}
         </div>
@@ -321,20 +321,20 @@ const steps = [
 function HowItWorks() {
   return (
     <section id="how" className="border-b border-border/60 bg-secondary/40">
-      <div className="mx-auto max-w-6xl px-6 py-24 md:py-32">
+      <div className="mx-auto max-w-6xl px-5 py-20 sm:px-6 sm:py-24 md:py-32">
         <div className="max-w-2xl">
           <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">How it works</p>
-          <h2 className="mt-4 text-3xl font-semibold tracking-tight md:text-5xl">
+          <h2 className="mt-4 text-[1.75rem] sm:text-3xl font-semibold leading-[1.2] tracking-tight md:text-5xl">
             From sign-up to sitting across the table.
           </h2>
         </div>
-        <div className="mt-16 grid gap-12 md:grid-cols-4 md:gap-8">
+        <div className="mt-12 sm:mt-16 grid gap-10 sm:gap-12 md:grid-cols-4 md:gap-8">
           {steps.map((s) => (
             <div key={s.n}>
               <div className="text-sm font-medium text-primary">{s.n}</div>
               <div className="mt-4 h-px w-full bg-border" />
-              <h3 className="mt-6 text-lg font-semibold tracking-tight">{s.title}</h3>
-              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{s.body}</p>
+              <h3 className="mt-5 sm:mt-6 text-lg font-semibold leading-snug tracking-tight">{s.title}</h3>
+              <p className="mt-3 text-[15px] leading-[1.7] text-muted-foreground sm:text-sm sm:leading-relaxed">{s.body}</p>
             </div>
           ))}
         </div>
@@ -356,14 +356,14 @@ const compareRows = [
 function Compare() {
   return (
     <section id="compare" className="border-b border-border/60">
-      <div className="mx-auto max-w-6xl px-6 py-24 md:py-32">
+      <div className="mx-auto max-w-6xl px-5 py-20 sm:px-6 sm:py-24 md:py-32">
         <div className="max-w-2xl">
           <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Compare</p>
-          <h2 className="mt-4 text-3xl font-semibold tracking-tight md:text-5xl">
+          <h2 className="mt-4 text-[1.75rem] sm:text-3xl font-semibold leading-[1.2] tracking-tight md:text-5xl">
             Why linQ beats traditional matching.
           </h2>
         </div>
-        <div className="mt-16 overflow-hidden rounded-sm border border-border">
+        <div className="mt-12 sm:mt-16 overflow-x-auto overflow-hidden rounded-sm border border-border">
           <div className="grid grid-cols-3 border-b border-border bg-secondary/50 text-xs font-medium uppercase tracking-wider text-muted-foreground">
             <div className="p-5"></div>
             <div className="p-5">Traditional platforms</div>
@@ -409,18 +409,18 @@ const trust = [
 function Trust() {
   return (
     <section id="trust" className="border-b border-border/60 bg-secondary/40">
-      <div className="mx-auto max-w-6xl px-6 py-24 md:py-32">
+      <div className="mx-auto max-w-6xl px-5 py-20 sm:px-6 sm:py-24 md:py-32">
         <div className="max-w-2xl">
           <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Trust & Compliance</p>
-          <h2 className="mt-4 text-3xl font-semibold tracking-tight md:text-5xl">
+          <h2 className="mt-4 text-[1.75rem] sm:text-3xl font-semibold leading-[1.2] tracking-tight md:text-5xl">
             Privacy is the product.
           </h2>
         </div>
-        <div className="mt-16 grid gap-10 md:grid-cols-3">
+        <div className="mt-12 sm:mt-16 grid gap-8 sm:gap-10 md:grid-cols-3">
           {trust.map((t, i) => (
             <div key={i} className="border-t border-foreground pt-6">
-              <h3 className="text-lg font-semibold tracking-tight">{t.title}</h3>
-              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{t.body}</p>
+              <h3 className="text-lg font-semibold leading-snug tracking-tight">{t.title}</h3>
+              <p className="mt-3 text-[15px] leading-[1.7] text-muted-foreground sm:text-sm sm:leading-relaxed">{t.body}</p>
             </div>
           ))}
         </div>
@@ -432,8 +432,8 @@ function Trust() {
 function FinalCTA() {
   return (
     <section id="cta" className="border-b border-border/60">
-      <div className="mx-auto max-w-5xl px-6 py-28 text-center md:py-40">
-        <h2 className="text-4xl font-semibold tracking-tight md:text-6xl">
+      <div className="mx-auto max-w-5xl px-5 py-20 text-center sm:px-6 sm:py-28 md:py-40">
+        <h2 className="text-[2.25rem] sm:text-4xl font-semibold leading-[1.1] tracking-tight md:text-6xl">
           <span className="text-gold-glow">Start</span>{" "}
           <span className="font-display text-gold-glow">matching</span>.
           <br />
@@ -466,13 +466,13 @@ function Moments() {
   const loop = [...moments, ...moments];
   return (
     <section id="moments" className="border-b border-border/60">
-      <div className="py-24 md:py-32">
-        <div className="mx-auto max-w-7xl px-6 max-w-2xl">
+      <div className="py-20 sm:py-24 md:py-32">
+        <div className="mx-auto max-w-7xl px-5 sm:px-6 max-w-2xl">
           <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Moments</p>
-          <h2 className="mt-4 text-3xl font-semibold tracking-tight md:text-5xl">
+          <h2 className="mt-4 text-[1.75rem] sm:text-3xl font-semibold leading-[1.2] tracking-tight md:text-5xl">
             <span className="font-display text-gold-glow">Unforgettable</span> great times.
           </h2>
-          <p className="mt-4 text-sm leading-relaxed text-muted-foreground md:text-base">
+          <p className="mt-4 text-[15px] leading-[1.7] text-muted-foreground sm:text-sm sm:leading-relaxed md:text-base">
             Real people. Real meet-ups. Curated by Claude, lived by you.
           </p>
         </div>
