@@ -16,6 +16,7 @@ import { Route as ApiStatsRouteImport } from './routes/api/stats'
 import { Route as ApiLoginRouteImport } from './routes/api/login'
 import { Route as ApiAuthorizeRouteImport } from './routes/api/authorize'
 import { Route as ApiUserMeRouteImport } from './routes/api/user/me'
+import { Route as ApiAiGenerateProfileRouteImport } from './routes/api/ai/generate-profile'
 
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
@@ -52,6 +53,11 @@ const ApiUserMeRoute = ApiUserMeRouteImport.update({
   path: '/api/user/me',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAiGenerateProfileRoute = ApiAiGenerateProfileRouteImport.update({
+  id: '/api/ai/generate-profile',
+  path: '/api/ai/generate-profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -60,6 +66,7 @@ export interface FileRoutesByFullPath {
   '/api/login': typeof ApiLoginRoute
   '/api/stats': typeof ApiStatsRoute
   '/api/waitlist': typeof ApiWaitlistRoute
+  '/api/ai/generate-profile': typeof ApiAiGenerateProfileRoute
   '/api/user/me': typeof ApiUserMeRoute
 }
 export interface FileRoutesByTo {
@@ -69,6 +76,7 @@ export interface FileRoutesByTo {
   '/api/login': typeof ApiLoginRoute
   '/api/stats': typeof ApiStatsRoute
   '/api/waitlist': typeof ApiWaitlistRoute
+  '/api/ai/generate-profile': typeof ApiAiGenerateProfileRoute
   '/api/user/me': typeof ApiUserMeRoute
 }
 export interface FileRoutesById {
@@ -79,6 +87,7 @@ export interface FileRoutesById {
   '/api/login': typeof ApiLoginRoute
   '/api/stats': typeof ApiStatsRoute
   '/api/waitlist': typeof ApiWaitlistRoute
+  '/api/ai/generate-profile': typeof ApiAiGenerateProfileRoute
   '/api/user/me': typeof ApiUserMeRoute
 }
 export interface FileRouteTypes {
@@ -90,6 +99,7 @@ export interface FileRouteTypes {
     | '/api/login'
     | '/api/stats'
     | '/api/waitlist'
+    | '/api/ai/generate-profile'
     | '/api/user/me'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -99,6 +109,7 @@ export interface FileRouteTypes {
     | '/api/login'
     | '/api/stats'
     | '/api/waitlist'
+    | '/api/ai/generate-profile'
     | '/api/user/me'
   id:
     | '__root__'
@@ -108,6 +119,7 @@ export interface FileRouteTypes {
     | '/api/login'
     | '/api/stats'
     | '/api/waitlist'
+    | '/api/ai/generate-profile'
     | '/api/user/me'
   fileRoutesById: FileRoutesById
 }
@@ -118,6 +130,7 @@ export interface RootRouteChildren {
   ApiLoginRoute: typeof ApiLoginRoute
   ApiStatsRoute: typeof ApiStatsRoute
   ApiWaitlistRoute: typeof ApiWaitlistRoute
+  ApiAiGenerateProfileRoute: typeof ApiAiGenerateProfileRoute
   ApiUserMeRoute: typeof ApiUserMeRoute
 }
 
@@ -172,6 +185,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiUserMeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/ai/generate-profile': {
+      id: '/api/ai/generate-profile'
+      path: '/api/ai/generate-profile'
+      fullPath: '/api/ai/generate-profile'
+      preLoaderRoute: typeof ApiAiGenerateProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -182,6 +202,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiLoginRoute: ApiLoginRoute,
   ApiStatsRoute: ApiStatsRoute,
   ApiWaitlistRoute: ApiWaitlistRoute,
+  ApiAiGenerateProfileRoute: ApiAiGenerateProfileRoute,
   ApiUserMeRoute: ApiUserMeRoute,
 }
 export const routeTree = rootRouteImport
