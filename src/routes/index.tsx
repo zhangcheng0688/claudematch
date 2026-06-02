@@ -428,27 +428,22 @@ function FinalCTA() {
   );
 }
 
-const moments = [
-  { src: moment1, name: "Leo & Maya", tag: "Coffee Chat · SF", quote: "AI nailed our vibe. Two hours flew by.", rotate: "-rotate-3" },
-  { src: moment2, name: "Jay & Priya", tag: "Rooftop · NYC", quote: "Way better than juggling 10 Hinge chats.", rotate: "rotate-2" },
-  { src: moment3, name: "Founders Dinner", tag: "Business · Shanghai", quote: "Met my co-founder on linQ. Closed seed in 6 weeks.", rotate: "-rotate-2" },
-  { src: moment4, name: "Alex & Jordan", tag: "Partnership · London", quote: "Skipped 20 LinkedIn DMs. Just met. Just clicked.", rotate: "rotate-1" },
-  { src: moment5, name: "Mia & Daniel", tag: "First Date · Tokyo", quote: "AI picked the place. We picked each other.", rotate: "-rotate-1" },
-  { src: moment6, name: "Game Night Crew", tag: "Local Friends · Austin", quote: "Found my Sunday people in one tap.", rotate: "rotate-3" },
-];
-
 function Moments() {
+  const { lang, t } = useLang();
+  const imgs = [moment1, moment2, moment3, moment4, moment5, moment6];
+  const rotates = ["-rotate-3", "rotate-2", "-rotate-2", "rotate-1", "-rotate-1", "rotate-3"];
+  const moments = momentsI18n[lang].map((m, i) => ({ ...m, src: imgs[i], rotate: rotates[i] }));
   const loop = [...moments, ...moments];
   return (
     <section id="moments" className="border-b border-border/60">
       <div className="py-20 sm:py-24 md:py-32">
         <div className="mx-auto max-w-7xl px-5 sm:px-6 max-w-2xl">
-          <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Moments</p>
+          <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">{t("moments_kicker")}</p>
           <h2 className="mt-4 text-[1.75rem] sm:text-3xl font-semibold leading-[1.2] tracking-tight md:text-5xl">
-            <span className="font-display text-gold-glow">Unforgettable</span> great times.
+            <span className="font-display text-gold-glow">{t("moments_title1")}</span> {t("moments_title2")}
           </h2>
           <p className="mt-4 text-[15px] leading-[1.7] text-muted-foreground sm:text-sm sm:leading-relaxed md:text-base">
-            Real people. Real meet-ups. Curated by Claude, lived by you.
+            {t("moments_desc")}
           </p>
         </div>
         <div
