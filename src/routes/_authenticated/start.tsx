@@ -518,8 +518,9 @@ function PlanCard({
       <div className="grid gap-4 sm:grid-cols-2">
         {p.when && <PlanRow icon={Calendar} label={t("When", "时间")} value={p.when} />}
         {p.where && <PlanRow icon={MapPin} label={t("Where", "地点")} value={p.where} />}
-        {p.activity && <PlanRow icon={Sparkles} label={t("Activity", "活动")} value={p.activity} />}
-        {p.duration && <PlanRow icon={Calendar} label={t("Duration", "时长")} value={p.duration} />}
+        {p.dress_code && (
+          <PlanRow icon={Sparkles} label={t("Dress code", "着装")} value={p.dress_code} />
+        )}
       </div>
       {p.icebreakers && p.icebreakers.length > 0 && (
         <div>
@@ -532,18 +533,6 @@ function PlanCard({
               </li>
             ))}
           </ul>
-        </div>
-      )}
-      {p.vibe_tip && (
-        <p className="text-xs text-muted-foreground italic">"{p.vibe_tip}"</p>
-      )}
-      {p.first_message && (
-        <div className="rounded-sm border border-border bg-background/60 p-4">
-          <div className="mb-2 flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
-            <MessageSquare className="h-3.5 w-3.5" />
-            {t("First message", "首条消息")}
-          </div>
-          <p className="text-sm">{p.first_message}</p>
         </div>
       )}
     </div>
