@@ -80,9 +80,9 @@ export const translations: Record<Lang, Dict> = {
   },
   zh: {
     nav_why: "为什么选 linQ",
-    nav_how: "运作方式",
-    nav_moments: "瞬间",
-    nav_compare: "对比",
+    nav_how: "​经营模式",
+    nav_moments: "精彩瞬间",
+    nav_compare: "产品定位",
     nav_trust: "信任",
     nav_support: "7×24 客服",
     nav_getStarted: "开始使用",
@@ -113,9 +113,9 @@ export const translations: Record<Lang, Dict> = {
     send_terms: "继续即表示同意我们的条款与隐私政策。",
     values_kicker: "为什么选 linQ",
     values_title: "基于真实行为的全新匹配方式。",
-    how_kicker: "运作方式",
+    how_kicker: "​经营模式",
     how_title: "从注册到面对面只差一步。",
-    compare_kicker: "对比",
+    compare_kicker: "产品定位",
     compare_title: "为何 linQ 超越传统匹配。",
     compare_col_trad: "传统平台",
     compare_col_linq: "linQ",
@@ -125,7 +125,7 @@ export const translations: Record<Lang, Dict> = {
     cta_matching: "匹配",
     cta_real: "这一次,来真的。",
     cta_btn: "开始匹配",
-    moments_kicker: "瞬间",
+    moments_kicker: "精彩瞬间",
     moments_title1: "难忘的",
     moments_title2: "美好时光。",
     moments_desc: "真实的人,真实的相见。由 Claude 精心策划,由你亲身经历。",
@@ -135,7 +135,7 @@ export const translations: Record<Lang, Dict> = {
     footer_resources: "资源",
     footer_support: "支持",
     footer_careers: "招聘",
-    footer_manifesto: "宣言",
+    footer_manifesto: "理念",
     footer_press: "媒体资料",
     footer_blog: "博客",
     footer_chat: "7×24 在线客服",
@@ -162,7 +162,7 @@ export const valuesI18n = {
   zh: [
     { title: "零负担 AI 档案", body: "无需填表,无需贴标签。AI 默默从你的行为中理解你真正是谁 —— 而不是你如何描述自己。" },
     { title: "三大场景,一个平台", body: "商业合作、约会、本地伙伴。一个账号覆盖你需要的所有人际连接。" },
-    { title: "AI 见面副驾", body: "从匹配到见面 —— linQ 为整场约会规划一切。不再有尴尬寒暄,不再放鸽子,只有真实的结果。" },
+    { title: "AI保驾护航", body: "从匹配到见面 —— linQ 为整场约会规划一切。不再有尴尬寒暄,不再放鸽子,只有真实的结果。" },
   ],
 };
 
@@ -194,7 +194,7 @@ export const compareRowsI18n = {
   zh: [
     ["档案构建", "Tinder / Hinge —— 无尽滑动与精心包装的人设", "由 Claude 驱动的零负担行为档案"],
     ["真实度", "小红书 · Coffee Chat —— 表演式贴文与过滤后的自己", "源自你真实行为的诚实信号"],
-    ["入门", "小红书 / 微信 —— 填简介、标签、MBTI、兴趣、照片、语音…", "零表单。Claude 读懂你的真实行为。"],
+    ["入门", "社交媒体 —— 简介、标签、MBTI、兴趣、照片、语音…", "零表单。Claude 读懂你的真实行为。"],
     ["获得回复", "微信 —— 加好友、等通过、发 50 条消息,或许能见面", "一键。AI 把现成的邀请同时送达双方。"],
     ["场景", "孤岛 App:LinkedIn 谈事业、Hinge 谈恋爱、Meetup 找朋友", "商业、约会、本地 —— 同一张人际图谱"],
     ["见面成本", "匹配后还要寒暄 100+ 条消息", "AI 规划好见面,你只管赴约。"],
@@ -209,9 +209,9 @@ export const trustI18n = {
     { title: "Explainable AI", body: "Every match comes with reasoning. Fair, auditable, and accountable by design." },
   ],
   zh: [
-    { title: "三层隐私", body: "细粒度授权,跨场景的数据层在物理上彼此隔离。" },
+    { title: "三层隐私管理", body: "细粒度授权,跨场景的数据层在物理上彼此隔离。" },
     { title: "拒绝数据滥用", body: "绝不出售,绝不强制收集。合规是底线,不是目标。" },
-    { title: "可解释的 AI", body: "每一次匹配都有理由可循。公平、可审计、有责可究。" },
+    { title: "监管下的深度AI", body: "每一次匹配都有理由可循。公平、可审计、有责可究。" },
   ],
 };
 

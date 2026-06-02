@@ -533,7 +533,7 @@ function Footer() {
                   </span>
                   {t("footer_chat")}
                 </li>
-                <li><a href="mailto:hi@linq.app" className="inline-flex items-center gap-1.5 text-foreground/80 transition-colors hover:text-primary"><Mail className="h-3.5 w-3.5" /> hi@linq.app</a></li>
+                <li><a href="mailto:hi@linq.app" className="inline-flex items-center gap-1.5 text-foreground/80 transition-colors hover:text-primary"><Mail className="h-3.5 w-3.5" /> {lang === "zh" ? "vip专属会员中心" : "hi@linq.app"}</a></li>
                 <li><a href="#trust" className="text-foreground/80 transition-colors hover:text-primary">{t("footer_trust")}</a></li>
                 <li><a href="#" className="text-foreground/80 transition-colors hover:text-primary">{t("footer_help")}</a></li>
               </ul>
