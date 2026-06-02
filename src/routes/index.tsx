@@ -96,15 +96,15 @@ function Hero() {
           </div>
           <h1 className="text-5xl font-semibold leading-[1.05] tracking-tight md:text-7xl">
             <span className="text-gold-glow">Claude-powered</span>{" "}
-            <span className="font-display text-foreground/95">connections</span>
+            <span className="font-display text-foreground/95 text-[#c90db3]">connections</span>
             <br />
-            <span className="text-foreground/95">for</span>{" "}
+            <span className="text-foreground/95 text-[#c1158d]">for</span>{" "}
             <span className="font-display text-gold-glow">work</span>
             <span className="text-foreground/60">,</span>{" "}
             <span className="font-display text-gold-glow">love</span>
             <span className="text-foreground/60">,</span>{" "}
             <span className="font-display text-gold-glow">life</span>
-            <span className="text-foreground/95">.</span>
+            <span className="text-foreground/95 text-[#c1158d]">.</span>
           </h1>
           <p className="mx-auto mt-8 max-w-2xl leading-relaxed text-muted-foreground md:text-lg text-base whitespace-pre-line">
             Less effort, more meaningful links.{"\n"}Business partners, dating, local friends —
