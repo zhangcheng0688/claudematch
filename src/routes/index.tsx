@@ -338,31 +338,23 @@ function HowItWorks() {
   );
 }
 
-const compareRows = [
-  ["Profile building", "Tinder / Hinge — endless swiping & curated personas", "Effortless Claude-powered behavioral profile"],
-  ["Authenticity", "RedNote · Coffee Chat — performative posts & filtered selves", "Honest signals from how you actually behave"],
-  ["Onboarding", "RedNote / WeChat — fill bio, tags, MBTI, hobbies, photos, voice intro…", "Zero forms. Claude reads your real behavior."],
-  ["Getting a reply", "WeChat — add friend, wait for accept, send 50 messages, maybe meet", "One tap. AI sends a ready-to-go invite to both sides."],
-  ["Scenarios", "Siloed apps: LinkedIn for work, Hinge for love, Meetup for friends", "Business, dating & local — one unified graph"],
-  ["Effort to meet", "Match, then 100+ messages of small talk", "AI plans the meet-up. Just show up."],
-  ["Outcome", "Ghosting, flakes, and dead chats", "Real-world dates, deals, and friendships"],
-];
-
 function Compare() {
+  const { lang, t } = useLang();
+  const compareRows = compareRowsI18n[lang];
   return (
     <section id="compare" className="border-b border-border/60">
       <div className="mx-auto max-w-6xl px-5 py-20 sm:px-6 sm:py-24 md:py-32">
         <div className="max-w-2xl">
-          <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">Compare</p>
+          <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">{t("compare_kicker")}</p>
           <h2 className="mt-4 text-[1.75rem] sm:text-3xl font-semibold leading-[1.2] tracking-tight md:text-5xl">
-            Why linQ beats traditional matching.
+            {t("compare_title")}
           </h2>
         </div>
         <div className="mt-12 sm:mt-16 overflow-x-auto overflow-hidden rounded-sm border border-border">
           <div className="grid grid-cols-3 border-b border-border bg-secondary/50 text-xs font-medium uppercase tracking-wider text-muted-foreground">
             <div className="p-5"></div>
-            <div className="p-5">Traditional platforms</div>
-            <div className="p-5 text-foreground">linQ</div>
+            <div className="p-5">{t("compare_col_trad")}</div>
+            <div className="p-5 text-foreground">{t("compare_col_linq")}</div>
           </div>
           {compareRows.map((row, i) => (
             <div
