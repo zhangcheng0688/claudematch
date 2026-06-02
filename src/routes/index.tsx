@@ -94,6 +94,133 @@ function Hero() {
   );
 }
 
+function useCountdown(target: Date) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const id = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(id);
+  }, []);
+  const diff = Math.max(0, target.getTime() - now);
+  const d = Math.floor(diff / 86400000);
+  const h = Math.floor((diff % 86400000) / 3600000);
+  const m = Math.floor((diff % 3600000) / 60000);
+  const s = Math.floor((diff % 60000) / 1000);
+  const pad = (n: number) => n.toString().padStart(2, "0");
+  return { d: pad(d), h: pad(h), m: pad(m), s: pad(s) };
+}
+
+function nextWednesday() {
+  const now = new Date();
+  const day = now.getUTCDay();
+  const daysUntil = (3 - day + 7) % 7 || 7;
+  const next = new Date(now);
+  next.setUTCDate(now.getUTCDate() + daysUntil);
+  next.setUTCHours(19, 0, 0, 0);
+  return next;
+}
+
+function WeeklyDate() {
+  const target = nextWednesday();
+  const { d, h, m, s } = useCountdown(target);
+  const dateLabel = target.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  return (
+    <section id="weekly" className="relative overflow-hidden border-b border-border/60 bg-secondary/30">
+      <div className="absolute inset-0 -z-10 opacity-40" aria-hidden="true"
+        style={{ background: "radial-gradient(60% 50% at 50% 0%, oklch(0.85 0.17 90 / 0.18), transparent 70%)" }} />
+      <div className="mx-auto max-w-6xl px-6 py-24 md:py-32">
+        <div className="grid items-center gap-12 md:grid-cols-2">
+          <div>
+            <p className="text-xs font-medium uppercase tracking-[0.18em] text-primary">Every Wednesday</p>
+            <h2 className="mt-4 font-display text-5xl leading-[0.95] tracking-tight md:text-7xl">
+              <span className="text-gold-glow">Get a date</span>
+              <br />
+              <span className="italic">every week.</span>
+            </h2>
+            <p className="mt-6 max-w-md text-sm leading-relaxed text-muted-foreground md:text-base">
+              One curated match. One ready-to-go plan. Delivered every Wednesday at 7pm —
+              like a standing reservation with someone you'll actually want to meet.
+            </p>
+
+            <div className="mt-10 flex items-end gap-3 font-display text-5xl tracking-tight text-gold-glow md:text-6xl">
+              {[
+                { v: d, l: "days" },
+                { v: h, l: "hrs" },
+                { v: m, l: "min" },
+                { v: s, l: "sec" },
+              ].map((c, i) => (
+                <div key={c.l} className="flex items-end gap-3">
+                  <div className="flex flex-col items-center">
+                    <span className="tabular-nums">{c.v}</span>
+                    <span className="mt-2 text-[10px] font-medium uppercase tracking-[0.2em] text-muted-foreground">{c.l}</span>
+                  </div>
+                  {i < 3 && <span className="pb-6 text-muted-foreground/40">:</span>}
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-6 space-y-1 text-sm text-muted-foreground">
+              <p>Next Match Day: <span className="text-foreground">{dateLabel}</span></p>
+              <p>Already Joined: <span className="text-foreground">156,070</span></p>
+            </div>
+          </div>
+
+          <div className="relative mx-auto flex h-[420px] w-full max-w-md items-center justify-center md:h-[480px]">
+            <div className="absolute inset-0 -z-10 blur-3xl opacity-50"
+              style={{ background: "radial-gradient(40% 40% at 50% 50%, oklch(0.85 0.17 90 / 0.35), transparent 70%)" }} />
+            <figure className="polaroid -rotate-3 w-[240px] md:w-[280px]">
+              <img src={moment2} alt="Weekly match meet-up" loading="lazy" className="aspect-[4/5] w-full object-cover" />
+              <figcaption className="mt-3 px-1 text-left">
+                <div className="text-[10px] font-medium uppercase tracking-wider" style={{ color: "oklch(0.45 0.03 260)" }}>Match Day · Wed</div>
+                <div className="mt-1 text-sm font-medium" style={{ color: "oklch(0.2 0.03 260)" }}>Jay & Priya</div>
+              </figcaption>
+            </figure>
+            <figure className="polaroid rotate-6 absolute right-2 top-8 w-[170px] md:w-[200px]">
+              <img src={moment5} alt="Weekly match meet-up" loading="lazy" className="aspect-square w-full object-cover" />
+            </figure>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function SendRealYou() {
+  return (
+    <section id="send" className="relative overflow-hidden border-b border-border/60">
+      <div className="mx-auto max-w-6xl px-6 py-24 md:py-32">
+        <div className="mx-auto max-w-3xl text-center">
+          <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs text-primary">
+            <Sparkles className="h-3.5 w-3.5" /> One tap. Zero forms.
+          </div>
+          <h2 className="text-4xl font-semibold tracking-tight md:text-6xl">
+            <span className="text-gold-glow">Send the real you</span>
+            <br />
+            <span className="font-display italic text-muted-foreground">to your match.</span>
+          </h2>
+          <p className="mx-auto mt-6 max-w-xl text-sm leading-relaxed text-muted-foreground md:text-base">
+            No curated bio. No filtered selfies. Claude packages the honest signals — how you think,
+            what you care about, how you actually show up — and delivers them to the person on the other side.
+          </p>
+
+          <div className="mt-12 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
+            <a
+              href="#cta"
+              className="group inline-flex h-14 w-full max-w-sm items-center justify-center gap-3 rounded-full bg-background pr-7 pl-3 text-base font-semibold text-primary shadow-[0_8px_40px_-8px_oklch(0.85_0.17_90/0.55)] ring-1 ring-primary/30 transition-all hover:ring-primary/60 sm:w-auto"
+            >
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground">
+                <MessageCircle className="h-5 w-5" />
+              </span>
+              Send Real You to Match
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+            </a>
+          </div>
+          <p className="mt-4 text-xs text-muted-foreground">By continuing, you agree to our Terms & Privacy.</p>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 const values = [
   {
     title: "Effortless AI profile",
