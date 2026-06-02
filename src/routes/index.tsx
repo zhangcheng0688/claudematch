@@ -176,6 +176,8 @@ function WeeklyDate() {
   const target = nextWednesday();
   const { d, h, m, s } = useCountdown(target);
   const dateLabel = target.toLocaleDateString(lang === "zh" ? "zh-CN" : "en-US", { month: "short", day: "numeric", year: "numeric" });
+  const now = new Date();
+  const isMatchDay = now.getUTCDay() === 3 && now.getUTCHours() < 19;
   return (
     <section id="weekly" className="relative overflow-hidden border-b border-border/60 bg-secondary/30">
       <div className="absolute inset-0 -z-10 opacity-40" aria-hidden="true"
@@ -193,6 +195,11 @@ function WeeklyDate() {
               {t("weekly_desc")}
             </p>
 
+            {isMatchDay ? (
+              <p className="mt-8 sm:mt-10 font-display text-2xl sm:text-3xl leading-snug text-gold-glow md:text-4xl">
+                {lang === "zh" ? "今天就是匹配日！你的专属匹配已就绪。" : "Match Day is here! Your curated match is ready."}
+              </p>
+            ) : (
             <div className="mt-8 sm:mt-10 flex items-end gap-2 sm:gap-3 font-display text-4xl sm:text-5xl tracking-tight text-gold-glow md:text-6xl">
               {[
                 { v: d, l: t("weekly_days") },
@@ -209,6 +216,7 @@ function WeeklyDate() {
                 </div>
               ))}
             </div>
+            )}
 
             <div className="mt-6 space-y-1 text-sm text-muted-foreground">
               <p>{t("weekly_next")} <span className="text-foreground">{dateLabel}</span></p>
@@ -255,16 +263,17 @@ function SendRealYou() {
           </p>
 
           <div className="mt-12 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-            <a
-              href="/auth"
-              className="group inline-flex h-14 w-full max-w-sm items-center justify-center gap-3 rounded-full bg-background pr-7 pl-3 text-base font-semibold text-primary shadow-[0_8px_40px_-8px_oklch(0.85_0.17_90/0.55)] ring-1 ring-primary/30 transition-all hover:ring-primary/60 sm:w-auto"
+            <button
+              type="button"
+              disabled
+              aria-disabled="true"
+              className="group inline-flex h-14 w-full max-w-sm cursor-not-allowed items-center justify-center gap-3 rounded-full bg-background pr-7 pl-3 text-base font-semibold text-muted-foreground opacity-70 ring-1 ring-border sm:w-auto"
             >
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground">
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted text-muted-foreground">
                 <MessageCircle className="h-5 w-5" />
               </span>
-              {t("send_cta")}
-              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-            </a>
+              Coming Soon
+            </button>
           </div>
           <p className="mt-4 text-xs text-muted-foreground">{t("send_terms")}</p>
         </div>
