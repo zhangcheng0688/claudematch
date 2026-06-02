@@ -94,7 +94,7 @@ export const Route = createFileRoute("/api/ai/generate-profile")({
 
         const { data, error } = await supabase
           .from("user_profiles")
-          .insert({ user_id: userId, profile_data })
+          .insert({ user_id: userId, profile_data: profile_data as never })
           .select("*")
           .single();
 
