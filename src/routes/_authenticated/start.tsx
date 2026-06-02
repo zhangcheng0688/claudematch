@@ -62,11 +62,8 @@ type MeetPlan = {
     ai?: {
       when?: string;
       where?: string;
-      activity?: string;
-      duration?: string;
+      dress_code?: string;
       icebreakers?: string[];
-      vibe_tip?: string;
-      first_message?: string;
     };
   };
 };
@@ -101,6 +98,7 @@ function StartPage() {
   const [plan, setPlan] = useState<MeetPlan | null>(null);
   const [loading, setLoading] = useState<null | "profile" | "match" | "plan">(null);
   const [err, setErr] = useState<string | null>(null);
+  const [waitlistMsg, setWaitlistMsg] = useState<string | null>(null);
   const [email, setEmail] = useState<string>("");
 
   useEffect(() => {
@@ -145,13 +143,29 @@ function StartPage() {
 
   const findMatches = async () => {
     setErr(null);
+    setWaitlistMsg(null);
+    setPlan(null);
+    setActiveMatch(null);
+    setMatches([]);
     setLoading("match");
     try {
       const res = await authedFetch("/api/ai/match", {
         method: "POST",
         body: JSON.stringify({ scenario, lang }),
       });
-      setMatches((res as { data: MatchRow[] }).data);
+      const r = res as {
+        data: MatchRow[];
+        plan?: MeetPlan;
+        waitlisted?: boolean;
+        message?: string;
+      };
+      setMatches(r.data ?? []);
+      if (r.waitlisted) {
+        setWaitlistMsg(r.message ?? "暂无匹配，已加入等待池。");
+      } else if (r.data?.[0]) {
+        setActiveMatch(r.data[0]);
+        if (r.plan) setPlan(r.plan);
+      }
       setStep(3);
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Failed");
@@ -288,26 +302,35 @@ function StartPage() {
         {step === 3 && (
           <div className="mt-10 space-y-6">
             <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-              <span className="text-gold-glow">{t("Your 3 matches", "你的 3 个匹配")}</span>
+              <span className="text-gold-glow">{t("Your match", "你的匹配")}</span>
             </h2>
-            <p className="text-sm text-muted-foreground">
-              {t("Pick one — AI will draft a thoughtful first meet-up.", "选一个——AI 会为你拟一份贴心的见面方案。")}
-            </p>
-
-            <div className="space-y-4">
-              {matches.map((m) => (
-                <MatchCard
-                  key={m.id}
-                  match={m}
-                  active={activeMatch?.id === m.id}
-                  onPlan={() => planMeet(m)}
-                  loading={loading === "plan" && activeMatch?.id === m.id}
-                  t={t}
-                />
-              ))}
-            </div>
-
-            {plan && activeMatch && <PlanCard plan={plan} match={activeMatch} t={t} />}
+            {waitlistMsg ? (
+              <div className="rounded-sm border border-primary/40 bg-primary/5 p-6 text-sm leading-relaxed">
+                {waitlistMsg}
+              </div>
+            ) : (
+              <>
+                <p className="text-sm text-muted-foreground">
+                  {t(
+                    "linQ matched you 1:1. The meet-up plan is sent to both inboxes.",
+                    "linQ 已为你完成 1 对 1 匹配，见面方案已同步发送至双方邮箱。",
+                  )}
+                </p>
+                <div className="space-y-4">
+                  {matches.map((m) => (
+                    <MatchCard
+                      key={m.id}
+                      match={m}
+                      active={activeMatch?.id === m.id}
+                      onPlan={() => planMeet(m)}
+                      loading={loading === "plan" && activeMatch?.id === m.id}
+                      t={t}
+                    />
+                  ))}
+                </div>
+                {plan && activeMatch && <PlanCard plan={plan} match={activeMatch} t={t} />}
+              </>
+            )}
 
             <div className="pt-4">
               <button
@@ -316,6 +339,7 @@ function StartPage() {
                   setMatches([]);
                   setPlan(null);
                   setActiveMatch(null);
+                  setWaitlistMsg(null);
                 }}
                 className="text-xs text-muted-foreground hover:text-foreground"
               >
