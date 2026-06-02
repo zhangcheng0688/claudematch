@@ -15,10 +15,10 @@ export const Route = createFileRoute("/")({
 
 function Nav() {
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-border/60 bg-background/80 backdrop-blur">
+    <header className="sticky top-0 z-50 w-full border-b border-border/60 bg-background/70 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
         <a href="#" className="text-lg font-semibold tracking-tight">
-          lin<span className="text-primary">Q</span>
+          lin<span className="font-display text-primary text-2xl align-middle">Q</span>
         </a>
         <nav className="hidden items-center gap-8 text-sm text-muted-foreground md:flex">
           <a href="#values" className="transition-colors hover:text-foreground">Why linQ</a>
@@ -28,7 +28,7 @@ function Nav() {
         </nav>
         <a
           href="#cta"
-          className="inline-flex h-9 items-center rounded-sm bg-foreground px-4 text-sm font-medium text-background transition-colors hover:bg-foreground/85"
+          className="inline-flex h-9 items-center rounded-sm bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
         >
           Get Started
         </a>
@@ -39,26 +39,29 @@ function Nav() {
 
 function Hero() {
   return (
-    <section className="border-b border-border/60">
+    <section className="relative border-b border-border/60 overflow-hidden">
       <div className="mx-auto max-w-6xl px-6 py-28 md:py-40">
         <div className="mx-auto max-w-4xl text-center">
-          <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-border px-3 py-1 text-xs text-muted-foreground">
+          <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-border bg-background/40 px-3 py-1 text-xs text-muted-foreground backdrop-blur">
             <span className="h-1.5 w-1.5 rounded-full bg-primary" />
             The AI-native matching platform
           </div>
           <h1 className="text-5xl font-semibold leading-[1.05] tracking-tight md:text-7xl">
-            AI-powered matching
+            <span className="text-gold-glow">AI-powered</span>{" "}
+            <span className="font-display text-gold-glow">connections</span>
             <br />
-            for work, love, and life.
+            for <span className="font-display text-gold-glow">work</span>,{" "}
+            <span className="font-display text-gold-glow">love</span>,{" "}
+            <span className="font-display text-gold-glow">life</span>.
           </h1>
           <p className="mx-auto mt-8 max-w-2xl text-base leading-relaxed text-muted-foreground md:text-lg">
-            Business partners, dating, local friends — one AI connection covers them all.
-            No forms. No tags. Just the real you.
+            Less effort, more meaningful links. Business partners, dating, local friends —
+            one AI connection covers them all. No forms. No tags. Just the real you.
           </p>
           <div className="mt-12 flex items-center justify-center">
             <a
               href="#cta"
-              className="group inline-flex h-12 items-center gap-2 rounded-sm bg-foreground px-7 text-sm font-medium text-background transition-colors hover:bg-foreground/85"
+              className="group inline-flex h-12 items-center gap-2 rounded-sm bg-primary px-7 text-sm font-medium text-primary-foreground shadow-[0_8px_40px_-8px_oklch(0.85_0.17_90/0.55)] transition-colors hover:bg-primary/90"
             >
               Get Started
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
@@ -245,14 +248,15 @@ function FinalCTA() {
     <section id="cta" className="border-b border-border/60">
       <div className="mx-auto max-w-5xl px-6 py-28 text-center md:py-40">
         <h2 className="text-4xl font-semibold tracking-tight md:text-6xl">
-          Start matching.
+          <span className="text-gold-glow">Start</span>{" "}
+          <span className="font-display text-gold-glow">matching</span>.
           <br />
           <span className="text-muted-foreground">For real this time.</span>
         </h2>
         <div className="mt-12 flex items-center justify-center">
           <a
             href="#"
-            className="group inline-flex h-12 items-center gap-2 rounded-sm bg-foreground px-7 text-sm font-medium text-background transition-colors hover:bg-foreground/85"
+            className="group inline-flex h-12 items-center gap-2 rounded-sm bg-primary px-7 text-sm font-medium text-primary-foreground shadow-[0_8px_40px_-8px_oklch(0.85_0.17_90/0.55)] transition-colors hover:bg-primary/90"
           >
             Start Matching
             <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
@@ -269,7 +273,7 @@ function Footer() {
       <div className="mx-auto grid max-w-6xl gap-12 px-6 py-16 md:grid-cols-4">
         <div className="md:col-span-2">
           <div className="text-lg font-semibold tracking-tight">
-            lin<span className="text-primary">Q</span>
+            lin<span className="font-display text-primary text-2xl align-middle">Q</span>
           </div>
           <p className="mt-4 max-w-sm text-sm leading-relaxed text-muted-foreground">
             The AI-native matching platform for business, dating, and local life.
