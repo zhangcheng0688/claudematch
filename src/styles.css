@@ -242,3 +242,18 @@
 .polaroid:hover {
   transform: translateY(-6px) rotate(0deg) scale(1.02);
 }
+
+/* Horizontal marquee for Moments */
+.marquee {
+  display: flex;
+  width: max-content;
+  gap: 2rem;
+  animation: marquee-scroll 60s linear infinite;
+}
+.marquee-wrap:hover .marquee {
+  animation-play-state: paused;
+}
+@keyframes marquee-scroll {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
+}
