@@ -11,7 +11,6 @@ import {
   Loader2,
   Calendar,
   MapPin,
-  MessageSquare,
   LogOut,
   CheckCircle2,
 } from "lucide-react";
