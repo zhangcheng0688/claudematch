@@ -181,10 +181,11 @@ function HowItWorks() {
 }
 
 const compareRows = [
-  ["Profile building", "Tedious forms, curated personas", "Effortless behavioral AI profile"],
-  ["Authenticity", "Performative & filtered", "Honest signals, accurate matches"],
-  ["Scenarios", "Siloed apps for work / love / friends", "Business, dating & local — unified"],
-  ["Outcome", "Match, then disappear", "End-to-end AI guidance until you meet"],
+  ["Profile building", "Tinder / Hinge — endless swiping & curated personas", "Effortless Claude-powered behavioral profile"],
+  ["Authenticity", "RedNote · Coffee Chat — performative posts & filtered selves", "Honest signals from how you actually behave"],
+  ["Scenarios", "Siloed apps: LinkedIn for work, Hinge for love, Meetup for friends", "Business, dating & local — one unified graph"],
+  ["Effort to meet", "Match, then 100+ messages of small talk", "AI plans the meet-up. Just show up."],
+  ["Outcome", "Ghosting, flakes, and dead chats", "Real-world dates, deals, and friendships"],
 ];
 
 function Compare() {
