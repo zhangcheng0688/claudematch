@@ -14,7 +14,155 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      matches: {
+        Row: {
+          created_at: string
+          id: string
+          match_score: number
+          matched_user_id: string
+          scenario: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          match_score?: number
+          matched_user_id: string
+          scenario?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          match_score?: number
+          matched_user_id?: string
+          scenario?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      meet_plans: {
+        Row: {
+          created_at: string
+          id: string
+          match_id: string
+          plan_content: Json
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          match_id: string
+          plan_content?: Json
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          match_id?: string
+          plan_content?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meet_plans_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "matches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_authorizations: {
+        Row: {
+          business: boolean
+          created_at: string
+          dating: boolean
+          id: string
+          partner: boolean
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          business?: boolean
+          created_at?: string
+          dating?: boolean
+          id?: string
+          partner?: boolean
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          business?: boolean
+          created_at?: string
+          dating?: boolean
+          id?: string
+          partner?: boolean
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_profiles: {
+        Row: {
+          created_at: string
+          id: string
+          profile_data: Json
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          profile_data?: Json
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          profile_data?: Json
+          user_id?: string
+        }
+        Relationships: []
+      }
+      waitlist: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          status?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
