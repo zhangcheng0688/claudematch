@@ -57,6 +57,7 @@ export const Route = createFileRoute("/")({
 });
 
 function Nav() {
+  const { lang, setLang, t } = useLang();
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/60 bg-background/70 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
@@ -64,13 +65,32 @@ function Nav() {
           lin<span className="font-display text-primary text-2xl align-middle">Q</span>
         </a>
         <nav className="hidden items-center gap-8 text-sm text-muted-foreground md:flex">
-          <a href="#values" className="transition-colors hover:text-foreground">Why linQ</a>
-          <a href="#how" className="transition-colors hover:text-foreground">How it works</a>
-          <a href="#moments" className="transition-colors hover:text-foreground">Moments</a>
-          <a href="#compare" className="transition-colors hover:text-foreground">Compare</a>
-          <a href="#trust" className="transition-colors hover:text-foreground">Trust</a>
+          <a href="#values" className="transition-colors hover:text-foreground">{t("nav_why")}</a>
+          <a href="#how" className="transition-colors hover:text-foreground">{t("nav_how")}</a>
+          <a href="#moments" className="transition-colors hover:text-foreground">{t("nav_moments")}</a>
+          <a href="#compare" className="transition-colors hover:text-foreground">{t("nav_compare")}</a>
+          <a href="#trust" className="transition-colors hover:text-foreground">{t("nav_trust")}</a>
         </nav>
         <div className="flex items-center gap-3">
+          <div className="inline-flex h-9 items-center rounded-sm border border-border bg-background/60 p-0.5 text-xs">
+            <Globe className="ml-1.5 mr-1 h-3.5 w-3.5 text-muted-foreground" aria-hidden="true" />
+            <button
+              type="button"
+              onClick={() => setLang("en")}
+              className={`h-7 rounded-[3px] px-2 font-medium transition-colors ${lang === "en" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
+              aria-pressed={lang === "en"}
+            >
+              EN
+            </button>
+            <button
+              type="button"
+              onClick={() => setLang("zh")}
+              className={`h-7 rounded-[3px] px-2 font-medium transition-colors ${lang === "zh" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:text-foreground"}`}
+              aria-pressed={lang === "zh"}
+            >
+              中文
+            </button>
+          </div>
           <a
             href="#support"
             className="hidden md:inline-flex h-9 items-center gap-2 rounded-sm border border-primary/40 bg-primary/10 px-3 text-xs font-medium text-primary transition-colors hover:bg-primary/20"
@@ -80,13 +100,13 @@ function Nav() {
               <span className="relative inline-flex h-2 w-2 rounded-full bg-primary" />
             </span>
             <Headphones className="h-3.5 w-3.5" />
-            24/7 Support
+            {t("nav_support")}
           </a>
           <a
             href="#cta"
             className="inline-flex h-9 items-center rounded-sm bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
           >
-            Get Started
+            {t("nav_getStarted")}
           </a>
         </div>
       </div>
