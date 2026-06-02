@@ -11,7 +11,6 @@ import {
   Loader2,
   Calendar,
   MapPin,
-  MessageSquare,
   LogOut,
   CheckCircle2,
 } from "lucide-react";
@@ -62,11 +61,8 @@ type MeetPlan = {
     ai?: {
       when?: string;
       where?: string;
-      activity?: string;
-      duration?: string;
+      dress_code?: string;
       icebreakers?: string[];
-      vibe_tip?: string;
-      first_message?: string;
     };
   };
 };
@@ -101,6 +97,7 @@ function StartPage() {
   const [plan, setPlan] = useState<MeetPlan | null>(null);
   const [loading, setLoading] = useState<null | "profile" | "match" | "plan">(null);
   const [err, setErr] = useState<string | null>(null);
+  const [waitlistMsg, setWaitlistMsg] = useState<string | null>(null);
   const [email, setEmail] = useState<string>("");
 
   useEffect(() => {
@@ -145,13 +142,29 @@ function StartPage() {
 
   const findMatches = async () => {
     setErr(null);
+    setWaitlistMsg(null);
+    setPlan(null);
+    setActiveMatch(null);
+    setMatches([]);
     setLoading("match");
     try {
       const res = await authedFetch("/api/ai/match", {
         method: "POST",
         body: JSON.stringify({ scenario, lang }),
       });
-      setMatches((res as { data: MatchRow[] }).data);
+      const r = res as {
+        data: MatchRow[];
+        plan?: MeetPlan;
+        waitlisted?: boolean;
+        message?: string;
+      };
+      setMatches(r.data ?? []);
+      if (r.waitlisted) {
+        setWaitlistMsg(r.message ?? "暂无匹配，已加入等待池。");
+      } else if (r.data?.[0]) {
+        setActiveMatch(r.data[0]);
+        if (r.plan) setPlan(r.plan);
+      }
       setStep(3);
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Failed");
@@ -288,26 +301,35 @@ function StartPage() {
         {step === 3 && (
           <div className="mt-10 space-y-6">
             <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-              <span className="text-gold-glow">{t("Your 3 matches", "你的 3 个匹配")}</span>
+              <span className="text-gold-glow">{t("Your match", "你的匹配")}</span>
             </h2>
-            <p className="text-sm text-muted-foreground">
-              {t("Pick one — AI will draft a thoughtful first meet-up.", "选一个——AI 会为你拟一份贴心的见面方案。")}
-            </p>
-
-            <div className="space-y-4">
-              {matches.map((m) => (
-                <MatchCard
-                  key={m.id}
-                  match={m}
-                  active={activeMatch?.id === m.id}
-                  onPlan={() => planMeet(m)}
-                  loading={loading === "plan" && activeMatch?.id === m.id}
-                  t={t}
-                />
-              ))}
-            </div>
-
-            {plan && activeMatch && <PlanCard plan={plan} match={activeMatch} t={t} />}
+            {waitlistMsg ? (
+              <div className="rounded-sm border border-primary/40 bg-primary/5 p-6 text-sm leading-relaxed">
+                {waitlistMsg}
+              </div>
+            ) : (
+              <>
+                <p className="text-sm text-muted-foreground">
+                  {t(
+                    "linQ matched you 1:1. The meet-up plan is sent to both inboxes.",
+                    "linQ 已为你完成 1 对 1 匹配，见面方案已同步发送至双方邮箱。",
+                  )}
+                </p>
+                <div className="space-y-4">
+                  {matches.map((m) => (
+                    <MatchCard
+                      key={m.id}
+                      match={m}
+                      active={activeMatch?.id === m.id}
+                      onPlan={() => planMeet(m)}
+                      loading={loading === "plan" && activeMatch?.id === m.id}
+                      t={t}
+                    />
+                  ))}
+                </div>
+                {plan && activeMatch && <PlanCard plan={plan} match={activeMatch} t={t} />}
+              </>
+            )}
 
             <div className="pt-4">
               <button
@@ -316,6 +338,7 @@ function StartPage() {
                   setMatches([]);
                   setPlan(null);
                   setActiveMatch(null);
+                  setWaitlistMsg(null);
                 }}
                 className="text-xs text-muted-foreground hover:text-foreground"
               >
@@ -494,8 +517,9 @@ function PlanCard({
       <div className="grid gap-4 sm:grid-cols-2">
         {p.when && <PlanRow icon={Calendar} label={t("When", "时间")} value={p.when} />}
         {p.where && <PlanRow icon={MapPin} label={t("Where", "地点")} value={p.where} />}
-        {p.activity && <PlanRow icon={Sparkles} label={t("Activity", "活动")} value={p.activity} />}
-        {p.duration && <PlanRow icon={Calendar} label={t("Duration", "时长")} value={p.duration} />}
+        {p.dress_code && (
+          <PlanRow icon={Sparkles} label={t("Dress code", "着装")} value={p.dress_code} />
+        )}
       </div>
       {p.icebreakers && p.icebreakers.length > 0 && (
         <div>
@@ -508,18 +532,6 @@ function PlanCard({
               </li>
             ))}
           </ul>
-        </div>
-      )}
-      {p.vibe_tip && (
-        <p className="text-xs text-muted-foreground italic">"{p.vibe_tip}"</p>
-      )}
-      {p.first_message && (
-        <div className="rounded-sm border border-border bg-background/60 p-4">
-          <div className="mb-2 flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
-            <MessageSquare className="h-3.5 w-3.5" />
-            {t("First message", "首条消息")}
-          </div>
-          <p className="text-sm">{p.first_message}</p>
         </div>
       )}
     </div>
