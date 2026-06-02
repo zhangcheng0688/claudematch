@@ -586,6 +586,7 @@ function Footer() {
 
 function Index() {
   return (
+    <LanguageProvider>
     <div className="min-h-screen bg-background text-foreground">
       <div className="aurora" aria-hidden="true">
         <div className="aurora-extra" />
@@ -613,5 +614,6 @@ function Index() {
       </main>
       <Footer />
     </div>
+    </LanguageProvider>
   );
 }
