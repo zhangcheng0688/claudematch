@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { LanguageProvider, useLang } from "@/lib/i18n";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowRight, Mail, KeyRound, Loader2 } from "lucide-react";
+import { ArrowRight, Mail, KeyRound, Loader2, QrCode, Smartphone } from "lucide-react";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -21,6 +21,7 @@ export const Route = createFileRoute("/auth")({
 function AuthPage() {
   const { lang } = useLang();
   const navigate = useNavigate();
+  const [tab, setTab] = useState<"wechat" | "phone" | "email">("wechat");
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
   const [stage, setStage] = useState<"email" | "code">("email");
@@ -99,13 +100,62 @@ function AuthPage() {
           </h1>
           <p className="mt-3 text-sm text-muted-foreground">
             {t(
-              "We'll email you a one-time verification code. No password needed.",
-              "我们会给你发一封一次性验证码邮件，无需密码。",
+              "Choose your preferred way to sign in. No password needed.",
+              "选择你习惯的登录方式，无需密码。",
             )}
           </p>
         </div>
 
-        {stage === "email" ? (
+        {/* Tabs */}
+        <div className="grid grid-cols-3 gap-1 rounded-sm border border-border bg-background/40 p-1">
+          {([
+            { key: "wechat", icon: QrCode, label: t("WeChat", "微信扫码") },
+            { key: "phone", icon: Smartphone, label: t("Phone", "手机号") },
+            { key: "email", icon: Mail, label: t("Email", "邮箱") },
+          ] as const).map(({ key, icon: Icon, label }) => (
+            <button
+              key={key}
+              type="button"
+              onClick={() => {
+                setTab(key);
+                setErr(null);
+                setMsg(null);
+              }}
+              className={`flex h-10 items-center justify-center gap-1.5 rounded-sm text-xs font-medium transition-colors ${
+                tab === key
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              <Icon className="h-3.5 w-3.5" />
+              {label}
+            </button>
+          ))}
+        </div>
+
+        {tab === "wechat" ? (
+          <ComingSoon
+            icon={<QrCode className="h-10 w-10 text-primary/70" />}
+            title={t("WeChat QR sign-in", "微信扫码登录")}
+            body={t(
+              "Coming soon — we're getting WeChat Open Platform verified. For now, please sign in with email.",
+              "即将开放 —— 微信开放平台资质审核中。请暂时使用邮箱登录。",
+            )}
+            cta={t("Use email instead", "改用邮箱登录")}
+            onCta={() => setTab("email")}
+          />
+        ) : tab === "phone" ? (
+          <ComingSoon
+            icon={<Smartphone className="h-10 w-10 text-primary/70" />}
+            title={t("Phone + SMS code", "手机号 + 短信验证码")}
+            body={t(
+              "Coming soon — SMS provider (Aliyun / Tencent Cloud) being configured. For now, please sign in with email.",
+              "即将开放 —— 短信服务商（阿里云 / 腾讯云）接入中。请暂时使用邮箱登录。",
+            )}
+            cta={t("Use email instead", "改用邮箱登录")}
+            onCta={() => setTab("email")}
+          />
+        ) : stage === "email" ? (
           <form onSubmit={sendCode} className="space-y-4">
             <label className="block text-xs uppercase tracking-wider text-muted-foreground">
               {t("Email", "邮箱")}
@@ -182,5 +232,36 @@ function AuthPage() {
         {err && <p className="text-xs text-destructive">{err}</p>}
       </section>
     </main>
+  );
+}
+
+function ComingSoon({
+  icon,
+  title,
+  body,
+  cta,
+  onCta,
+}: {
+  icon: React.ReactNode;
+  title: string;
+  body: string;
+  cta: string;
+  onCta: () => void;
+}) {
+  return (
+    <div className="flex flex-col items-center gap-4 rounded-sm border border-dashed border-border/80 bg-background/40 px-6 py-10 text-center">
+      {icon}
+      <div>
+        <p className="text-sm font-medium text-foreground">{title}</p>
+        <p className="mt-2 text-xs text-muted-foreground">{body}</p>
+      </div>
+      <button
+        type="button"
+        onClick={onCta}
+        className="text-xs font-medium text-primary hover:underline"
+      >
+        {cta}
+      </button>
+    </div>
   );
 }
