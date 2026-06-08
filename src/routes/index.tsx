@@ -606,7 +606,7 @@ function Footer() {
                   </span>
                   {t("footer_chat")}
                 </li>
-                <li><a href="mailto:hi@linq.app" className="inline-flex items-center gap-1.5 text-foreground/80 transition-colors hover:text-primary"><Mail className="h-3.5 w-3.5" /> {lang === "zh" ? "vip专属会员中心" : "hi@linq.app"}</a></li>
+                <li><a href="mailto:hi@linq.app" className="inline-flex items-center gap-1.5 text-foreground/80 transition-colors hover:text-primary"><Mail className="h-3.5 w-3.5" /> {lang === "zh" ? "vip专属会员中心" : "vip special service"}</a></li>
                 <li><Link to="/trust" className="text-foreground/80 transition-colors hover:text-primary">{t("footer_trust")}</Link></li>
                 <li><a href="#" className="text-foreground/80 transition-colors hover:text-primary">{t("footer_help")}</a></li>
               </ul>
