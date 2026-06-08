@@ -23,10 +23,12 @@ import { Route as ApiStatsRouteImport } from './routes/api/stats'
 import { Route as ApiLoginRouteImport } from './routes/api/login'
 import { Route as ApiAuthorizeRouteImport } from './routes/api/authorize'
 import { Route as AuthenticatedStartRouteImport } from './routes/_authenticated/start'
+import { Route as AuthenticatedMatchRouteImport } from './routes/_authenticated/match'
 import { Route as ApiUserMeRouteImport } from './routes/api/user/me'
 import { Route as ApiAiMeetPlanRouteImport } from './routes/api/ai/meet-plan'
 import { Route as ApiAiMatchRouteImport } from './routes/api/ai/match'
 import { Route as ApiAiGenerateProfileRouteImport } from './routes/api/ai/generate-profile'
+import { Route as AuthenticatedDateIdRouteImport } from './routes/_authenticated/date.$id'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
@@ -100,6 +102,11 @@ const AuthenticatedStartRoute = AuthenticatedStartRouteImport.update({
   path: '/start',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedMatchRoute = AuthenticatedMatchRouteImport.update({
+  id: '/match',
+  path: '/match',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const ApiUserMeRoute = ApiUserMeRouteImport.update({
   id: '/api/user/me',
   path: '/api/user/me',
@@ -119,6 +126,11 @@ const ApiAiGenerateProfileRoute = ApiAiGenerateProfileRouteImport.update({
   id: '/api/ai/generate-profile',
   path: '/api/ai/generate-profile',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedDateIdRoute = AuthenticatedDateIdRouteImport.update({
+  id: '/date/$id',
+  path: '/date/$id',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const LovableEmailQueueProcessRoute =
   LovableEmailQueueProcessRouteImport.update({
@@ -146,11 +158,13 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/trust': typeof TrustRoute
+  '/match': typeof AuthenticatedMatchRoute
   '/start': typeof AuthenticatedStartRoute
   '/api/authorize': typeof ApiAuthorizeRoute
   '/api/login': typeof ApiLoginRoute
   '/api/stats': typeof ApiStatsRoute
   '/api/waitlist': typeof ApiWaitlistRoute
+  '/date/$id': typeof AuthenticatedDateIdRoute
   '/api/ai/generate-profile': typeof ApiAiGenerateProfileRoute
   '/api/ai/match': typeof ApiAiMatchRoute
   '/api/ai/meet-plan': typeof ApiAiMeetPlanRoute
@@ -168,11 +182,13 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/trust': typeof TrustRoute
+  '/match': typeof AuthenticatedMatchRoute
   '/start': typeof AuthenticatedStartRoute
   '/api/authorize': typeof ApiAuthorizeRoute
   '/api/login': typeof ApiLoginRoute
   '/api/stats': typeof ApiStatsRoute
   '/api/waitlist': typeof ApiWaitlistRoute
+  '/date/$id': typeof AuthenticatedDateIdRoute
   '/api/ai/generate-profile': typeof ApiAiGenerateProfileRoute
   '/api/ai/match': typeof ApiAiMatchRoute
   '/api/ai/meet-plan': typeof ApiAiMeetPlanRoute
@@ -192,11 +208,13 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/trust': typeof TrustRoute
+  '/_authenticated/match': typeof AuthenticatedMatchRoute
   '/_authenticated/start': typeof AuthenticatedStartRoute
   '/api/authorize': typeof ApiAuthorizeRoute
   '/api/login': typeof ApiLoginRoute
   '/api/stats': typeof ApiStatsRoute
   '/api/waitlist': typeof ApiWaitlistRoute
+  '/_authenticated/date/$id': typeof AuthenticatedDateIdRoute
   '/api/ai/generate-profile': typeof ApiAiGenerateProfileRoute
   '/api/ai/match': typeof ApiAiMatchRoute
   '/api/ai/meet-plan': typeof ApiAiMeetPlanRoute
@@ -216,11 +234,13 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/terms'
     | '/trust'
+    | '/match'
     | '/start'
     | '/api/authorize'
     | '/api/login'
     | '/api/stats'
     | '/api/waitlist'
+    | '/date/$id'
     | '/api/ai/generate-profile'
     | '/api/ai/match'
     | '/api/ai/meet-plan'
@@ -238,11 +258,13 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/terms'
     | '/trust'
+    | '/match'
     | '/start'
     | '/api/authorize'
     | '/api/login'
     | '/api/stats'
     | '/api/waitlist'
+    | '/date/$id'
     | '/api/ai/generate-profile'
     | '/api/ai/match'
     | '/api/ai/meet-plan'
@@ -261,11 +283,13 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/terms'
     | '/trust'
+    | '/_authenticated/match'
     | '/_authenticated/start'
     | '/api/authorize'
     | '/api/login'
     | '/api/stats'
     | '/api/waitlist'
+    | '/_authenticated/date/$id'
     | '/api/ai/generate-profile'
     | '/api/ai/match'
     | '/api/ai/meet-plan'
@@ -398,6 +422,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedStartRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/match': {
+      id: '/_authenticated/match'
+      path: '/match'
+      fullPath: '/match'
+      preLoaderRoute: typeof AuthenticatedMatchRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/api/user/me': {
       id: '/api/user/me'
       path: '/api/user/me'
@@ -426,6 +457,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAiGenerateProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/date/$id': {
+      id: '/_authenticated/date/$id'
+      path: '/date/$id'
+      fullPath: '/date/$id'
+      preLoaderRoute: typeof AuthenticatedDateIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/lovable/email/queue/process': {
       id: '/lovable/email/queue/process'
       path: '/lovable/email/queue/process'
@@ -451,11 +489,15 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedMatchRoute: typeof AuthenticatedMatchRoute
   AuthenticatedStartRoute: typeof AuthenticatedStartRoute
+  AuthenticatedDateIdRoute: typeof AuthenticatedDateIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedMatchRoute: AuthenticatedMatchRoute,
   AuthenticatedStartRoute: AuthenticatedStartRoute,
+  AuthenticatedDateIdRoute: AuthenticatedDateIdRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
