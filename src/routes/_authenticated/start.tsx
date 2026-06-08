@@ -2,6 +2,9 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { LanguageProvider, useLang } from "@/lib/i18n";
 import { supabase } from "@/integrations/supabase/client";
+import { MatchCard } from "@/components/shared/MatchCard";
+import { PlanCard } from "@/components/shared/PlanCard";
+import type { Scenario, Profile, MatchRow, MeetPlan } from "@/types/match";
 import {
   ArrowRight,
   Briefcase,
@@ -9,8 +12,6 @@ import {
   Users,
   Sparkles,
   Loader2,
-  Calendar,
-  MapPin,
   LogOut,
   CheckCircle2,
 } from "lucide-react";
@@ -23,54 +24,6 @@ export const Route = createFileRoute("/_authenticated/start")({
     </LanguageProvider>
   ),
 });
-
-type Scenario = "business" | "dating" | "partner";
-
-type Profile = {
-  id: string;
-  profile_data: {
-    ai?: {
-      summary?: string;
-      traits?: Record<string, number>;
-      interests?: string[];
-      communication_style?: string;
-      looking_for?: string;
-      ideal_match?: string;
-    };
-  };
-};
-
-type MatchRow = {
-  id: string;
-  match_score: number;
-  scenario: string;
-  details: {
-    name?: string;
-    age?: number;
-    city?: string;
-    headline?: string;
-    bio?: string;
-    shared_interests?: string[];
-    reason?: string;
-  };
-};
-
-type MeetPlan = {
-  id: string;
-  plan_content: {
-    ai?: {
-      when?: string;
-      where?: string;
-      location_intro?: string;
-      dress_code?: string;
-      icebreakers?: string[];
-      duration?: string;
-      budget?: string;
-      pitfalls?: string[];
-      highlights?: string[];
-    };
-  };
-};
 
 async function authedFetch(path: string, init?: RequestInit) {
   const { data } = await supabase.auth.getSession();
@@ -328,11 +281,10 @@ function StartPage() {
                       active={activeMatch?.id === m.id}
                       onPlan={() => planMeet(m)}
                       loading={loading === "plan" && activeMatch?.id === m.id}
-                      t={t}
                     />
                   ))}
                 </div>
-                {plan && activeMatch && <PlanCard plan={plan} match={activeMatch} t={t} />}
+                {plan && activeMatch && <PlanCard plan={plan} match={activeMatch} />}
               </>
             )}
 
@@ -434,161 +386,6 @@ function Row({ label, value }: { label: string; value: string }) {
     <div>
       <dt className="text-xs uppercase tracking-wider text-muted-foreground">{label}</dt>
       <dd className="mt-1">{value}</dd>
-    </div>
-  );
-}
-
-function MatchCard({
-  match,
-  active,
-  loading,
-  onPlan,
-  t,
-}: {
-  match: MatchRow;
-  active: boolean;
-  loading: boolean;
-  onPlan: () => void;
-  t: (en: string, zh: string) => string;
-}) {
-  const d = match.details ?? {};
-  return (
-    <div
-      className={`rounded-sm border p-5 transition-all ${
-        active ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"
-      }`}
-    >
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <div className="flex items-baseline gap-3">
-            <h3 className="text-lg font-semibold tracking-tight">{d.name ?? "Match"}</h3>
-            {d.age && <span className="text-xs text-muted-foreground">{d.age}</span>}
-            {d.city && <span className="text-xs text-muted-foreground">· {d.city}</span>}
-          </div>
-          {d.headline && <p className="mt-1 text-sm text-muted-foreground">{d.headline}</p>}
-        </div>
-        <div className="text-right">
-          <div className="text-2xl font-semibold text-gold-glow tabular-nums">{match.match_score.toFixed(1)}</div>
-          <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{t("Match", "匹配度")}</div>
-        </div>
-      </div>
-      {d.bio && <p className="mt-3 text-sm leading-relaxed">{d.bio}</p>}
-      {d.shared_interests && d.shared_interests.length > 0 && (
-        <div className="mt-3 flex flex-wrap gap-2">
-          {d.shared_interests.map((s) => (
-            <span key={s} className="rounded-full border border-border bg-background/60 px-2.5 py-0.5 text-xs">
-              {s}
-            </span>
-          ))}
-        </div>
-      )}
-      {d.reason && (
-        <p className="mt-3 rounded-sm border-l-2 border-primary/60 bg-primary/5 px-3 py-2 text-xs text-muted-foreground">
-          <span className="font-medium text-primary">{t("Why", "为何匹配")}: </span>
-          {d.reason}
-        </p>
-      )}
-      <div className="mt-4">
-        <button
-          onClick={onPlan}
-          disabled={loading}
-          className="group inline-flex h-10 items-center gap-2 rounded-sm border border-primary/40 bg-primary/10 px-4 text-xs font-medium text-primary transition-colors hover:bg-primary/20 disabled:opacity-60"
-        >
-          {loading ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
-          {t("Plan a meet-up", "生成见面方案")}
-          <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-0.5" />
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function PlanCard({
-  plan,
-  match,
-  t,
-}: {
-  plan: MeetPlan;
-  match: MatchRow;
-  t: (en: string, zh: string) => string;
-}) {
-  const p = plan.plan_content?.ai ?? {};
-  return (
-    <div className="rounded-sm border border-primary/40 bg-gradient-to-br from-primary/10 to-transparent p-6 space-y-4">
-      <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-primary">
-        <Sparkles className="h-3.5 w-3.5" />
-        {t("AI meet-up plan with", "AI 见面方案 ·")} {match.details?.name}
-      </div>
-      <div className="grid gap-4 sm:grid-cols-2">
-        {p.when && <PlanRow icon={Calendar} label={t("When", "时间")} value={p.when} />}
-        {p.where && (
-          <PlanRow
-            icon={MapPin}
-            label={t("Where", "地点")}
-            value={p.location_intro ? `${p.where} · ${p.location_intro}` : p.where}
-          />
-        )}
-        {p.dress_code && (
-          <PlanRow icon={Sparkles} label={t("Dress code", "着装")} value={p.dress_code} />
-        )}
-        {p.duration && (
-          <PlanRow icon={Calendar} label={t("Duration", "时长")} value={p.duration} />
-        )}
-        {p.budget && (
-          <PlanRow icon={Sparkles} label={t("Budget", "人均消费")} value={p.budget} />
-        )}
-      </div>
-      {p.icebreakers && p.icebreakers.length > 0 && (
-        <div>
-          <div className="text-xs uppercase tracking-wider text-muted-foreground">{t("Icebreakers", "破冰开场话术")}</div>
-          <ul className="mt-2 space-y-1.5 text-sm">
-            {p.icebreakers.map((q, i) => (
-              <li key={i} className="flex gap-2">
-                <span className="text-primary">{i + 1}.</span>
-                <span>{q}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-      {p.pitfalls && p.pitfalls.length > 0 && (
-        <div>
-          <div className="text-xs uppercase tracking-wider text-muted-foreground">{t("Pitfalls to avoid", "沟通避坑提醒")}</div>
-          <ul className="mt-2 space-y-1.5 text-sm">
-            {p.pitfalls.map((q, i) => (
-              <li key={i} className="flex gap-2">
-                <span className="text-primary">·</span>
-                <span>{q}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-      {p.highlights && p.highlights.length > 0 && (
-        <div>
-          <div className="text-xs uppercase tracking-wider text-muted-foreground">{t("Why you match", "双方适配亮点")}</div>
-          <ul className="mt-2 space-y-1.5 text-sm">
-            {p.highlights.map((q, i) => (
-              <li key={i} className="flex gap-2">
-                <span className="text-primary">★</span>
-                <span>{q}</span>
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function PlanRow({ icon: Icon, label, value }: { icon: typeof Calendar; label: string; value: string }) {
-  return (
-    <div className="flex items-start gap-3">
-      <Icon className="mt-0.5 h-4 w-4 text-primary" />
-      <div>
-        <div className="text-xs uppercase tracking-wider text-muted-foreground">{label}</div>
-        <div className="text-sm">{value}</div>
-      </div>
     </div>
   );
 }
