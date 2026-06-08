@@ -347,7 +347,29 @@ function ProfileCard({
       gifts: Array<{ what: string; why: string }>;
       risks: Array<{ what: string; impact: string }>;
     };
-    // legacy v1 (kept for back-compat, no longer rendered as primary UI)
+    // v4 fields
+    life_themes?: Array<{ name: string; evidence: string }>;
+    scene_predictions?: Array<{ context: string; behavior: string; why: string }>;
+    growth_stage?: {
+      stage: string;
+      label: string;
+      why: string;
+    };
+    aesthetic_signature?: {
+      preferences: string[];
+      contradiction: string;
+    };
+    defense_mechanisms?: Array<{
+      mechanism: string;
+      when_triggered: string;
+      behavior: string;
+    }>;
+    communication_recipes?: Array<{
+      context: string;
+      recipe: string;
+      avoid: string;
+    }>;
+    // legacy v1
     summary?: string;
     traits?: Record<string, number>;
     interests?: string[];
@@ -365,8 +387,13 @@ function ProfileCard({
   const paradoxes = ai.paradoxes ?? [];
   const archetypes = ai.archetypes ?? [];
   const matchSignals = ai.match_signals;
+  const lifeThemes = ai.life_themes ?? [];
+  const scenePredictions = ai.scene_predictions ?? [];
+  const growthStage = ai.growth_stage;
+  const aesthetic = ai.aesthetic_signature;
+  const defenseMechanisms = ai.defense_mechanisms ?? [];
+  const communicationRecipes = ai.communication_recipes ?? [];
 
-  // v1 fallback: derive dimensions from traits if dimensions[] is missing
   const fallbackDimensions = dimensions.length > 0
     ? dimensions
     : Object.entries(ai.traits ?? {}).map(([k, v]) => ({
@@ -400,7 +427,51 @@ function ProfileCard({
         </div>
       )}
 
-      {/* v3 Paradoxes — "你表面想要 vs 实际想要" */}
+      {/* v4 Life themes */}
+      {lifeThemes.length > 0 && (
+        <div>
+          <p className="mb-3 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+            {t("Your life themes", "你正在经历的主题", "你經歷緊嘅主題")}
+          </p>
+          <div className="space-y-2">
+            {lifeThemes.map((lt, i) => (
+              <div
+                key={i}
+                className="rounded-sm border border-rose-500/20 bg-rose-500/5 p-3"
+              >
+                <p className="text-sm font-medium text-rose-300">{lt.name}</p>
+                <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                  {lt.evidence}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* v4 Growth stage */}
+      {growthStage && (
+        <div>
+          <p className="mb-3 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+            {t("Where you are in life", "你现在在哪个阶段", "你而家喺邊個階段")}
+          </p>
+          <div className="rounded-sm border border-amber-500/30 bg-amber-500/5 p-4">
+            <div className="flex items-baseline gap-3">
+              <span className="font-display text-lg font-semibold italic text-amber-300">
+                {growthStage.label}
+              </span>
+              <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                {growthStage.stage}
+              </span>
+            </div>
+            <p className="mt-2 text-sm leading-relaxed text-foreground/90">
+              {growthStage.why}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* v3 Paradoxes */}
       {paradoxes.length > 0 && (
         <div>
           <p className="mb-3 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
@@ -442,7 +513,7 @@ function ProfileCard({
         </div>
       )}
 
-      {/* v3 Archetypes — "你像谁" */}
+      {/* v3 Archetypes */}
       {archetypes.length > 0 && (
         <div>
           <p className="mb-3 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
@@ -471,7 +542,34 @@ function ProfileCard({
         </div>
       )}
 
-      {/* Patterns — the "AI 看到了你没说的" centerpiece */}
+      {/* v4 Scene predictions */}
+      {scenePredictions.length > 0 && (
+        <div>
+          <p className="mb-3 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+            {t("How you'll actually behave", "你在这些场景会怎么表现", "你喺呢啲場景會點做")}
+          </p>
+          <div className="space-y-3">
+            {scenePredictions.map((sp, i) => (
+              <div
+                key={i}
+                className="rounded-sm border border-cyan-500/30 bg-cyan-500/5 p-4"
+              >
+                <p className="text-[10px] font-medium uppercase tracking-wider text-cyan-400">
+                  {sp.context}
+                </p>
+                <p className="mt-2 text-sm leading-relaxed text-foreground/95">
+                  {sp.behavior}
+                </p>
+                <p className="mt-1 text-[11px] italic text-muted-foreground">
+                  — {sp.why}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Patterns */}
       {patterns.length > 0 && (
         <div>
           <p className="mb-3 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
@@ -521,7 +619,7 @@ function ProfileCard({
         </div>
       )}
 
-      {/* Dimensions — 5 axes with `why` explanations + behavioral signals */}
+      {/* Dimensions */}
       {fallbackDimensions.length > 0 && (
         <div>
           <p className="mb-3 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
@@ -571,7 +669,92 @@ function ProfileCard({
         </div>
       )}
 
-      {/* v3 Match signals — needs / gifts / risks */}
+      {/* v4 Aesthetic signature */}
+      {aesthetic && (aesthetic.preferences.length > 0 || aesthetic.contradiction) && (
+        <div>
+          <p className="mb-3 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+            {t("Your aesthetic signature", "你的审美指纹", "你嘅審美指紋")}
+          </p>
+          <div className="rounded-sm border border-fuchsia-500/30 bg-fuchsia-500/5 p-4">
+            {aesthetic.preferences.length > 0 && (
+              <ul className="space-y-1">
+                {aesthetic.preferences.map((p, i) => (
+                  <li
+                    key={i}
+                    className="text-sm text-foreground/95 before:mr-2 before:text-fuchsia-400 before:content-['◆']"
+                  >
+                    {p}
+                  </li>
+                ))}
+              </ul>
+            )}
+            {aesthetic.contradiction && (
+              <p className="mt-3 border-t border-fuchsia-500/20 pt-2 text-xs italic leading-relaxed text-muted-foreground">
+                {aesthetic.contradiction}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* v4 Defense mechanisms */}
+      {defenseMechanisms.length > 0 && (
+        <div>
+          <p className="mb-3 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+            {t("How you defend", "你的心理防御", "你嘅心理防禦")}
+          </p>
+          <div className="space-y-2">
+            {defenseMechanisms.map((dm, i) => (
+              <div
+                key={i}
+                className="rounded-sm border border-orange-500/30 bg-orange-500/5 p-3"
+              >
+                <p className="text-sm font-medium text-orange-300">
+                  {dm.mechanism}
+                </p>
+                <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                  <span className="text-orange-400/80">
+                    {t("Trigger:", "触发：", "觸發：")}
+                  </span>{" "}
+                  {dm.when_triggered}
+                </p>
+                <p className="mt-1 text-xs leading-relaxed text-foreground/85">
+                  {dm.behavior}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* v4 Communication recipes */}
+      {communicationRecipes.length > 0 && (
+        <div>
+          <p className="mb-3 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+            {t("How to talk to you", "跟你沟通的最佳方式", "同你傾偈嘅最佳方式")}
+          </p>
+          <div className="space-y-2">
+            {communicationRecipes.map((r, i) => (
+              <div
+                key={i}
+                className="rounded-sm border border-teal-500/30 bg-teal-500/5 p-3"
+              >
+                <p className="text-[10px] font-medium uppercase tracking-wider text-teal-400">
+                  {r.context}
+                </p>
+                <p className="mt-1 text-sm text-foreground/95">
+                  <span className="text-emerald-400/90">+</span> {r.recipe}
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  <span className="text-rose-400/80">−</span> {r.avoid}
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* v3 Match signals */}
       {matchSignals &&
         (matchSignals.needs.length > 0 ||
           matchSignals.gifts.length > 0 ||
@@ -636,7 +819,7 @@ function ProfileCard({
           </div>
         )}
 
-      {/* Interests (v1 compat) */}
+      {/* Interests (legacy) */}
       {interests.length > 0 && (
         <div>
           <p className="mb-2 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">

@@ -114,6 +114,12 @@ export const Route = createFileRoute("/api/ai/match")({
         // asked for a single `reason` field which produced surface-level
         // "you both like X" outputs. The 5-axis split forces the model
         // to think about each layer of compatibility independently.
+        //
+        // v4: two-round pipeline. Round 1 = the 5-axis analysis + meet plan
+        // (the same as v3 but bigger). Round 2 = timeline / conversation
+        // arc / follow-up / paradox resolution. Splitting these rounds
+        // forces the model to do *separate* reasoning for each rather
+        // than collapsing them into one shallow paragraph.
         const sys =
           "你是 linQ 的 AI 匹配引擎 —— 一个比任何交友 App 都更懂关系的角色。\n\n任务：\n1. 从候选人中挑出最匹配的 1 位\n2. 不仅写「匹配理由」(那是 surface)，要分析 5 个层面：\n   - resonance（共鸣）—— 表面上的共同点之外的深层契合\n   - complementarity（互补）—— 哪里互相补足\n   - friction（摩擦）—— 哪里会起冲突（必须真实，不回避）\n   - chemistry（化学反应）—— 见面头 10 分钟会发生什么\n   - growth（成长）—— 6 个月后你们会让对方变成什么样\n3. 生成详细的首次见面方案（meet_plan）\n\n不要'表面贴合'。要写出让人'这说的就是我'的感受。严格输出 JSON。";
         const prompt = `场景: ${SCENARIO_LABEL[scenario]}
@@ -141,6 +147,13 @@ ${candidates.map((c, i) => `[${i}] ${JSON.stringify(c.profile_data)}`).join("\n"
     "in_6_months": string (6 个月后你们会让对方变成什么样 —— 改变、保留、风险),
     "the_third_thing": string (你们在一起后会产生的'第三个东西'，不属于你也不属于 ta，而是关系本身的新产物，例如'一种你们都说不出来但都喜欢的生活方式'")
   },
+  "compatibility_breakdown": {
+    "resonance": number (0-100, 共鸣强度),
+    "complementarity": number (0-100, 互补强度),
+    "friction_risk": number (0-100, 摩擦风险，**这个数值越低越好**),
+    "chemistry": number (0-100, 化学反应强度),
+    "growth_potential": number (0-100, 成长潜力)
+  },
   "shared_interests": string[] (3-6 个共同兴趣标签),
   "meet_plan": {
     "when": string (未来 7 天内,含星期与具体时段),
@@ -163,6 +176,116 @@ ${candidates.map((c, i) => `[${i}] ${JSON.stringify(c.profile_data)}`).join("\n"
           ],
           { json: true, temperature: 0.9, max_tokens: 2400 },
         );
+        const parsed = safeParseJSON<ParsedT>(raw) ?? {};
+
+        // ============================================================
+        // ROUND 2 (v4) — Deep temporal + interaction analysis
+        //   - paradox_resolution: how B's presence specifically addresses
+        //     A's paradoxes (drawn from the latest profile data on A)
+        //   - timeline: 3-month / 6-month / 1-year projection
+        //   - conversation_arc: the 30-minute first-meeting flow
+        //   - follow_up_strategy: day_1 / week_1 / month_1
+        // ============================================================
+        const deepSys = lang === "zh"
+          ? `你是 linQ 的关系动力学引擎。
+
+任务：基于 A 的画像（包括 ta 的矛盾）和被选中的候选人 B 的画像，分析：
+1. A 的某个具体矛盾在 B 身上是怎么被松动/解决的（**不是泛泛的"我们互补"**）
+2. 关系在 3 个月 / 6 个月 / 1 年的演化轨迹（具体到会经历什么阶段）
+3. 第一次见面的 30 分钟对话流程（**不是 3 个破冰话术**，是分段流程：前 5 分钟/5-15/15-25/25-30）
+4. 见面后的跟进策略（**不是"保持联系"这种废话**，是 day 1/week 1/month 1 各自怎么操作）
+
+**关键要求**：
+- 所有内容**必须具体到这两个人** —— 不写"保持真诚"这种泛泛建议
+- 跟进策略**考虑 A 的防御机制和 B 的沟通风格**（来自两人画像）
+- 第一次见面流程**考虑 A 的场景化行为预测**（ta 在陌生场合会怎么反应）
+- 关系时间线**考虑 A 的成长阶段**（如果 A 在"探索期"，3 个月后可能还在探索中）
+
+严格输出 JSON。`
+          : `You are linQ's relationship dynamics engine.
+
+Task: based on A's profile (including ta's paradoxes) and selected candidate B's profile, analyze:
+1. How B's presence specifically loosens/solves one of A's paradoxes (NOT generic 'we complement each other')
+2. Relationship trajectory at 3 months / 6 months / 1 year
+3. First-meeting 30-minute conversation flow (NOT 3 icebreaker questions — segmented flow: 0-5 / 5-15 / 15-25 / 25-30 min)
+4. Post-meeting follow-up strategy (NOT 'keep in touch' — specific day 1 / week 1 / month 1 actions)
+
+Critical: all output must be specific to these two people.
+Strict JSON output.`;
+
+        const deepUserPrompt = lang === "zh"
+          ? `A 的画像：${JSON.stringify(latestProfile.profile_data, null, 2)}
+被选中的 B (候选 ${parsed.best_index ?? 0})：${JSON.stringify(candidates[Math.max(0, Math.min(candidates.length - 1, Number(parsed.best_index ?? 0)))]?.profile_data, null, 2)}
+
+请输出 v4 字段 JSON：
+{
+  "paradox_resolution": {
+    "a_paradox": "A 的一个具体矛盾（**用 A 画像里 paradoxes 数组里的某条**，不是新造的）",
+    "how_b_resolves": "B 是怎么让这个矛盾松动的（**具体到 B 的哪种行为/特质/沟通方式起了作用**，不是泛泛的'B 会理解'）",
+    "why": "为什么 B 能解决（**基于两人画像具体推论**）"
+  },
+  "timeline": [
+    {
+      "phase": "3_months",
+      "what_happens": "3 个月后关系大概是什么状态（具体会经历什么）",
+      "signals_to_watch": "关注哪些信号判断是否健康（**不是泛泛的'注意沟通'**）"
+    },
+    { "phase": "6_months", "what_happens": "...", "signals_to_watch": "..." },
+    { "phase": "1_year", "what_happens": "...", "signals_to_watch": "..." }
+  ],
+  "conversation_arc": {
+    "opening": "前 5 分钟：谁先开口、会说什么、空气是舒服还是紧绷（**考虑 A 的 scene_predictions 中的'在咖啡馆遇到陌生人'那种场景**）",
+    "warming": "5-15 分钟：聊什么会让双方都放松（**避开 A 的 defense_mechanisms 触发的雷区**）",
+    "depth": "15-25 分钟：哪个话题能让 ta 说出真话（**用 A 的 communication_recipes 中的'想表达好感时'反向推——什么话题 ta 会最放松）",
+    "closing": "25-30 分钟：怎么自然结束不尴尬（**给 A 一个具体的'结束信号'和'下一步约定'**）"
+  },
+  "follow_up_strategy": {
+    "day_1": "当晚怎么发消息（**具体到用什么开场、避免什么话题、聊多久**）",
+    "week_1": "第一周怎么维持节奏（**不要泛泛的'保持联系'——具体到第几天做什么、什么时间发、聊什么**）",
+    "month_1": "第一个月怎么判断是否继续（**具体到看哪些信号、看 B 的哪种行为意味着 ta 也有兴趣**）"
+  }
+}`
+          : `A's profile: ${JSON.stringify(latestProfile.profile_data, null, 2)}
+Selected B (candidate ${parsed.best_index ?? 0}): ${JSON.stringify(candidates[Math.max(0, Math.min(candidates.length - 1, Number(parsed.best_index ?? 0)))]?.profile_data, null, 2)}
+
+Output v4 fields JSON:
+{
+  "paradox_resolution": { "a_paradox": "...", "how_b_resolves": "...", "why": "..." },
+  "timeline": [
+    { "phase": "3_months", "what_happens": "...", "signals_to_watch": "..." },
+    { "phase": "6_months", "what_happens": "...", "signals_to_watch": "..." },
+    { "phase": "1_year", "what_happens": "...", "signals_to_watch": "..." }
+  ],
+  "conversation_arc": { "opening": "...", "warming": "...", "depth": "...", "closing": "..." },
+  "follow_up_strategy": { "day_1": "...", "week_1": "...", "month_1": "..." }
+}`;
+
+        const deepRaw = await deepseekChat(
+          [
+            { role: "system", content: deepSys },
+            { role: "user", content: deepUserPrompt },
+          ],
+          { json: true, temperature: 0.9, max_tokens: 2000 },
+        );
+        const deep = safeParseJSON<{
+          paradox_resolution?: {
+            a_paradox?: string;
+            how_b_resolves?: string;
+            why?: string;
+          };
+          timeline?: Array<{ phase: string; what_happens?: string; signals_to_watch?: string }>;
+          conversation_arc?: {
+            opening?: string;
+            warming?: string;
+            depth?: string;
+            closing?: string;
+          };
+          follow_up_strategy?: {
+            day_1?: string;
+            week_1?: string;
+            month_1?: string;
+          };
+        }>(deepRaw) ?? {};
         type ParsedT = {
           best_index?: number;
           match_score?: number;
@@ -182,6 +305,13 @@ ${candidates.map((c, i) => `[${i}] ${JSON.stringify(c.profile_data)}`).join("\n"
             in_6_months?: string;
             the_third_thing?: string;
           };
+          compatibility_breakdown?: {
+            resonance: number;
+            complementarity: number;
+            friction_risk: number;
+            chemistry: number;
+            growth_potential: number;
+          };
           reason?: string;
           meet_plan?: {
             when?: string;
@@ -195,7 +325,7 @@ ${candidates.map((c, i) => `[${i}] ${JSON.stringify(c.profile_data)}`).join("\n"
             highlights?: string[];
           };
         };
-        const parsed = safeParseJSON<ParsedT>(raw) ?? {};
+        const _typedParsed: ParsedT = parsed;
         const bestIdx = Math.max(
           0,
           Math.min(candidates.length - 1, Number(parsed.best_index ?? 0)),
@@ -248,10 +378,16 @@ ${candidates.map((c, i) => `[${i}] ${JSON.stringify(c.profile_data)}`).join("\n"
             in_6_months: parsed.growth?.in_6_months ?? "",
             the_third_thing: parsed.growth?.the_third_thing ?? "",
           },
+          compatibility_breakdown: parsed.compatibility_breakdown ?? null,
+          // v4 deep analysis
+          paradox_resolution: deep.paradox_resolution ?? null,
+          timeline: Array.isArray(deep.timeline) ? deep.timeline : [],
+          conversation_arc: deep.conversation_arc ?? null,
+          follow_up_strategy: deep.follow_up_strategy ?? null,
           // legacy (back-compat with /match detail page that may still read it)
           reason: parsed.reason ?? "",
           is_real_user: true,
-          ai_provider: raw ? "deepseek" : "fallback",
+          ai_provider: raw ? "deepseek-2round" : "fallback",
         };
 
         // 5) Persist match for requester + reverse row for the matched user.

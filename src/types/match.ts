@@ -76,10 +76,68 @@ export type AiMatchSignals = {
   risks: Array<{ what: string; impact: string }>;
 };
 
+/** v4: 人生主题 —— ta 正在经历/经历过的核心叙事 */
+export type AiLifeTheme = {
+  /** 主题名（如"逃离原生家庭"、"建构自我"） */
+  name: string;
+  /** 1 句解释 + 引用 */
+  evidence: string;
+};
+
+/** v4: 场景行为预测 —— ta 在具体场景下会怎么表现 */
+export type AiScenePrediction = {
+  /** 场景描述（如"周三晚上 9 点独自在家"） */
+  context: string;
+  /** 预测行为 */
+  behavior: string;
+  /** 为什么（基于画像推断） */
+  why: string;
+};
+
+/** v4: 人生阶段 */
+export type AiGrowthStage = {
+  /** 4 选 1 */
+  stage: "exploration" | "construction" | "transition" | "integration";
+  /** 中文标签（用于 UI 展示） */
+  label: string;
+  /** 为什么 ta 在这个阶段 */
+  why: string;
+};
+
+/** v4: 审美指纹 */
+export type AiAestheticSignature = {
+  /** 偏好模式（3-5 条） */
+  preferences: string[];
+  /** 矛盾点（ta 自己在审美/价值观上的冲突） */
+  contradiction: string;
+};
+
+/** v4: 心理防御机制 */
+export type AiDefenseMechanism = {
+  /** 机制名（如"理智化"、"反向形成"） */
+  mechanism: string;
+  /** 何时被触发 */
+  when_triggered: string;
+  /** 外显行为 */
+  behavior: string;
+};
+
+/** v4: 沟通建议 —— 在不同场景下 ta 的最优沟通方式 */
+export type AiCommunicationRecipe = {
+  /** 场景（如"被误解时"） */
+  context: string;
+  /** 推荐做法 */
+  recipe: string;
+  /** 应避免 */
+  avoid: string;
+};
+
 /**
  * AI 画像结构。
  * 2026-06-08 v2：新增 headline / narrative / patterns / dimensions
  * 2026-06-08 v3：新增 paradoxes / archetypes / match_signals / dimensions.signals
+ * 2026-06-08 v4：新增 life_themes / scene_predictions / growth_stage /
+ *                aesthetic_signature / defense_mechanisms / communication_recipes
  * 老字段（summary / traits / interests / communication_style / looking_for / ideal_match）
  * 保留在 schema 中做向后兼容，但 UI 不再展示。
  */
@@ -100,6 +158,13 @@ export type AiProfile = {
   paradoxes?: AiParadox[];
   archetypes?: AiArchetype[];
   match_signals?: AiMatchSignals;
+  /** v4 字段 */
+  life_themes?: AiLifeTheme[];
+  scene_predictions?: AiScenePrediction[];
+  growth_stage?: AiGrowthStage;
+  aesthetic_signature?: AiAestheticSignature;
+  defense_mechanisms?: AiDefenseMechanism[];
+  communication_recipes?: AiCommunicationRecipe[];
 };
 
 export type Profile = {
@@ -113,6 +178,57 @@ export type Profile = {
     ai_provider?: "deepseek" | "fallback";
     generated_at?: string;
   };
+};
+
+/** v4: A 的矛盾在 B 身上的解决路径 */
+export type AiParadoxResolution = {
+  /** A 的具体矛盾 */
+  a_paradox: string;
+  /** B 是怎么让这个矛盾松动的（具体到行为） */
+  how_b_resolves: string;
+  /** 为什么 B 能解决（基于两人画像） */
+  why: string;
+};
+
+/** v4: 关系时间线 */
+export type AiTimelinePoint = {
+  /** phase label */
+  phase: "3_months" | "6_months" | "1_year";
+  /** 这段时间会怎么样 */
+  what_happens: string;
+  /** 关注什么信号（怎么判断是否健康） */
+  signals_to_watch: string;
+};
+
+/** v4: 第一次见面对话流程 */
+export type AiConversationArc = {
+  /** 前 5 分钟：谁先开口 / 说什么 / 空气感 */
+  opening: string;
+  /** 5-15 分钟：聊什么会让双方都放松 */
+  warming: string;
+  /** 15-25 分钟：哪个话题能让 ta 说出真话 */
+  depth: string;
+  /** 25-30 分钟：怎么自然结束（不尴尬） */
+  closing: string;
+};
+
+/** v4: 见面后跟进策略 */
+export type AiFollowUpStrategy = {
+  /** 当晚怎么发消息 */
+  day_1: string;
+  /** 第一周怎么维持节奏 */
+  week_1: string;
+  /** 第一个月怎么判断是否继续 */
+  month_1: string;
+};
+
+/** v4: 多维度兼容性评分 */
+export type AiCompatibilityBreakdown = {
+  resonance: number;
+  complementarity: number;
+  friction_risk: number;
+  chemistry: number;
+  growth_potential: number;
 };
 
 /** One match row. `details` carries the user-facing fields the AI returned. */
@@ -138,6 +254,12 @@ export type MatchDetails = {
     in_6_months?: string;
     the_third_thing?: string;
   };
+  /** v4 deep analysis: paradox resolution, timeline, conversation arc, follow-up */
+  paradox_resolution?: AiParadoxResolution;
+  timeline?: AiTimelinePoint[];
+  conversation_arc?: AiConversationArc;
+  follow_up_strategy?: AiFollowUpStrategy;
+  compatibility_breakdown?: AiCompatibilityBreakdown;
   is_real_user?: boolean;
   ai_provider?: "deepseek" | "fallback";
 };
@@ -147,6 +269,56 @@ export type MatchRow = {
   match_score: number;
   scenario: string;
   details: MatchDetails;
+};
+
+/** v2: 见面方案 v2 —— multi-plan + 场景化设计 + venue 模板 */
+export type AiVenueOption = {
+  /** 场所类型/名称示例（如"xx 区某品牌精品咖啡"） */
+  name_example: string;
+  /** 区域（用户所在城市） */
+  district?: string;
+  /** 为什么这个场所适合这两人 */
+  why: string;
+  /** 步行距离（分钟，从双方中点） */
+  distance_walking_minutes?: number;
+  /** 价格档（人均 ¥） */
+  price_level?: string;
+};
+
+export type AiActivityDesign = {
+  /** 为什么这个活动适合这两人（基于画像） */
+  why_this_activity: string;
+  /** 具体 30 / 60 / 90 分钟活动流程 */
+  flow: {
+    "0_30_min": string;
+    "30_60_min": string;
+    "60_90_min": string;
+  };
+  /** 如果 30 分钟就冷场，怎么切换 */
+  backup_if_bored: string;
+};
+
+export type AiTimeConsiderations = {
+  best_window: string;
+  avoid_window: string;
+  weather_check?: string;
+};
+
+export type AiExitStrategy = {
+  /** 怎么体面结束（"如果 90 分钟感觉不对..."） */
+  natural_close: string;
+  /** 结束时的「下一步约定」 */
+  followup_anchor: string;
+};
+
+export type AiMultiPlan = {
+  id: "A" | "B" | "C";
+  /** 标签（"安静型" / "互动型" / "折中型"） */
+  label: string;
+  /** 1 句话描述 */
+  description: string;
+  /** 这个 plan 的首选 venue */
+  venue_options: AiVenueOption[];
 };
 
 /** AI-generated meet-up plan. */
@@ -163,6 +335,11 @@ export type MeetPlanAi = {
   activity?: string;
   vibe_tip?: string;
   first_message?: string;
+  /** v2 fields */
+  multi_plan?: AiMultiPlan[];
+  activity_design?: AiActivityDesign;
+  time_considerations?: AiTimeConsiderations;
+  exit_strategy?: AiExitStrategy;
 };
 
 export type MeetPlan = {

@@ -194,7 +194,110 @@ Make deep inferences, output JSON:
         const inferred = safeParseJSON<Record<string, unknown>>(inferredRaw) ?? {};
 
         // ============================================================
-        // ROUND 3 — Synthesize (narrative, dimensions, headline — the
+        // ROUND 3 — Scene predictions + life context (v4 additions)
+        //          Predict user behavior in 5 concrete scenes + identify
+        //          their life themes, growth stage, aesthetic signature,
+        //          and defense mechanisms.
+        // ============================================================
+        const sceneSys = lang === "zh"
+          ? `你是一位行为心理学家。
+
+任务：基于事实 + 推断画像，预测用户在 5 个具体生活场景中的真实行为，并识别 ta 的人生主题、当前阶段、审美指纹、心理防御机制、场景化沟通建议。
+
+关键：
+- 场景预测必须具体到「时间+地点+在场人物+预期行为」，不是泛泛"ta 是个 X 性格的人"
+- 人生主题（life_themes）是 ta 正在经历/经历过的核心叙事（如"逃离"、"寻找"、"建构"、"失去"）—— **不是用户职业/兴趣**，是更深的存在性主题
+- 心理防御机制（defense_mechanisms）是 ta 在压力下的下意识反应模式（理智化/反向形成/投射/合理化/回避等）—— **必须基于 ta 的矛盾和维度推断**
+- 沟通建议（communication_recipes）是"在不同场景下 ta 的最优沟通方式"—— **不是"ta 喜欢怎样沟通"**，是"为了达成 X 目的，ta 应该如何沟通"
+
+严格输出 JSON。`
+          : `You are a behavioral psychologist.
+
+Task: based on the fact + inference profile, predict the user's behavior in 5 concrete life scenes, and identify their life themes, growth stage, aesthetic signature, defense mechanisms, and scene-specific communication recipes.
+
+Key:
+- Scene predictions must be specific to time+place+people+expected behavior, not generic personality labels
+- life_themes: core existential narratives the user is living through (escape/seeking/building/loss) — not career/interests
+- defense_mechanisms: subconscious reactions under pressure — derived from paradoxes + dimensions
+- communication_recipes: scene-specific communication advice — "to achieve X, the user should..."
+
+Strict JSON output.`;
+
+        const sceneUserPrompt = lang === "zh"
+          ? `事实画像：${JSON.stringify(facts, null, 2)}
+推断画像：${JSON.stringify(inferred, null, 2)}
+
+请输出 v4 字段 JSON：
+{
+  "life_themes": [
+    { "name": "主题名（如'逃离原生家庭'、'建构自我叙事'、'寻找深层连接'）", "evidence": "1 句证据（基于事实/推断）" }
+  ] (3 条),
+  "scene_predictions": [
+    {
+      "context": "具体场景（如'周三晚上 9 点独自在出租屋'、'在咖啡馆遇到老同事'、'第一次见到对方家长'）",
+      "behavior": "ta 会怎么表现（具体动作/语言/情绪）",
+      "why": "为什么（基于画像推断）"
+    }
+  ] (5 条),
+  "growth_stage": {
+    "stage": "exploration" | "construction" | "transition" | "integration",
+    "label": "中文标签（如'探索期'、'建构期'、'转折期'、'整合期'）",
+    "why": "为什么 ta 在这个阶段（1-2 句）"
+  },
+  "aesthetic_signature": {
+    "preferences": string[] (3-5 条 ta 的审美/价值观模式，如"偏好日式极简而非北欧极简"或"重视真实性胜过表达性"),
+    "contradiction": "ta 在审美/价值观上的内在矛盾（1 句）"
+  },
+  "defense_mechanisms": [
+    { "mechanism": "机制名（如'理智化'、'反向形成'、'回避'、'投射'）", "when_triggered": "何时被触发", "behavior": "外显行为" }
+  ] (2-3 条),
+  "communication_recipes": [
+    { "context": "场景（如'被误解时'、'想拒绝时'、'想表达好感时'）", "recipe": "推荐做法（具体动作）", "avoid": "应避免" }
+  ] (3 条)
+}`
+          : `Fact profile: ${JSON.stringify(facts, null, 2)}
+Inferred profile: ${JSON.stringify(inferred, null, 2)}
+
+Output v4 fields JSON:
+{
+  "life_themes": [
+    { "name": "theme name", "evidence": "1 sentence" }
+  ] (3),
+  "scene_predictions": [
+    {
+      "context": "specific scene",
+      "behavior": "what they'll do",
+      "why": "why"
+    }
+  ] (5),
+  "growth_stage": {
+    "stage": "exploration" | "construction" | "transition" | "integration",
+    "label": "stage label",
+    "why": "why this stage (1-2 sentences)"
+  },
+  "aesthetic_signature": {
+    "preferences": string[] (3-5),
+    "contradiction": "internal contradiction in aesthetics/values (1 sentence)"
+  },
+  "defense_mechanisms": [
+    { "mechanism": "name", "when_triggered": "when", "behavior": "behavior" }
+  ] (2-3),
+  "communication_recipes": [
+    { "context": "scene", "recipe": "recommended action", "avoid": "what to avoid" }
+  ] (3)
+}`;
+
+        const sceneRaw = await deepseekChat(
+          [
+            { role: "system", content: sceneSys },
+            { role: "user", content: sceneUserPrompt },
+          ],
+          { json: true, temperature: 0.9, max_tokens: 2200 },
+        );
+        const sceneFields = safeParseJSON<Record<string, unknown>>(sceneRaw) ?? {};
+
+        // ============================================================
+        // ROUND 4 — Synthesize (narrative, dimensions, headline — the
         //          output the user actually reads)
         // ============================================================
         const dimensionKeysZh = ["决策模式", "信任建立", "能量来源", "冲突处理", "理想匹配"];
@@ -249,7 +352,87 @@ Output final profile JSON:
         const synth = safeParseJSON<Record<string, unknown>>(synthRaw) ?? {};
 
         // ============================================================
-        // Merge the 3 rounds. If synthesis failed, fall back to a v3-shaped
+        // ROUND 5 — Self-critique (the v4 anti-paraphrase mechanism)
+        //
+        // The LLM has now produced: facts, inferences, scene predictions,
+        // and a synthesis. The biggest remaining failure mode is that
+        // patterns / narrative / dimensions still feel like restating
+        // the user's input.
+        //
+        // Here we ask the LLM to step OUT of the role of "AI profiler"
+        // and INTO the role of "the user themselves reading this". For
+        // each field, we ask: "would the user feel 'this AI gets me'?"
+        // If not, we ask it to revise that specific field.
+        //
+        // The output is a JSON with the SAME shape as the synthesis +
+        // scene-fields, but with revised copy where needed. v3 didn't
+        // have this — v4 ships it.
+        // ============================================================
+        const critiqueSys = lang === "zh"
+          ? `你是一位严厉的内部审查员。
+
+任务：审阅上面的画像输出，找出**任何还像 paraphrase（用同义词复述用户输入）的部分**，并**改写到让用户觉得「这说的就是我」**。
+
+**关键判断标准**：
+- 如果某个 pattern 仍然是把用户的话换种说法说出来 → 必须改写
+- 如果某个 dimension 的 why/signals 是「高 X 的人都这样」的泛泛 → 必须改写
+- 如果 narrative 还是把用户输入重新组织一遍 → 必须改写
+- 如果 paradox 看着像刻意造的 → 必须改写
+
+**改写原则**：
+- 每条都加至少一个"用户没说但能看出来"的具体观察
+- 不要再写"对外部世界敏感"这种泛泛的标签 —— 写"在餐桌上被问到'最近怎么样'时，你会先停下来 0.5 秒判断对方是否真想知道"
+- 不要给建议，只描述
+
+输出 JSON（**只输出需要修改的字段**，保持其他字段引用原值）：
+{
+  "headline": "改写后的 headline（如不需要改可省略）",
+  "narrative": "改写后的 narrative（如不需要改可省略）",
+  "patterns": [ "改写后的 pattern insight 列表 ——**只输出 insight 字符串数组**，按原 patterns 顺序覆盖对应位置；不需要改的可以省略" ],
+  "dimensions": [
+    { "key": "原 key", "why": "改写后的 why", "signals": ["改写后的 signal", ...] }
+  ] (只输出需要改的)
+}`
+          : `You are a strict internal reviewer.
+
+Task: audit the profile output above, find any field that still feels like paraphrase (restating user input in different words), and revise it to make the user feel "this AI gets me".
+
+**Decision criteria**:
+- if a pattern is still restating user input in different words -> must rewrite
+- if a dimension's why/signals are generic ("high X people tend to Y") -> must rewrite
+- if narrative just reorganizes user input -> must rewrite
+- if paradox feels manufactured -> must rewrite
+
+**Revision principles**:
+- Each item must add at least one specific observation the user didn't say but a sharp reader would notice
+- Don't write generic labels. Write "when asked at the dinner table 'how are you', you pause 0.5s to judge if they really want to know"
+- Don't give advice, only describe
+
+Output JSON (only output fields that need changing):`;
+
+        const critiqueUserPrompt = lang === "zh"
+          ? `用户原始输入："""${input}"""
+已生成的画像：
+${JSON.stringify({ ...synth, ...sceneFields, ...inferred }, null, 2)}
+
+请审阅并改写（只输出需要改的字段）。注意：你必须确保改写后**每条都引用了用户没说但能推断出的具体观察**，不是复述用户原话。`
+          : `Original user input: """${input}"""
+Generated profile:
+${JSON.stringify({ ...synth, ...sceneFields, ...inferred }, null, 2)}
+
+Audit and revise (only output fields that need changing). Every revised line must add a specific observation the user didn't say but a sharp reader would notice.`;
+
+        const critiqueRaw = await deepseekChat(
+          [
+            { role: "system", content: critiqueSys },
+            { role: "user", content: critiqueUserPrompt },
+          ],
+          { json: true, temperature: 0.7, max_tokens: 2000 },
+        );
+        const critique = safeParseJSON<Record<string, unknown>>(critiqueRaw) ?? {};
+
+        // ============================================================
+        // Merge the 5 rounds. If synthesis failed, fall back to a v4-shaped
         // placeholder so the UI never has to handle a different shape.
         // ============================================================
         const fallback = lang === "zh"
@@ -296,6 +479,35 @@ Output final profile JSON:
                   { what: "在被快速匹配时感到不被理解", impact: "会因为「太快了」而退出对话" },
                 ],
               },
+              life_themes: [
+                { name: "寻找连接", evidence: "你写下了这段话，本身就是寻找的一部分" },
+              ],
+              scene_predictions: [
+                {
+                  context: "周三晚上 9 点独自在家",
+                  behavior: "你会打开手机，反复看这段描述",
+                  why: "你在思考，思考是 ta 充电的方式",
+                },
+              ],
+              growth_stage: { stage: "exploration", label: "探索期", why: "你正在尝试一种新的连接方式" },
+              aesthetic_signature: {
+                preferences: ["偏好深度胜过广度", "重视真实性胜过表达性"],
+                contradiction: "想要被看见，但又不想被太多人看见",
+              },
+              defense_mechanisms: [
+                {
+                  mechanism: "理智化",
+                  when_triggered: "当情绪可能失控时",
+                  behavior: "把感受转化为分析和判断",
+                },
+              ],
+              communication_recipes: [
+                {
+                  context: "想拒绝时",
+                  recipe: "先肯定对方的善意，再用具体边界说明",
+                  avoid: "直接拒绝 + 不解释",
+                },
+              ],
             }
           : {
               headline: "One of a kind",
@@ -340,29 +552,115 @@ Output final profile JSON:
                   { what: "May feel misunderstood when matched quickly", impact: "Will exit conversations that feel 'too fast'" },
                 ],
               },
+              life_themes: [
+                { name: "Seeking connection", evidence: "Your willingness to write at length signals this" },
+              ],
+              scene_predictions: [
+                {
+                  context: "Wednesday 9pm, alone at home",
+                  behavior: "You re-read what you wrote",
+                  why: "Reflection is how you recharge",
+                },
+              ],
+              growth_stage: { stage: "exploration", label: "exploration", why: "You're trying a new way to connect" },
+              aesthetic_signature: {
+                preferences: ["depth over breadth", "authenticity over expression"],
+                contradiction: "wants to be seen, but not by too many",
+              },
+              defense_mechanisms: [
+                { mechanism: "Intellectualization", when_triggered: "When emotions might slip out", behavior: "Converts feelings into analysis" },
+              ],
+              communication_recipes: [
+                { context: "Wanting to decline", recipe: "Affirm the intent, then state a specific boundary", avoid: "Direct refusal with no explanation" },
+              ],
             };
 
         const useFallback = !synth || !synth.headline;
+
+        // Apply Round 5 critique to Round 4 synthesis (in-place revisions).
+        // The critique may revise: headline, narrative, patterns, dimensions.
+        const applyCritique = (base: Record<string, unknown>) => {
+          const out: Record<string, unknown> = { ...base };
+          if (critique.headline && typeof critique.headline === "string") {
+            out.headline = critique.headline;
+          }
+          if (critique.narrative && typeof critique.narrative === "string") {
+            out.narrative = critique.narrative;
+          }
+          // Patterns: critique returns a list of insight strings, in original order.
+          if (Array.isArray(critique.patterns) && Array.isArray(out.patterns)) {
+            const revisedPatterns = (out.patterns as Array<Record<string, unknown>>).map(
+              (p, i) => {
+                const newInsight = (critique.patterns as unknown[])[i];
+                if (typeof newInsight === "string" && newInsight.trim().length > 0) {
+                  return { ...p, insight: newInsight };
+                }
+                return p;
+              },
+            );
+            out.patterns = revisedPatterns;
+          }
+          // Dimensions: critique returns a list of { key, why, signals }.
+          if (Array.isArray(critique.dimensions) && Array.isArray(out.dimensions)) {
+            const revisedDims = (out.dimensions as Array<Record<string, unknown>>).map(
+              (d) => {
+                const match = (critique.dimensions as Array<Record<string, unknown>>).find(
+                  (cd) => cd.key === d.key,
+                );
+                if (match) {
+                  return {
+                    ...d,
+                    why: typeof match.why === "string" ? match.why : d.why,
+                    signals: Array.isArray(match.signals) ? match.signals : d.signals,
+                  };
+                }
+                return d;
+              },
+            );
+            out.dimensions = revisedDims;
+          }
+          return out;
+        };
+
         const ai = useFallback
           ? fallback
           : {
-              headline: synth.headline,
-              narrative: synth.narrative,
-              patterns: inferred.patterns,
-              dimensions: synth.dimensions,
+              ...applyCritique(synth),
+              patterns: (() => {
+                const cPatterns = critique.patterns;
+                if (Array.isArray(cPatterns) && Array.isArray(inferred.patterns)) {
+                  return (inferred.patterns as Array<Record<string, unknown>>).map(
+                    (p, i) => {
+                      const newInsight = (cPatterns as unknown[])[i];
+                      if (typeof newInsight === "string" && newInsight.trim().length > 0) {
+                        return { ...p, insight: newInsight };
+                      }
+                      return p;
+                    },
+                  );
+                }
+                return inferred.patterns;
+              })(),
               paradoxes: inferred.paradoxes,
               archetypes: inferred.archetypes,
               match_signals: inferred.match_signals,
+              // v4 fields (from Round 3)
+              life_themes: sceneFields.life_themes,
+              scene_predictions: sceneFields.scene_predictions,
+              growth_stage: sceneFields.growth_stage,
+              aesthetic_signature: sceneFields.aesthetic_signature,
+              defense_mechanisms: sceneFields.defense_mechanisms,
+              communication_recipes: sceneFields.communication_recipes,
             };
 
         const profile_data = {
-          version: "v3",
+          version: "v4",
           scenario,
           lang,
           input,
           ai,
           facts,
-          ai_provider: useFallback ? "fallback" : "deepseek-3round",
+          ai_provider: useFallback ? "fallback" : "deepseek-5round",
           generated_at: new Date().toISOString(),
         };
 

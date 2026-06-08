@@ -5,8 +5,23 @@
 // chemistry / growth). Each axis is shown as a collapsible detail. The default
 // view surfaces the headline + bio + resonance; clicking "Show deep analysis"
 // reveals the rest.
+//
+// v4 — adds paradox_resolution, timeline, conversation_arc, follow_up_strategy.
+// Plus compatibility_breakdown (5 sub-scores).
 
-import { ArrowRight, Loader2, Sparkles, ChevronDown, Heart, Zap, AlertTriangle, Sparkles as Stars, TrendingUp } from "lucide-react";
+import {
+  ArrowRight,
+  Loader2,
+  Sparkles,
+  ChevronDown,
+  Heart,
+  Zap,
+  AlertTriangle,
+  Sparkles as Stars,
+  TrendingUp,
+  Clock,
+  MessageCircle,
+} from "lucide-react";
 import { useState } from "react";
 import { useLang } from "@/lib/i18n";
 import type { MatchRow } from "@/types/match";
@@ -33,6 +48,11 @@ export function MatchCard({ match, active, loading, onPlan }: MatchCardProps) {
   const friction = d.friction ?? [];
   const chemistry = d.chemistry;
   const growth = d.growth;
+  const paradoxResolution = d.paradox_resolution;
+  const timeline = d.timeline ?? [];
+  const conversationArc = d.conversation_arc;
+  const followUp = d.follow_up_strategy;
+  const breakdown = d.compatibility_breakdown;
 
   return (
     <div
@@ -78,7 +98,40 @@ export function MatchCard({ match, active, loading, onPlan }: MatchCardProps) {
         </div>
       )}
 
-      {/* v3 Resonance (always shown — the strongest signal of fit) */}
+      {/* v4 Compatibility breakdown bars */}
+      {breakdown && (
+        <div className="mt-4 grid grid-cols-5 gap-1.5">
+          {(
+            [
+              { key: "resonance", label: t("Res", "共鸣", "共鳴"), color: "bg-primary" },
+              { key: "complementarity", label: t("Comp", "互补", "互補"), color: "bg-emerald-500" },
+              { key: "friction_risk", label: t("Risk", "摩擦", "摩擦"), color: "bg-rose-500" },
+              { key: "chemistry", label: t("Chem", "反应", "反應"), color: "bg-violet-500" },
+              { key: "growth_potential", label: t("Grow", "成长", "成長"), color: "bg-amber-500" },
+            ] as const
+          ).map(({ key, label, color }) => {
+            const v = Math.max(0, Math.min(100, (breakdown as Record<string, number>)[key] ?? 0));
+            return (
+              <div key={key} className="text-center">
+                <div className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                  {label}
+                </div>
+                <div className="mx-auto mt-1 h-1 w-full overflow-hidden rounded-full bg-border">
+                  <div
+                    className={`h-full ${color}`}
+                    style={{ width: `${v}%` }}
+                  />
+                </div>
+                <div className="mt-0.5 text-[10px] tabular-nums text-muted-foreground">
+                  {v}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* v3 Resonance (always shown) */}
       {resonance.length > 0 && (
         <div className="mt-4 space-y-2">
           <p className="flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wider text-primary">
@@ -95,6 +148,34 @@ export function MatchCard({ match, active, loading, onPlan }: MatchCardProps) {
               </li>
             ))}
           </ul>
+        </div>
+      )}
+
+      {/* v4 Paradox resolution — always shown, the strongest "AI gets us" signal */}
+      {paradoxResolution && paradoxResolution.a_paradox && (
+        <div className="mt-4 rounded-sm border border-amber-500/30 bg-amber-500/5 p-4">
+          <p className="flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wider text-amber-400">
+            {t("How they ease your paradox", "ta 怎么松动你的矛盾", "佢點鬆動你嘅矛盾")}
+          </p>
+          <div className="mt-2 space-y-1.5">
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
+              {t("Your paradox", "你的矛盾", "你嘅矛盾")}
+            </p>
+            <p className="text-sm text-foreground/95">
+              {paradoxResolution.a_paradox}
+            </p>
+            <p className="mt-2 text-[10px] uppercase tracking-wider text-emerald-400">
+              {t("How they resolve it", "ta 怎么松动", "佢點鬆動")}
+            </p>
+            <p className="text-sm text-foreground/95">
+              {paradoxResolution.how_b_resolves}
+            </p>
+            {paradoxResolution.why && (
+              <p className="mt-1 text-[11px] italic text-muted-foreground">
+                — {paradoxResolution.why}
+              </p>
+            )}
+          </div>
         </div>
       )}
 
@@ -180,7 +261,44 @@ export function MatchCard({ match, active, loading, onPlan }: MatchCardProps) {
             </div>
           )}
 
-          {/* Growth */}
+          {/* v4 Conversation arc — 30-min first-meeting flow */}
+          {conversationArc && (
+            <div>
+              <p className="mb-2 flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wider text-cyan-400">
+                <MessageCircle className="h-3 w-3" />
+                {t("The 30-minute first meeting", "第一次见面的 30 分钟", "第一次見面嘅 30 分鐘")}
+              </p>
+              <div className="space-y-1.5">
+                {(
+                  [
+                    { phase: "0-5", key: "opening" as const, label: t("Opening", "前 5 分钟", "前 5 分鐘"), color: "border-cyan-500/40 bg-cyan-500/5" },
+                    { phase: "5-15", key: "warming" as const, label: t("Warming", "5-15 分钟", "5-15 分鐘"), color: "border-cyan-500/40 bg-cyan-500/5" },
+                    { phase: "15-25", key: "depth" as const, label: t("Depth", "15-25 分钟", "15-25 分鐘"), color: "border-cyan-500/40 bg-cyan-500/5" },
+                    { phase: "25-30", key: "closing" as const, label: t("Closing", "25-30 分钟", "25-30 分鐘"), color: "border-cyan-500/40 bg-cyan-500/5" },
+                  ] as const
+                ).map(({ phase, key, label, color }) => {
+                  const text = conversationArc[key];
+                  if (!text) return null;
+                  return (
+                    <div
+                      key={phase}
+                      className={`rounded-sm border-l-2 ${color} px-3 py-2`}
+                    >
+                      <span className="mr-2 text-[10px] font-mono uppercase tracking-wider text-cyan-400">
+                        {phase}m
+                      </span>
+                      <span className="text-[10px] uppercase tracking-wider text-muted-foreground">
+                        {label}:
+                      </span>
+                      <p className="mt-0.5 text-sm leading-relaxed">{text}</p>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Growth + 6 months */}
           {growth && (growth.in_6_months || growth.the_third_thing) && (
             <div>
               <p className="mb-2 flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wider text-amber-400">
@@ -200,6 +318,73 @@ export function MatchCard({ match, active, loading, onPlan }: MatchCardProps) {
                   {growth.the_third_thing}
                 </p>
               )}
+            </div>
+          )}
+
+          {/* v4 Timeline */}
+          {timeline.length > 0 && (
+            <div>
+              <p className="mb-2 flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wider text-indigo-400">
+                <Clock className="h-3 w-3" />
+                {t("Relationship timeline", "关系时间线", "關係時間線")}
+              </p>
+              <div className="space-y-2">
+                {timeline.map((p, i) => (
+                  <div
+                    key={i}
+                    className="rounded-sm border-l-2 border-indigo-500/40 bg-indigo-500/5 px-3 py-2"
+                  >
+                    <p className="text-[10px] font-medium uppercase tracking-wider text-indigo-300">
+                      {p.phase === "3_months"
+                        ? t("3 months", "3 个月后", "3 個月後")
+                        : p.phase === "6_months"
+                          ? t("6 months", "6 个月后", "6 個月後")
+                          : t("1 year", "1 年后", "1 年後")}
+                    </p>
+                    <p className="mt-1 text-sm leading-relaxed">{p.what_happens}</p>
+                    {p.signals_to_watch && (
+                      <p className="mt-1 text-[11px] italic text-muted-foreground">
+                        {t("Watch:", "关注：", "關注：")} {p.signals_to_watch}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* v4 Follow-up */}
+          {followUp && (followUp.day_1 || followUp.week_1 || followUp.month_1) && (
+            <div>
+              <p className="mb-2 flex items-center gap-1.5 text-[10px] font-medium uppercase tracking-wider text-emerald-400">
+                {t("After the meeting", "见面后怎么跟进", "見面後點跟進")}
+              </p>
+              <div className="space-y-1.5">
+                {followUp.day_1 && (
+                  <div className="rounded-sm border-l-2 border-emerald-500/40 bg-emerald-500/5 px-3 py-2">
+                    <p className="text-[10px] font-medium uppercase tracking-wider text-emerald-300">
+                      {t("Day 1", "当晚", "當晚")}
+                    </p>
+                    <p className="mt-0.5 text-sm leading-relaxed">{followUp.day_1}</p>
+                  </div>
+                )}
+                {followUp.week_1 && (
+                  <div className="rounded-sm border-l-2 border-emerald-500/40 bg-emerald-500/5 px-3 py-2">
+                    <p className="text-[10px] font-medium uppercase tracking-wider text-emerald-300">
+                      {t("Week 1", "第一周", "第一週")}
+                    </p>
+                    <p className="mt-0.5 text-sm leading-relaxed">{followUp.week_1}</p>
+                  </div>
+                )}
+                {followUp.month_1 && (
+                  <div className="rounded-sm border-l-2 border-emerald-500/40 bg-emerald-500/5 px-3 py-2">
+                    <p className="text-[10px] font-medium uppercase tracking-wider text-emerald-300">
+                      {t("Month 1", "第一个月", "第一個月")}
+                    </p>
+                    <p className="mt-0.5 text-sm leading-relaxed">{followUp.month_1}</p>
+                  </div>
+                )}
+              </div>
             </div>
           )}
 
