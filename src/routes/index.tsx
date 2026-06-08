@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, Check, Minus, Headphones, Instagram, Twitter, Github, Linkedin, Mail, MessageCircle, Sparkles, Loader2 } from "lucide-react";
+import { ArrowRight, Check, Minus, Headphones, Mail, MessageCircle, Sparkles, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { CookieBanner } from "@/components/CookieBanner";
 const ogImageUrl = "/og-image.jpg";
@@ -68,7 +68,7 @@ function Nav() {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/60 bg-background/70 backdrop-blur-xl">
       <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
-        <a href="#" className="text-lg font-semibold tracking-tight">
+        <a href="/" className="text-lg font-semibold tracking-tight">
           lin<span className="font-display text-primary text-2xl align-middle">Q</span>
         </a>
         <nav className="hidden items-center gap-8 text-sm text-muted-foreground md:flex">
@@ -550,10 +550,10 @@ function Footer() {
             <div>
               <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">{t("footer_resources")}</p>
               <ul className="mt-5 space-y-3 text-sm">
-                <li><a href="#" className="inline-flex items-center gap-1 text-foreground/80 transition-colors hover:text-primary">{t("footer_careers")} <ArrowRight className="h-3 w-3 -rotate-45" /></a></li>
-                <li><a href="#" className="inline-flex items-center gap-1 text-foreground/80 transition-colors hover:text-primary">{t("footer_manifesto")} <ArrowRight className="h-3 w-3 -rotate-45" /></a></li>
-                <li><a href="#" className="inline-flex items-center gap-1 text-foreground/80 transition-colors hover:text-primary">{t("footer_press")} <ArrowRight className="h-3 w-3 -rotate-45" /></a></li>
-                <li><a href="#" className="inline-flex items-center gap-1 text-foreground/80 transition-colors hover:text-primary">{t("footer_blog")} <ArrowRight className="h-3 w-3 -rotate-45" /></a></li>
+                <li><a href="mailto:zhangcheng0688@gmail.com?subject=linQ%20Careers" className="inline-flex items-center gap-1 text-foreground/80 transition-colors hover:text-primary">{t("footer_careers")} <ArrowRight className="h-3 w-3 -rotate-45" /></a></li>
+                <li><a href="#values" className="inline-flex items-center gap-1 text-foreground/80 transition-colors hover:text-primary">{t("footer_manifesto")} <ArrowRight className="h-3 w-3 -rotate-45" /></a></li>
+                <li><a href="mailto:zhangcheng0688@gmail.com?subject=linQ%20Press%20Kit" className="inline-flex items-center gap-1 text-foreground/80 transition-colors hover:text-primary">{t("footer_press")} <ArrowRight className="h-3 w-3 -rotate-45" /></a></li>
+                <li><Link to="/blog" className="inline-flex items-center gap-1 text-foreground/80 transition-colors hover:text-primary">{t("footer_blog")} <ArrowRight className="h-3 w-3 -rotate-45" /></Link></li>
               </ul>
             </div>
             <div>
@@ -566,9 +566,9 @@ function Footer() {
                   </span>
                   {t("footer_chat")}
                 </li>
-                <li><a href="mailto:hi@linq.app" className="inline-flex items-center gap-1.5 text-foreground/80 transition-colors hover:text-primary"><Mail className="h-3.5 w-3.5" /> {lang === "zh" ? "vip专属会员中心" : "hi@linq.app"}</a></li>
+                <li><a href="mailto:zhangcheng0688@gmail.com?subject=linQ%20Support" className="inline-flex items-center gap-1.5 text-foreground/80 transition-colors hover:text-primary"><Mail className="h-3.5 w-3.5" /> [email protected]</a></li>
                 <li><Link to="/trust" className="text-foreground/80 transition-colors hover:text-primary">{t("footer_trust")}</Link></li>
-                <li><a href="#" className="text-foreground/80 transition-colors hover:text-primary">{t("footer_help")}</a></li>
+                <li><a href="mailto:zhangcheng0688@gmail.com?subject=linQ%20Help" className="text-foreground/80 transition-colors hover:text-primary">{t("footer_help")}</a></li>
               </ul>
             </div>
           </div>
@@ -615,10 +615,7 @@ function Footer() {
       <div className="border-t border-border/60">
         <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-4 px-6 py-6 text-xs text-muted-foreground md:flex-row md:items-center">
           <div className="flex items-center gap-4">
-            <a href="#" aria-label="Instagram" className="transition-colors hover:text-primary"><Instagram className="h-4 w-4" /></a>
-            <a href="#" aria-label="X / Twitter" className="transition-colors hover:text-primary"><Twitter className="h-4 w-4" /></a>
-            <a href="#" aria-label="LinkedIn" className="transition-colors hover:text-primary"><Linkedin className="h-4 w-4" /></a>
-            <a href="#" aria-label="GitHub" className="transition-colors hover:text-primary"><Github className="h-4 w-4" /></a>
+            <a href="mailto:zhangcheng0688@gmail.com" aria-label="Email linQ" className="transition-colors hover:text-primary"><Mail className="h-4 w-4" /></a>
           </div>
           <p>© {new Date().getFullYear()} {t("footer_copy")}</p>
           <div className="flex items-center gap-5">

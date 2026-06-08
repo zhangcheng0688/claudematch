@@ -2,7 +2,7 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { LanguageProvider, useLang } from "@/lib/i18n";
 import { supabase } from "@/integrations/supabase/client";
-import { ArrowRight, Mail, KeyRound, Loader2, MessageCircle } from "lucide-react";
+import { ArrowRight, Mail, KeyRound, Loader2, MessageCircle, Apple } from "lucide-react";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({
@@ -237,6 +237,24 @@ function AuthPage() {
                 <MessageCircle className="h-4 w-4" />
               )}
               {t("Continue with WeChat", "用微信登录", "用微信登入")}
+            </button>
+            {/* Apple login — disabled, awaiting Developer account */}
+            <button
+              type="button"
+              disabled
+              aria-disabled="true"
+              title={t(
+                "Apple login is coming soon.",
+                "Apple 登录即将上线。",
+                "Apple 登入快將推出。",
+              )}
+              className="inline-flex h-12 w-full cursor-not-allowed items-center justify-center gap-2 rounded-sm border border-border bg-background/40 text-sm font-medium text-muted-foreground opacity-60"
+            >
+              <Apple className="h-4 w-4" />
+              {t("Continue with Apple", "用 Apple 登录", "用 Apple 登入")}
+              <span className="ml-1 rounded-full border border-border px-1.5 py-0.5 text-[10px] uppercase tracking-wider text-muted-foreground">
+                {t("Soon", "即将", "快將")}
+              </span>
             </button>
           </div>
         )}
