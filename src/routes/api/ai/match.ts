@@ -108,9 +108,14 @@ export const Route = createFileRoute("/api/ai/match")({
           });
         }
 
-        // 4) DeepSeek: pick best match + craft meeting plan in one call.
+        // 4) DeepSeek: pick best match + craft meeting plan + give deep
+        // 5-axis analysis (resonance / complementarity / friction /
+        // chemistry / growth). The previous version of this prompt only
+        // asked for a single `reason` field which produced surface-level
+        // "you both like X" outputs. The 5-axis split forces the model
+        // to think about each layer of compatibility independently.
         const sys =
-          "你是 linQ 的 AI 匹配引擎。根据 A 的画像，从候选人中挑选最匹配的一位，并生成匹配理由与首次见面方案。严格输出 JSON，不要 markdown。";
+          "你是 linQ 的 AI 匹配引擎 —— 一个比任何交友 App 都更懂关系的角色。\n\n任务：\n1. 从候选人中挑出最匹配的 1 位\n2. 不仅写「匹配理由」(那是 surface)，要分析 5 个层面：\n   - resonance（共鸣）—— 表面上的共同点之外的深层契合\n   - complementarity（互补）—— 哪里互相补足\n   - friction（摩擦）—— 哪里会起冲突（必须真实，不回避）\n   - chemistry（化学反应）—— 见面头 10 分钟会发生什么\n   - growth（成长）—— 6 个月后你们会让对方变成什么样\n3. 生成详细的首次见面方案（meet_plan）\n\n不要'表面贴合'。要写出让人'这说的就是我'的感受。严格输出 JSON。";
         const prompt = `场景: ${SCENARIO_LABEL[scenario]}
 A 的画像: ${JSON.stringify(latestProfile.profile_data)}
 
@@ -120,42 +125,42 @@ ${candidates.map((c, i) => `[${i}] ${JSON.stringify(c.profile_data)}`).join("\n"
 输出 JSON：
 {
   "best_index": number,
-  "match_score": number,
-  "name": string,
-  "headline": string,
-  "bio": string,
-  "shared_interests": string[],
-  "reason": string,
+  "match_score": number (60-99, 两位小数),
+  "name": string (对方画像里的名字或昵称),
+  "headline": string (10-20 字符画像标签),
+  "bio": string (一段 60-100 字的画像描写 —— 不是简历，是让 A 看了能"看到"对方的一段文字),
+  "resonance": string[] (共鸣点 —— 3-5 条，**每条必须展示深层契合而非关键词重合**，例如"你们的孤独感来自同一处：不被理解的精确性，而不是不被看见的本身"),
+  "complementarity": string[] (互补点 —— 3 条，**具体到 ta 的哪种特质补了你的哪种缺口**),
+  "friction": string[] (摩擦点 —— 2-3 条，**真实存在的潜在冲突点**，例如"你们都会在压力下沉默，初期这会变成'两个人都不开口'的僵局"),
+  "chemistry": {
+    "first_10_minutes": string (见面头 10 分钟会发生什么 —— 谁先开口、会聊什么、空气是舒服还是紧绷),
+    "the_unspoken": string (双方不会说出口但都会感觉到的那种东西，例如"你感觉到 ta 在用问题测你"或"ta 比你预期更紧张")
+  },
+  "growth": {
+    "in_6_months": string (6 个月后你们会让对方变成什么样 —— 改变、保留、风险),
+    "the_third_thing": string (你们在一起后会产生的'第三个东西'，不属于你也不属于 ta，而是关系本身的新产物，例如'一种你们都说不出来但都喜欢的生活方式'")
+  },
+  "shared_interests": string[] (3-6 个共同兴趣标签),
   "meet_plan": {
-    "when": string,
-    "where": string,
-    "location_intro": string,
-    "dress_code": string,
-    "icebreakers": string[],
-    "duration": string,
-    "budget": string,
-    "pitfalls": string[],
-    "highlights": string[]
+    "when": string (未来 7 天内,含星期与具体时段),
+    "where": string (城市 + 具体场所类型/名称示例),
+    "location_intro": string (30 字以内场所简介),
+    "dress_code": string (着装建议),
+    "icebreakers": string[] (3 条破冰开场话术,带'如果 ta 看起来有点紧张'的考虑),
+    "duration": string (建议会面时长,如"60-90 分钟"),
+    "budget": string (人均消费参考),
+    "pitfalls": string[] (3 条沟通避坑提醒,针对**这两人**的具体场景),
+    "highlights": string[] (3 条双方适配亮点,带具体场景)
   }
 }
-全部用中文表达。match_score 在 60-99 之间，两位小数。
-meet_plan 详细要求：
-- when：未来 7 天内，含星期与具体时段；
-- where：精准碰面地点（城市 + 具体场所类型/名称示例）；
-- location_intro：30 字以内简介该场所；
-- dress_code：着装建议；
-- icebreakers：3 条破冰开场话术；
-- duration：建议会面时长，如"60-90 分钟"；
-- budget：人均消费参考，如"人均 80-150 元"；
-- pitfalls：3 条沟通避坑提醒；
-- highlights：3 条双方适配亮点（匹配理由）。`;
+全部用中文表达。`;
 
         const raw = await deepseekChat(
           [
             { role: "system", content: sys },
             { role: "user", content: prompt },
           ],
-          { json: true, temperature: 0.85, max_tokens: 1600 },
+          { json: true, temperature: 0.9, max_tokens: 2400 },
         );
         type ParsedT = {
           best_index?: number;
@@ -164,6 +169,17 @@ meet_plan 详细要求：
           headline?: string;
           bio?: string;
           shared_interests?: string[];
+          resonance?: string[];
+          complementarity?: string[];
+          friction?: string[];
+          chemistry?: {
+            first_10_minutes?: string;
+            the_unspoken?: string;
+          };
+          growth?: {
+            in_6_months?: string;
+            the_third_thing?: string;
+          };
           reason?: string;
           meet_plan?: {
             when?: string;
@@ -217,6 +233,19 @@ meet_plan 详细要求：
           shared_interests: Array.isArray(parsed.shared_interests)
             ? parsed.shared_interests
             : [],
+          // v3 deep analysis
+          resonance: Array.isArray(parsed.resonance) ? parsed.resonance : [],
+          complementarity: Array.isArray(parsed.complementarity) ? parsed.complementarity : [],
+          friction: Array.isArray(parsed.friction) ? parsed.friction : [],
+          chemistry: {
+            first_10_minutes: parsed.chemistry?.first_10_minutes ?? "",
+            the_unspoken: parsed.chemistry?.the_unspoken ?? "",
+          },
+          growth: {
+            in_6_months: parsed.growth?.in_6_months ?? "",
+            the_third_thing: parsed.growth?.the_third_thing ?? "",
+          },
+          // legacy (back-compat with /match detail page that may still read it)
           reason: parsed.reason ?? "",
           is_real_user: true,
           ai_provider: raw ? "deepseek" : "fallback",

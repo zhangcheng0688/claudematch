@@ -31,20 +31,55 @@ export type AiPattern = {
   insight: string;
   /** 从用户输入里抓到的原话引文，作为洞察的证据 */
   evidence: string;
+  /** 5 步推理链：从输入到推断的中间步骤，每步 1 句话 */
+  reasoning_chain?: string[];
 };
 
 export type AiDimension = {
-  /** 大五人格维度 key (openness/conscientiousness/extraversion/agreeableness/curiosity) */
+  /** 维度 key（v3: 决策模式/信任建立/能量来源/冲突处理/理想匹配） */
   key: string;
   /** 0-1 之间的评分 */
   score: number;
   /** 一句话解读：为什么给这个分数（不允许空泛） */
   why: string;
+  /** 具体可观察的行为信号列表（3-5 条，每条是"ta 在 X 场景会做 Y"） */
+  signals?: string[];
+};
+
+/** v3: 内在矛盾 —— "你表面想要 vs 实际想要" */
+export type AiParadox = {
+  /** 你说的 / 表面表达的 */
+  surface: string;
+  /** 你实际想要的（可能没意识到） */
+  depth: string;
+  /** 为什么这个张力存在（一句心理学/行为学解释） */
+  tension: string;
+};
+
+/** v3: 内在人格原型 —— "ta 像谁" */
+export type AiArchetype = {
+  /** 原型名（如"深夜建筑师"、"压力下的探险家"） */
+  name: string;
+  /** 为什么 ta 像这个人（2-3 句话） */
+  why: string;
+  /** 这个原型的核心冲突/阴影面 */
+  shadow: string;
+};
+
+/** v3: 匹配信号 —— 对方和 ta 在一起会感受到什么 */
+export type AiMatchSignals = {
+  /** ta 需要的（情感/认知/行动层面的真实需求） */
+  needs: Array<{ what: string; why: string }>;
+  /** ta 能给的（独特的价值） */
+  gifts: Array<{ what: string; why: string }>;
+  /** 风险信号 —— 对方和 ta 相处会感到的摩擦 */
+  risks: Array<{ what: string; impact: string }>;
 };
 
 /**
  * AI 画像结构。
- * 2026-06-08 升级：新增 headline / narrative / patterns / dimensions。
+ * 2026-06-08 v2：新增 headline / narrative / patterns / dimensions
+ * 2026-06-08 v3：新增 paradoxes / archetypes / match_signals / dimensions.signals
  * 老字段（summary / traits / interests / communication_style / looking_for / ideal_match）
  * 保留在 schema 中做向后兼容，但 UI 不再展示。
  */
@@ -56,11 +91,15 @@ export type AiProfile = {
   communication_style?: string;
   looking_for?: string;
   ideal_match?: string;
-  /** v2 新字段 */
+  /** v2 字段 */
   headline?: string;
   narrative?: string;
   patterns?: AiPattern[];
   dimensions?: AiDimension[];
+  /** v3 字段 */
+  paradoxes?: AiParadox[];
+  archetypes?: AiArchetype[];
+  match_signals?: AiMatchSignals;
 };
 
 export type Profile = {
@@ -84,7 +123,20 @@ export type MatchDetails = {
   headline?: string;
   bio?: string;
   shared_interests?: string[];
+  /** v2 legacy single-line reason (kept for back-compat) */
   reason?: string;
+  /** v3 deep analysis: 5-axis compatibility */
+  resonance?: string[];
+  complementarity?: string[];
+  friction?: string[];
+  chemistry?: {
+    first_10_minutes?: string;
+    the_unspoken?: string;
+  };
+  growth?: {
+    in_6_months?: string;
+    the_third_thing?: string;
+  };
   is_real_user?: boolean;
   ai_provider?: "deepseek" | "fallback";
 };

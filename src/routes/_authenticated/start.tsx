@@ -329,8 +329,24 @@ function ProfileCard({
   const ai = (profile.profile_data?.ai ?? {}) as {
     headline?: string;
     narrative?: string;
-    patterns?: Array<{ insight: string; evidence: string }>;
-    dimensions?: Array<{ key: string; score: number; why: string }>;
+    patterns?: Array<{
+      insight: string;
+      evidence: string;
+      reasoning_chain?: string[];
+    }>;
+    dimensions?: Array<{
+      key: string;
+      score: number;
+      why: string;
+      signals?: string[];
+    }>;
+    paradoxes?: Array<{ surface: string; depth: string; tension: string }>;
+    archetypes?: Array<{ name: string; why: string; shadow: string }>;
+    match_signals?: {
+      needs: Array<{ what: string; why: string }>;
+      gifts: Array<{ what: string; why: string }>;
+      risks: Array<{ what: string; impact: string }>;
+    };
     // legacy v1 (kept for back-compat, no longer rendered as primary UI)
     summary?: string;
     traits?: Record<string, number>;
@@ -346,6 +362,9 @@ function ProfileCard({
   const patterns = ai.patterns ?? [];
   const dimensions = ai.dimensions ?? [];
   const interests = ai.interests ?? [];
+  const paradoxes = ai.paradoxes ?? [];
+  const archetypes = ai.archetypes ?? [];
+  const matchSignals = ai.match_signals;
 
   // v1 fallback: derive dimensions from traits if dimensions[] is missing
   const fallbackDimensions = dimensions.length > 0
@@ -362,7 +381,7 @@ function ProfileCard({
       {ai.headline && (
         <div>
           <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
-            {t("Your headline", "你的标签", "你嘅標籤")}
+            {t("Your portrait", "你的画像", "你嘅畫像")}
           </p>
           <h3 className="mt-2 font-display text-2xl font-semibold italic text-gold-glow sm:text-3xl">
             {ai.headline}
@@ -381,22 +400,40 @@ function ProfileCard({
         </div>
       )}
 
-      {/* Patterns — the "AI 看到了你没说的" centerpiece */}
-      {patterns.length > 0 && (
+      {/* v3 Paradoxes — "你表面想要 vs 实际想要" */}
+      {paradoxes.length > 0 && (
         <div>
           <p className="mb-3 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
-            {t("What AI saw that you didn't say", "AI 看到了你没说的", "AI 見到你無講嘅")}
+            {t("What you want vs what you actually want", "你表面想要 vs 实际想要的", "你表面想要 vs 實際想要嘅")}
           </p>
-          <div className="space-y-2.5">
-            {patterns.map((p, i) => (
+          <div className="space-y-3">
+            {paradoxes.map((p, i) => (
               <div
                 key={i}
-                className="rounded-sm border border-primary/20 bg-primary/5 p-4 transition-colors hover:border-primary/40"
+                className="rounded-sm border border-amber-500/30 bg-amber-500/5 p-4"
               >
-                <p className="text-sm leading-relaxed text-foreground/95">{p.insight}</p>
-                {p.evidence && (
-                  <p className="mt-2 border-l-2 border-border pl-2 text-xs italic text-muted-foreground">
-                    {t("You said:", "你说过：", "你講過：")}「{p.evidence}」
+                <div className="flex items-start gap-3">
+                  <div className="flex-1">
+                    <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                      {t("You said", "你表面说的", "你表面講嘅")}
+                    </p>
+                    <p className="mt-1 text-sm leading-relaxed text-foreground/90">
+                      {p.surface}
+                    </p>
+                  </div>
+                  <span className="self-center text-lg text-amber-500/70">↔</span>
+                  <div className="flex-1">
+                    <p className="text-[10px] font-medium uppercase tracking-wider text-amber-400">
+                      {t("You actually want", "你实际想要的", "你實際想要嘅")}
+                    </p>
+                    <p className="mt-1 text-sm leading-relaxed text-foreground/95">
+                      {p.depth}
+                    </p>
+                  </div>
+                </div>
+                {p.tension && (
+                  <p className="mt-3 border-t border-amber-500/20 pt-2 text-xs italic leading-relaxed text-muted-foreground">
+                    {p.tension}
                   </p>
                 )}
               </div>
@@ -405,15 +442,95 @@ function ProfileCard({
         </div>
       )}
 
-      {/* Dimensions — 5 axes with `why` explanations */}
+      {/* v3 Archetypes — "你像谁" */}
+      {archetypes.length > 0 && (
+        <div>
+          <p className="mb-3 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+            {t("Who you resemble", "你的人格原型", "你嘅人格原型")}
+          </p>
+          <div className="grid gap-3 sm:grid-cols-2">
+            {archetypes.map((a, i) => (
+              <div
+                key={i}
+                className="rounded-sm border border-violet-500/30 bg-violet-500/5 p-4"
+              >
+                <p className="font-display text-base font-semibold italic text-violet-300">
+                  {a.name}
+                </p>
+                <p className="mt-2 text-sm leading-relaxed text-foreground/90">
+                  {a.why}
+                </p>
+                {a.shadow && (
+                  <p className="mt-2 text-xs italic text-muted-foreground">
+                    {t("Shadow:", "阴影面：", "陰影面：")} {a.shadow}
+                  </p>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Patterns — the "AI 看到了你没说的" centerpiece */}
+      {patterns.length > 0 && (
+        <div>
+          <p className="mb-3 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+            {t("What AI saw that you didn't say", "AI 看到了你没说的", "AI 見到你無講嘅")}
+          </p>
+          <div className="space-y-2.5">
+            {patterns.map((p, i) => (
+              <details
+                key={i}
+                className="group rounded-sm border border-primary/20 bg-primary/5 transition-colors hover:border-primary/40"
+              >
+                <summary className="cursor-pointer list-none p-4">
+                  <p className="text-sm leading-relaxed text-foreground/95">
+                    {p.insight}
+                  </p>
+                  {p.evidence && (
+                    <p className="mt-2 border-l-2 border-border pl-2 text-xs italic text-muted-foreground">
+                      {t("You said:", "你说过：", "你講過：")}「{p.evidence}」
+                    </p>
+                  )}
+                  {p.reasoning_chain && p.reasoning_chain.length > 0 && (
+                    <p className="mt-2 text-[10px] uppercase tracking-wider text-muted-foreground/70 group-open:hidden">
+                      {t("Tap to see AI's reasoning", "展开推理过程", "展開推理過程")} →
+                    </p>
+                  )}
+                </summary>
+                {p.reasoning_chain && p.reasoning_chain.length > 0 && (
+                  <div className="border-t border-primary/20 px-4 pb-4 pt-3">
+                    <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+                      {t("AI's reasoning chain", "AI 的推理过程", "AI 嘅推理過程")}
+                    </p>
+                    <ol className="mt-2 space-y-1.5 text-xs leading-relaxed text-foreground/85">
+                      {p.reasoning_chain.map((step, j) => (
+                        <li key={j} className="flex gap-2">
+                          <span className="shrink-0 font-mono text-muted-foreground/70">
+                            {j + 1}.
+                          </span>
+                          <span>{step}</span>
+                        </li>
+                      ))}
+                    </ol>
+                  </div>
+                )}
+              </details>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Dimensions — 5 axes with `why` explanations + behavioral signals */}
       {fallbackDimensions.length > 0 && (
         <div>
           <p className="mb-3 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
-            {t("Five dimensions", "五个维度", "五個維度")}
+            {t("Your five work/relationship dimensions", "五个作业/关系维度", "五個作業/關係維度")}
           </p>
-          <div className="space-y-3.5">
+          <div className="space-y-4">
             {fallbackDimensions.map((d) => {
               const score = Math.max(0, Math.min(1, Number(d.score)));
+              const signals = (d as { signals?: string[] }).signals ?? [];
               return (
                 <div key={d.key}>
                   <div className="flex items-baseline gap-3">
@@ -435,12 +552,89 @@ function ProfileCard({
                       — {d.why}
                     </p>
                   )}
+                  {signals.length > 0 && (
+                    <ul className="ml-32 mt-2 space-y-1 border-l border-border/60 pl-3">
+                      {signals.map((s, j) => (
+                        <li
+                          key={j}
+                          className="text-[11px] leading-relaxed text-muted-foreground/90"
+                        >
+                          • {s}
+                        </li>
+                      ))}
+                    </ul>
+                  )}
                 </div>
               );
             })}
           </div>
         </div>
       )}
+
+      {/* v3 Match signals — needs / gifts / risks */}
+      {matchSignals &&
+        (matchSignals.needs.length > 0 ||
+          matchSignals.gifts.length > 0 ||
+          matchSignals.risks.length > 0) && (
+          <div>
+            <p className="mb-3 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+              {t("What people around you feel", "你身边的人会感受到的", "你身邊嘅人會感受到嘅")}
+            </p>
+            <div className="grid gap-3 sm:grid-cols-3">
+              {matchSignals.needs.length > 0 && (
+                <div className="rounded-sm border border-sky-500/30 bg-sky-500/5 p-4">
+                  <p className="text-[10px] font-medium uppercase tracking-wider text-sky-400">
+                    {t("Needs", "需要", "需要")}
+                  </p>
+                  <ul className="mt-2 space-y-2">
+                    {matchSignals.needs.map((n, i) => (
+                      <li key={i}>
+                        <p className="text-sm text-foreground/95">{n.what}</p>
+                        <p className="mt-0.5 text-[11px] italic text-muted-foreground">
+                          {n.why}
+                        </p>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {matchSignals.gifts.length > 0 && (
+                <div className="rounded-sm border border-emerald-500/30 bg-emerald-500/5 p-4">
+                  <p className="text-[10px] font-medium uppercase tracking-wider text-emerald-400">
+                    {t("Gives", "能给", "能俾")}
+                  </p>
+                  <ul className="mt-2 space-y-2">
+                    {matchSignals.gifts.map((g, i) => (
+                      <li key={i}>
+                        <p className="text-sm text-foreground/95">{g.what}</p>
+                        <p className="mt-0.5 text-[11px] italic text-muted-foreground">
+                          {g.why}
+                        </p>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {matchSignals.risks.length > 0 && (
+                <div className="rounded-sm border border-rose-500/30 bg-rose-500/5 p-4">
+                  <p className="text-[10px] font-medium uppercase tracking-wider text-rose-400">
+                    {t("Risks", "风险", "風險")}
+                  </p>
+                  <ul className="mt-2 space-y-2">
+                    {matchSignals.risks.map((r, i) => (
+                      <li key={i}>
+                        <p className="text-sm text-foreground/95">{r.what}</p>
+                        <p className="mt-0.5 text-[11px] italic text-muted-foreground">
+                          {r.impact}
+                        </p>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
       {/* Interests (v1 compat) */}
       {interests.length > 0 && (
@@ -476,9 +670,9 @@ function ProfileCard({
               <Sparkles className="h-3 w-3" />
             )}
             {t(
-              "Get a deeper take",
-              "让 AI 再深度分析一次",
-              "畀 AI 再深入睇一次",
+              "Re-analyze me from scratch",
+              "再深度分析一次",
+              "再深入分析一次",
             )}
           </button>
         </div>
