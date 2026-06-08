@@ -26,13 +26,41 @@ export const SCENARIO_DESC: Record<Scenario, { en: string; zh: string }> = {
 };
 
 /** AI-generated profile (DeepSeek output) stored in `user_profiles.profile_data.ai`. */
+export type AiPattern = {
+  /** AI 推断的洞察（用户没明说但能看出来的事） */
+  insight: string;
+  /** 从用户输入里抓到的原话引文，作为洞察的证据 */
+  evidence: string;
+};
+
+export type AiDimension = {
+  /** 大五人格维度 key (openness/conscientiousness/extraversion/agreeableness/curiosity) */
+  key: string;
+  /** 0-1 之间的评分 */
+  score: number;
+  /** 一句话解读：为什么给这个分数（不允许空泛） */
+  why: string;
+};
+
+/**
+ * AI 画像结构。
+ * 2026-06-08 升级：新增 headline / narrative / patterns / dimensions。
+ * 老字段（summary / traits / interests / communication_style / looking_for / ideal_match）
+ * 保留在 schema 中做向后兼容，但 UI 不再展示。
+ */
 export type AiProfile = {
+  /** v1 老字段（兼容） */
   summary?: string;
   traits?: Record<string, number>;
   interests?: string[];
   communication_style?: string;
   looking_for?: string;
   ideal_match?: string;
+  /** v2 新字段 */
+  headline?: string;
+  narrative?: string;
+  patterns?: AiPattern[];
+  dimensions?: AiDimension[];
 };
 
 export type Profile = {

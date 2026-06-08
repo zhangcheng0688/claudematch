@@ -271,17 +271,16 @@ function SendRealYou() {
           </p>
 
           <div className="mt-12 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
-            <button
-              type="button"
-              disabled
-              aria-disabled="true"
-              className="group inline-flex h-14 w-full max-w-sm cursor-not-allowed items-center justify-center gap-3 rounded-full bg-background pr-7 pl-3 text-base font-semibold text-muted-foreground opacity-70 ring-1 ring-border sm:w-auto"
+            <a
+              href="/auth"
+              className="group inline-flex h-14 w-full max-w-sm items-center justify-center gap-3 rounded-full bg-primary pl-3 pr-6 text-base font-semibold text-primary-foreground shadow-[0_20px_60px_-12px_oklch(0.85_0.17_90/0.65),0_0_0_1px_oklch(0.85_0.17_90/0.4),inset_0_1px_0_oklch(1_0_0/0.35)] transition-all hover:-translate-y-0.5 hover:bg-primary/90 hover:shadow-[0_28px_80px_-12px_oklch(0.85_0.17_90/0.8),0_0_0_1px_oklch(0.85_0.17_90/0.6),inset_0_1px_0_oklch(1_0_0/0.45)] sm:w-auto"
             >
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted text-muted-foreground">
+              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-foreground/15 text-primary-foreground">
                 <MessageCircle className="h-5 w-5" />
               </span>
-              Coming Soon
-            </button>
+              {t("nav_getStarted")}
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+            </a>
           </div>
           <p className="mt-4 text-xs text-muted-foreground">{t("send_terms")}</p>
         </div>

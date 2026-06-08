@@ -203,7 +203,12 @@ function StartPage() {
             <p className="text-sm text-muted-foreground">
               {t("Looks good? Let AI find your top 3 matches.", "看起来对吗？让 AI 为你挑出 3 个最佳匹配。", "睇落 OK 嗎？等 AI 幫你搵 3 個最夾嘅人。")}
             </p>
-            <ProfileCard profile={profile} t={t} />
+            <ProfileCard
+              profile={profile}
+              t={t}
+              onRegenerate={generateProfile}
+              regenerating={loading === "profile"}
+            />
             <div className="flex items-center justify-between">
               <button onClick={() => setStep(1)} className="text-xs text-muted-foreground hover:text-foreground">
                 ← {t("Edit description", "重新描述", "重新描述")}
@@ -310,41 +315,172 @@ function Stepper({ step, t }: { step: number; t: (en: string, zh: string, yue: s
   );
 }
 
-function ProfileCard({ profile, t }: { profile: Profile; t: (en: string, zh: string, yue: string) => string }) {
-  const ai = profile.profile_data?.ai ?? {};
-  const traits = ai.traits ?? {};
+function ProfileCard({
+  profile,
+  t,
+  onRegenerate,
+  regenerating,
+}: {
+  profile: Profile;
+  t: (en: string, zh: string, yue: string) => string;
+  onRegenerate?: () => void;
+  regenerating?: boolean;
+}) {
+  const ai = (profile.profile_data?.ai ?? {}) as {
+    headline?: string;
+    narrative?: string;
+    patterns?: Array<{ insight: string; evidence: string }>;
+    dimensions?: Array<{ key: string; score: number; why: string }>;
+    // legacy v1 (kept for back-compat, no longer rendered as primary UI)
+    summary?: string;
+    traits?: Record<string, number>;
+    interests?: string[];
+    communication_style?: string;
+    looking_for?: string;
+    ideal_match?: string;
+  };
+  const narrativeParas = (ai.narrative ?? ai.summary ?? "")
+    .split(/\n+/)
+    .map((s) => s.trim())
+    .filter(Boolean);
+  const patterns = ai.patterns ?? [];
+  const dimensions = ai.dimensions ?? [];
+  const interests = ai.interests ?? [];
+
+  // v1 fallback: derive dimensions from traits if dimensions[] is missing
+  const fallbackDimensions = dimensions.length > 0
+    ? dimensions
+    : Object.entries(ai.traits ?? {}).map(([k, v]) => ({
+        key: k,
+        score: Number(v),
+        why: "",
+      }));
+
   return (
-    <div className="rounded-sm border border-border bg-background/40 p-6 space-y-4">
-      {ai.summary && <p className="text-base leading-relaxed">{ai.summary}</p>}
-      {ai.interests && ai.interests.length > 0 && (
-        <div className="flex flex-wrap gap-2">
-          {ai.interests.map((i) => (
-            <span key={i} className="rounded-full border border-primary/30 bg-primary/10 px-2.5 py-0.5 text-xs text-primary">
-              {i}
-            </span>
+    <div className="rounded-sm border border-border bg-background/40 p-6 sm:p-8 space-y-7">
+      {/* Headline */}
+      {ai.headline && (
+        <div>
+          <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+            {t("Your headline", "你的标签", "你嘅標籤")}
+          </p>
+          <h3 className="mt-2 font-display text-2xl font-semibold italic text-gold-glow sm:text-3xl">
+            {ai.headline}
+          </h3>
+        </div>
+      )}
+
+      {/* Narrative */}
+      {narrativeParas.length > 0 && (
+        <div className="space-y-3 border-l-2 border-primary/30 pl-4">
+          {narrativeParas.map((p, i) => (
+            <p key={i} className="text-[15px] leading-[1.75] text-foreground/90">
+              {p}
+            </p>
           ))}
         </div>
       )}
-      <dl className="grid gap-3 text-sm sm:grid-cols-2">
-        {ai.communication_style && (
-          <Row label={t("Communication", "沟通风格", "溝通風格")} value={ai.communication_style} />
-        )}
-        {ai.looking_for && <Row label={t("Looking for", "在找的", "想搵嘅")} value={ai.looking_for} />}
-        {ai.ideal_match && <Row label={t("Ideal match", "理想对象", "理想對象")} value={ai.ideal_match} />}
-      </dl>
-      {Object.keys(traits).length > 0 && (
-        <div className="space-y-2 pt-2">
-          {Object.entries(traits).map(([k, v]) => (
-            <div key={k} className="flex items-center gap-3">
-              <span className="w-32 text-xs uppercase tracking-wider text-muted-foreground">{k}</span>
-              <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-border">
-                <div className="h-full bg-primary" style={{ width: `${Math.max(0, Math.min(1, Number(v))) * 100}%` }} />
+
+      {/* Patterns — the "AI 看到了你没说的" centerpiece */}
+      {patterns.length > 0 && (
+        <div>
+          <p className="mb-3 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+            {t("What AI saw that you didn't say", "AI 看到了你没说的", "AI 見到你無講嘅")}
+          </p>
+          <div className="space-y-2.5">
+            {patterns.map((p, i) => (
+              <div
+                key={i}
+                className="rounded-sm border border-primary/20 bg-primary/5 p-4 transition-colors hover:border-primary/40"
+              >
+                <p className="text-sm leading-relaxed text-foreground/95">{p.insight}</p>
+                {p.evidence && (
+                  <p className="mt-2 border-l-2 border-border pl-2 text-xs italic text-muted-foreground">
+                    {t("You said:", "你说过：", "你講過：")}「{p.evidence}」
+                  </p>
+                )}
               </div>
-              <span className="w-10 text-right text-xs tabular-nums text-muted-foreground">
-                {Math.round(Math.max(0, Math.min(1, Number(v))) * 100)}
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Dimensions — 5 axes with `why` explanations */}
+      {fallbackDimensions.length > 0 && (
+        <div>
+          <p className="mb-3 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+            {t("Five dimensions", "五个维度", "五個維度")}
+          </p>
+          <div className="space-y-3.5">
+            {fallbackDimensions.map((d) => {
+              const score = Math.max(0, Math.min(1, Number(d.score)));
+              return (
+                <div key={d.key}>
+                  <div className="flex items-baseline gap-3">
+                    <span className="w-32 shrink-0 text-xs font-medium uppercase tracking-wider text-foreground/80">
+                      {d.key}
+                    </span>
+                    <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-border">
+                      <div
+                        className="h-full bg-gradient-to-r from-primary/70 to-primary"
+                        style={{ width: `${score * 100}%` }}
+                      />
+                    </div>
+                    <span className="w-10 shrink-0 text-right text-xs tabular-nums text-muted-foreground">
+                      {Math.round(score * 100)}
+                    </span>
+                  </div>
+                  {d.why && (
+                    <p className="ml-32 mt-1 text-xs leading-relaxed text-muted-foreground">
+                      — {d.why}
+                    </p>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Interests (v1 compat) */}
+      {interests.length > 0 && (
+        <div>
+          <p className="mb-2 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+            {t("Interests", "兴趣标签", "興趣標籤")}
+          </p>
+          <div className="flex flex-wrap gap-2">
+            {interests.map((i) => (
+              <span
+                key={i}
+                className="rounded-full border border-border bg-background/60 px-2.5 py-0.5 text-xs text-foreground/80"
+              >
+                {i}
               </span>
-            </div>
-          ))}
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Regenerate */}
+      {onRegenerate && (
+        <div className="flex justify-end pt-2">
+          <button
+            type="button"
+            onClick={onRegenerate}
+            disabled={regenerating}
+            className="inline-flex items-center gap-1.5 rounded-sm border border-border bg-background/40 px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground disabled:opacity-60"
+          >
+            {regenerating ? (
+              <Loader2 className="h-3 w-3 animate-spin" />
+            ) : (
+              <Sparkles className="h-3 w-3" />
+            )}
+            {t(
+              "Get a deeper take",
+              "让 AI 再深度分析一次",
+              "畀 AI 再深入睇一次",
+            )}
+          </button>
         </div>
       )}
     </div>
