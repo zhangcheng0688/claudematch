@@ -31,8 +31,8 @@ function TrustPage() {
         <li>Service-role keys live only on the server. Browser code uses publishable keys with RLS enforced.</li>
         <li>Webhook signatures verified for every external callback.</li>
       </ul>
-      <h2>Scenario-based consent</h2>
-      <p>You explicitly authorize each matching scenario (business, dating, partner) before you can be matched in it. Authorization can be revoked at any time from settings.</p>
+      <h2>Three worlds, fully isolated</h2>
+      <p>Business, dating, and local data are physically separated. What you do in one never bleeds into another. Always.</p>
       <h2>Safe meet-ups</h2>
       <p>Every AI-generated meeting plan recommends public venues, a suggested duration, dress code guidance, and a "what to avoid" section. We never share contact details — communication runs through linQ until both sides consent.</p>
       <h2>Your rights</h2>
