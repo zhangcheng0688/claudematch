@@ -1,3 +1,7 @@
+// src/routes/api/user/me.ts
+// GET /api/user/me — return current user (email + WeChat bind status) plus
+// profile, scenario authorizations, and latest AI profile.
+
 import { createFileRoute } from "@tanstack/react-router";
 import { json, preflight, requireUser } from "@/lib/api/_helpers.server";
 
@@ -22,9 +26,16 @@ export const Route = createFileRoute("/api/user/me")({
             .maybeSingle(),
         ]);
 
+        // WeChat binding flag — populated by /api/auth/wechat/callback when
+        // a WeChat user links an account. The wechat_openid column is added
+        // by supabase/migrations/20260608_add_wechat_openid.sql.
+        const wechatBound = Boolean(
+          (profile as { wechat_openid?: string | null } | null)?.wechat_openid,
+        );
+
         return json({
           data: {
-            user: { id: userId, email },
+            user: { id: userId, email, wechat_bound: wechatBound },
             profile: profile ?? null,
             authorizations: authz ?? { business: false, dating: false, partner: false },
             ai_profile: aiProfile ?? null,
