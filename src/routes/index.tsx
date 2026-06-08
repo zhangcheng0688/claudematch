@@ -1,4 +1,4 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { ArrowRight, Check, Minus, Headphones, Instagram, Twitter, Github, Linkedin, Mail, MessageCircle, Sparkles, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { CookieBanner } from "@/components/CookieBanner";
@@ -253,7 +253,24 @@ function WeeklyDate() {
 }
 
 function SendRealYou() {
-  const { t } = useLang();
+  const { t, lang } = useLang();
+  const navigate = useNavigate();
+  const [text, setText] = useState("");
+  const [submitted, setSubmitted] = useState(false);
+
+  const placeholder =
+    lang === "zh"
+      ? "用一句话描述你自己，比如\"28岁产品经理，喜欢 hiking 和爵士乐，想找能聊得来的朋友\""
+      : 'Describe yourself in one sentence, e.g. "28-year-old PM who loves hiking and jazz, looking for someone to talk with"';
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!text.trim()) return;
+    setSubmitted(true);
+    localStorage.setItem("linq_onboarding_text", text.trim());
+    setTimeout(() => navigate({ to: "/auth" }), 400);
+  };
+
   return (
     <section id="send" className="relative overflow-hidden border-b border-border/60">
       <div className="mx-auto max-w-6xl px-5 py-20 sm:px-6 sm:py-24 md:py-32">
@@ -270,19 +287,37 @@ function SendRealYou() {
             {t("send_desc")}
           </p>
 
-          <div className="mt-12 flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
+          <form onSubmit={handleSubmit} className="mt-12 flex flex-col items-center gap-4">
+            <div className="relative w-full max-w-lg">
+              <textarea
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                placeholder={placeholder}
+                rows={3}
+                className="w-full resize-none rounded-xl border border-border bg-background/60 px-5 py-4 text-[15px] leading-relaxed text-foreground placeholder:text-muted-foreground/60 focus:border-primary/50 focus:outline-none focus:ring-2 focus:ring-primary/10 transition-all"
+              />
+              <div className="absolute bottom-3 right-3 text-[10px] text-muted-foreground/50">
+                {text.length}/200
+              </div>
+            </div>
             <button
-              type="button"
-              disabled
-              aria-disabled="true"
-              className="group inline-flex h-14 w-full max-w-sm cursor-not-allowed items-center justify-center gap-3 rounded-full bg-background pr-7 pl-3 text-base font-semibold text-muted-foreground opacity-70 ring-1 ring-border sm:w-auto"
+              type="submit"
+              disabled={submitted || !text.trim()}
+              className="group inline-flex h-12 items-center gap-2 rounded-full bg-primary px-8 text-sm font-semibold text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:shadow-xl hover:shadow-primary/30 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-muted text-muted-foreground">
-                <MessageCircle className="h-5 w-5" />
-              </span>
-              Coming Soon
+              {submitted ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  {lang === "zh" ? "正在启动…" : "Starting…"}
+                </>
+              ) : (
+                <>
+                  {lang === "zh" ? "开始匹配" : "Start Matching"}
+                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                </>
+              )}
             </button>
-          </div>
+          </form>
           <p className="mt-4 text-xs text-muted-foreground">{t("send_terms")}</p>
         </div>
       </div>
