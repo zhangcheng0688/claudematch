@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { LogOut, Sparkles } from "lucide-react";
+import { LogOut, Settings, Sparkles } from "lucide-react";
 import { LanguageProvider, useLang } from "@/lib/i18n";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -112,13 +112,32 @@ function ProfilePage() {
             <div className="overflow-hidden rounded-sm border border-border bg-background/40">
               <Link
                 to="/start"
-                className="flex items-center gap-3 px-5 py-4 transition-colors hover:bg-accent"
+                className="flex items-center gap-3 border-b border-border px-5 py-4 transition-colors hover:bg-accent"
               >
                 <Sparkles className="h-4 w-4 text-muted-foreground" />
                 <div className="flex-1">
                   <div className="text-sm font-medium">{t("Edit AI profile", "完善 AI 画像")}</div>
                   <div className="text-xs text-muted-foreground">
                     {t("Update how AI sees you", "更新 AI 对你的理解")}
+                  </div>
+                </div>
+                <span className="text-muted-foreground">→</span>
+              </Link>
+              <Link
+                to="/settings"
+                className="flex items-center gap-3 px-5 py-4 transition-colors hover:bg-accent"
+              >
+                <Settings className="h-4 w-4 text-muted-foreground" />
+                <div className="flex-1">
+                  <div className="text-sm font-medium">{t("Matching preferences", "匹配偏好")}</div>
+                  <div className="text-xs text-muted-foreground">
+                    {[
+                      me.authorizations?.business && t("Business", "工作"),
+                      me.authorizations?.dating && t("Dating", "恋爱"),
+                      me.authorizations?.partner && t("Local friends", "本地朋友"),
+                    ]
+                      .filter(Boolean)
+                      .join(" · ") || t("No scenarios enabled", "未启用任何场景")}
                   </div>
                 </div>
                 <span className="text-muted-foreground">→</span>
