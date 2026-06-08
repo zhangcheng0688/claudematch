@@ -23,11 +23,13 @@ import { Route as ApiStatsRouteImport } from './routes/api/stats'
 import { Route as ApiLoginRouteImport } from './routes/api/login'
 import { Route as ApiAuthorizeRouteImport } from './routes/api/authorize'
 import { Route as AuthenticatedStartRouteImport } from './routes/_authenticated/start'
+import { Route as AuthenticatedMeRouteImport } from './routes/_authenticated/me'
 import { Route as AuthenticatedMatchRouteImport } from './routes/_authenticated/match'
 import { Route as ApiUserMeRouteImport } from './routes/api/user/me'
 import { Route as ApiAiMeetPlanRouteImport } from './routes/api/ai/meet-plan'
 import { Route as ApiAiMatchRouteImport } from './routes/api/ai/match'
 import { Route as ApiAiGenerateProfileRouteImport } from './routes/api/ai/generate-profile'
+import { Route as AuthenticatedRateIdRouteImport } from './routes/_authenticated/rate.$id'
 import { Route as AuthenticatedDateIdRouteImport } from './routes/_authenticated/date.$id'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
@@ -102,6 +104,11 @@ const AuthenticatedStartRoute = AuthenticatedStartRouteImport.update({
   path: '/start',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedMeRoute = AuthenticatedMeRouteImport.update({
+  id: '/me',
+  path: '/me',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const AuthenticatedMatchRoute = AuthenticatedMatchRouteImport.update({
   id: '/match',
   path: '/match',
@@ -126,6 +133,11 @@ const ApiAiGenerateProfileRoute = ApiAiGenerateProfileRouteImport.update({
   id: '/api/ai/generate-profile',
   path: '/api/ai/generate-profile',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedRateIdRoute = AuthenticatedRateIdRouteImport.update({
+  id: '/rate/$id',
+  path: '/rate/$id',
+  getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
 const AuthenticatedDateIdRoute = AuthenticatedDateIdRouteImport.update({
   id: '/date/$id',
@@ -159,12 +171,14 @@ export interface FileRoutesByFullPath {
   '/terms': typeof TermsRoute
   '/trust': typeof TrustRoute
   '/match': typeof AuthenticatedMatchRoute
+  '/me': typeof AuthenticatedMeRoute
   '/start': typeof AuthenticatedStartRoute
   '/api/authorize': typeof ApiAuthorizeRoute
   '/api/login': typeof ApiLoginRoute
   '/api/stats': typeof ApiStatsRoute
   '/api/waitlist': typeof ApiWaitlistRoute
   '/date/$id': typeof AuthenticatedDateIdRoute
+  '/rate/$id': typeof AuthenticatedRateIdRoute
   '/api/ai/generate-profile': typeof ApiAiGenerateProfileRoute
   '/api/ai/match': typeof ApiAiMatchRoute
   '/api/ai/meet-plan': typeof ApiAiMeetPlanRoute
@@ -183,12 +197,14 @@ export interface FileRoutesByTo {
   '/terms': typeof TermsRoute
   '/trust': typeof TrustRoute
   '/match': typeof AuthenticatedMatchRoute
+  '/me': typeof AuthenticatedMeRoute
   '/start': typeof AuthenticatedStartRoute
   '/api/authorize': typeof ApiAuthorizeRoute
   '/api/login': typeof ApiLoginRoute
   '/api/stats': typeof ApiStatsRoute
   '/api/waitlist': typeof ApiWaitlistRoute
   '/date/$id': typeof AuthenticatedDateIdRoute
+  '/rate/$id': typeof AuthenticatedRateIdRoute
   '/api/ai/generate-profile': typeof ApiAiGenerateProfileRoute
   '/api/ai/match': typeof ApiAiMatchRoute
   '/api/ai/meet-plan': typeof ApiAiMeetPlanRoute
@@ -209,12 +225,14 @@ export interface FileRoutesById {
   '/terms': typeof TermsRoute
   '/trust': typeof TrustRoute
   '/_authenticated/match': typeof AuthenticatedMatchRoute
+  '/_authenticated/me': typeof AuthenticatedMeRoute
   '/_authenticated/start': typeof AuthenticatedStartRoute
   '/api/authorize': typeof ApiAuthorizeRoute
   '/api/login': typeof ApiLoginRoute
   '/api/stats': typeof ApiStatsRoute
   '/api/waitlist': typeof ApiWaitlistRoute
   '/_authenticated/date/$id': typeof AuthenticatedDateIdRoute
+  '/_authenticated/rate/$id': typeof AuthenticatedRateIdRoute
   '/api/ai/generate-profile': typeof ApiAiGenerateProfileRoute
   '/api/ai/match': typeof ApiAiMatchRoute
   '/api/ai/meet-plan': typeof ApiAiMeetPlanRoute
@@ -235,12 +253,14 @@ export interface FileRouteTypes {
     | '/terms'
     | '/trust'
     | '/match'
+    | '/me'
     | '/start'
     | '/api/authorize'
     | '/api/login'
     | '/api/stats'
     | '/api/waitlist'
     | '/date/$id'
+    | '/rate/$id'
     | '/api/ai/generate-profile'
     | '/api/ai/match'
     | '/api/ai/meet-plan'
@@ -259,12 +279,14 @@ export interface FileRouteTypes {
     | '/terms'
     | '/trust'
     | '/match'
+    | '/me'
     | '/start'
     | '/api/authorize'
     | '/api/login'
     | '/api/stats'
     | '/api/waitlist'
     | '/date/$id'
+    | '/rate/$id'
     | '/api/ai/generate-profile'
     | '/api/ai/match'
     | '/api/ai/meet-plan'
@@ -284,12 +306,14 @@ export interface FileRouteTypes {
     | '/terms'
     | '/trust'
     | '/_authenticated/match'
+    | '/_authenticated/me'
     | '/_authenticated/start'
     | '/api/authorize'
     | '/api/login'
     | '/api/stats'
     | '/api/waitlist'
     | '/_authenticated/date/$id'
+    | '/_authenticated/rate/$id'
     | '/api/ai/generate-profile'
     | '/api/ai/match'
     | '/api/ai/meet-plan'
@@ -422,6 +446,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedStartRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/me': {
+      id: '/_authenticated/me'
+      path: '/me'
+      fullPath: '/me'
+      preLoaderRoute: typeof AuthenticatedMeRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/match': {
       id: '/_authenticated/match'
       path: '/match'
@@ -457,6 +488,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiAiGenerateProfileRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/rate/$id': {
+      id: '/_authenticated/rate/$id'
+      path: '/rate/$id'
+      fullPath: '/rate/$id'
+      preLoaderRoute: typeof AuthenticatedRateIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/date/$id': {
       id: '/_authenticated/date/$id'
       path: '/date/$id'
@@ -490,14 +528,18 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteRouteChildren {
   AuthenticatedMatchRoute: typeof AuthenticatedMatchRoute
+  AuthenticatedMeRoute: typeof AuthenticatedMeRoute
   AuthenticatedStartRoute: typeof AuthenticatedStartRoute
   AuthenticatedDateIdRoute: typeof AuthenticatedDateIdRoute
+  AuthenticatedRateIdRoute: typeof AuthenticatedRateIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedMatchRoute: AuthenticatedMatchRoute,
+  AuthenticatedMeRoute: AuthenticatedMeRoute,
   AuthenticatedStartRoute: AuthenticatedStartRoute,
   AuthenticatedDateIdRoute: AuthenticatedDateIdRoute,
+  AuthenticatedRateIdRoute: AuthenticatedRateIdRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
