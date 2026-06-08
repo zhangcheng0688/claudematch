@@ -122,6 +122,7 @@ export type MatchDetails = {
   city?: string;
   headline?: string;
   bio?: string;
+  summary?: string;
   shared_interests?: string[];
   /** v2 legacy single-line reason (kept for back-compat) */
   reason?: string;

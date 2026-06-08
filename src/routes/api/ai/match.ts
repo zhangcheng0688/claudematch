@@ -129,6 +129,7 @@ ${candidates.map((c, i) => `[${i}] ${JSON.stringify(c.profile_data)}`).join("\n"
   "name": string (对方画像里的名字或昵称),
   "headline": string (10-20 字符画像标签),
   "bio": string (一段 60-100 字的画像描写 —— 不是简历，是让 A 看了能"看到"对方的一段文字),
+  "summary": string (1-2 句 30-50 字的极简总结，用于 detail 页的卡片开头 —— 要让人"一眼就懂这段关系"),
   "resonance": string[] (共鸣点 —— 3-5 条，**每条必须展示深层契合而非关键词重合**，例如"你们的孤独感来自同一处：不被理解的精确性，而不是不被看见的本身"),
   "complementarity": string[] (互补点 —— 3 条，**具体到 ta 的哪种特质补了你的哪种缺口**),
   "friction": string[] (摩擦点 —— 2-3 条，**真实存在的潜在冲突点**，例如"你们都会在压力下沉默，初期这会变成'两个人都不开口'的僵局"),
@@ -168,6 +169,7 @@ ${candidates.map((c, i) => `[${i}] ${JSON.stringify(c.profile_data)}`).join("\n"
           name?: string;
           headline?: string;
           bio?: string;
+          summary?: string;
           shared_interests?: string[];
           resonance?: string[];
           complementarity?: string[];
@@ -230,6 +232,7 @@ ${candidates.map((c, i) => `[${i}] ${JSON.stringify(c.profile_data)}`).join("\n"
           name: parsed.name ?? "匹配对象",
           headline: parsed.headline ?? "",
           bio: parsed.bio ?? "",
+          summary: parsed.summary ?? parsed.bio?.slice(0, 60) ?? "",
           shared_interests: Array.isArray(parsed.shared_interests)
             ? parsed.shared_interests
             : [],
