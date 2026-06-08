@@ -156,18 +156,21 @@ function Hero() {
 }
 
 function useCountdown(target: Date) {
-  const [now, setNow] = useState(() => Date.now());
+  const [now, setNow] = useState<number | null>(null);
   useEffect(() => {
-    const id = setInterval(() => setNow(Date.now()), 1000);
+    const tick = () => setNow(Date.now());
+    tick();
+    const id = setInterval(tick, 1000);
     return () => clearInterval(id);
   }, []);
+  const pad = (n: number) => n.toString().padStart(2, "0");
+  if (now === null) return { d: "--", h: "--", m: "--", s: "--", ready: false };
   const diff = Math.max(0, target.getTime() - now);
   const d = Math.floor(diff / 86400000);
   const h = Math.floor((diff % 86400000) / 3600000);
   const m = Math.floor((diff % 3600000) / 60000);
   const s = Math.floor((diff % 60000) / 1000);
-  const pad = (n: number) => n.toString().padStart(2, "0");
-  return { d: pad(d), h: pad(h), m: pad(m), s: pad(s) };
+  return { d: pad(d), h: pad(h), m: pad(m), s: pad(s), ready: true };
 }
 
 function nextWednesday() {
@@ -183,10 +186,10 @@ function nextWednesday() {
 function WeeklyDate() {
   const { lang, t } = useLang();
   const target = nextWednesday();
-  const { d, h, m, s } = useCountdown(target);
-  const dateLabel = target.toLocaleDateString(lang === "zh" ? "zh-CN" : "en-US", { month: "short", day: "numeric", year: "numeric" });
-  const now = new Date();
-  const isMatchDay = now.getUTCDay() === 3 && now.getUTCHours() < 19;
+  const { d, h, m, s, ready } = useCountdown(target);
+  const dateLabel = target.toLocaleDateString(lang === "zh" ? "zh-CN" : "en-US", { month: "short", day: "numeric", year: "numeric", timeZone: "Asia/Shanghai" });
+  const now = ready ? new Date() : null;
+  const isMatchDay = Boolean(now && now.getUTCDay() === 3 && now.getUTCHours() < 19);
   return (
     <section id="weekly" className="relative overflow-hidden border-b border-border/60 bg-secondary/30">
       <div className="absolute inset-0 -z-10 opacity-40" aria-hidden="true"
