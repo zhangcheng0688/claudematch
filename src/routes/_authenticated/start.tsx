@@ -1,7 +1,8 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
 import { LanguageProvider, useLang } from "@/lib/i18n";
-import { supabase } from "@/integrations/supabase/client";
+import { AppShell } from "@/components/AppShell";
+import { authedFetch } from "@/lib/api/authed-fetch";
 import { MatchCard } from "@/components/shared/MatchCard";
 import { PlanCard } from "@/components/shared/PlanCard";
 import type { Scenario, Profile, MatchRow, MeetPlan } from "@/types/match";
@@ -12,7 +13,6 @@ import {
   Users,
   Sparkles,
   Loader2,
-  LogOut,
   CheckCircle2,
 } from "lucide-react";
 
@@ -25,25 +25,8 @@ export const Route = createFileRoute("/_authenticated/start")({
   ),
 });
 
-async function authedFetch(path: string, init?: RequestInit) {
-  const { data } = await supabase.auth.getSession();
-  const token = data.session?.access_token;
-  const res = await fetch(path, {
-    ...init,
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...(init?.headers ?? {}),
-    },
-  });
-  const body = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error((body as { error?: string }).error ?? `Request failed (${res.status})`);
-  return body;
-}
-
 function StartPage() {
   const { lang } = useLang();
-  const navigate = useNavigate();
   const t = (en: string, zh: string) => (lang === "zh" ? zh : en);
 
   const [step, setStep] = useState<1 | 2 | 3>(1);
@@ -56,11 +39,6 @@ function StartPage() {
   const [loading, setLoading] = useState<null | "profile" | "match" | "plan">(null);
   const [err, setErr] = useState<string | null>(null);
   const [waitlistMsg, setWaitlistMsg] = useState<string | null>(null);
-  const [email, setEmail] = useState<string>("");
-
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => setEmail(data.user?.email ?? ""));
-  }, []);
 
   const scenarios = useMemo(
     () =>
@@ -72,11 +50,6 @@ function StartPage() {
     [lang],
   );
 
-  const signOut = async () => {
-    await supabase.auth.signOut();
-    navigate({ to: "/", replace: true });
-  };
-
   const generateProfile = async () => {
     setErr(null);
     if (input.trim().length < 12) {
@@ -85,11 +58,11 @@ function StartPage() {
     }
     setLoading("profile");
     try {
-      const res = await authedFetch("/api/ai/generate-profile", {
+      const res = await authedFetch<{ data: Profile }>("/api/ai/generate-profile", {
         method: "POST",
         body: JSON.stringify({ input, scenario, lang }),
       });
-      setProfile((res as { data: Profile }).data);
+      setProfile(res.data);
       setStep(2);
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Failed");
@@ -106,22 +79,21 @@ function StartPage() {
     setMatches([]);
     setLoading("match");
     try {
-      const res = await authedFetch("/api/ai/match", {
-        method: "POST",
-        body: JSON.stringify({ scenario, lang }),
-      });
-      const r = res as {
+      const res = await authedFetch<{
         data: MatchRow[];
         plan?: MeetPlan;
         waitlisted?: boolean;
         message?: string;
-      };
-      setMatches(r.data ?? []);
-      if (r.waitlisted) {
-        setWaitlistMsg(r.message ?? "暂无匹配，已加入等待池。");
-      } else if (r.data?.[0]) {
-        setActiveMatch(r.data[0]);
-        if (r.plan) setPlan(r.plan);
+      }>("/api/ai/match", {
+        method: "POST",
+        body: JSON.stringify({ scenario, lang }),
+      });
+      setMatches(res.data ?? []);
+      if (res.waitlisted) {
+        setWaitlistMsg(res.message ?? "暂无匹配，已加入等待池。");
+      } else if (res.data?.[0]) {
+        setActiveMatch(res.data[0]);
+        if (res.plan) setPlan(res.plan);
       }
       setStep(3);
     } catch (e) {
@@ -137,11 +109,11 @@ function StartPage() {
     setPlan(null);
     setLoading("plan");
     try {
-      const res = await authedFetch("/api/ai/meet-plan", {
+      const res = await authedFetch<{ data: MeetPlan }>("/api/ai/meet-plan", {
         method: "POST",
         body: JSON.stringify({ match_id: m.id, lang }),
       });
-      setPlan((res as { data: MeetPlan }).data);
+      setPlan(res.data);
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Failed");
     } finally {
@@ -150,22 +122,7 @@ function StartPage() {
   };
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
-          <Link to="/" className="text-lg font-semibold tracking-tight">
-            lin<span className="font-display text-primary text-2xl align-middle">Q</span>
-          </Link>
-          <div className="flex items-center gap-4 text-xs text-muted-foreground">
-            <span className="hidden sm:inline">{email}</span>
-            <button onClick={signOut} className="inline-flex items-center gap-1 hover:text-foreground">
-              <LogOut className="h-3.5 w-3.5" />
-              {t("Sign out", "退出")}
-            </button>
-          </div>
-        </div>
-      </header>
-
+    <AppShell>
       <section className="mx-auto max-w-3xl px-6 py-12 sm:py-16">
         <Stepper step={step} t={t} />
 
@@ -288,7 +245,7 @@ function StartPage() {
               </>
             )}
 
-            <div className="pt-4">
+            <div className="pt-4 flex flex-wrap items-center gap-3">
               <button
                 onClick={() => {
                   setStep(1);
@@ -301,6 +258,10 @@ function StartPage() {
               >
                 ↻ {t("Start over", "重新开始")}
               </button>
+              <span className="text-xs text-muted-foreground">·</span>
+              <Link to="/match" className="text-xs text-primary hover:underline">
+                {t("See all matches →", "查看所有匹配 →")}
+              </Link>
             </div>
           </div>
         )}
@@ -311,7 +272,7 @@ function StartPage() {
           </div>
         )}
       </section>
-    </main>
+    </AppShell>
   );
 }
 

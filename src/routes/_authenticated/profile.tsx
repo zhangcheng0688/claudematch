@@ -1,8 +1,9 @@
-import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { LogOut, Settings, Sparkles } from "lucide-react";
 import { LanguageProvider, useLang } from "@/lib/i18n";
-import { supabase } from "@/integrations/supabase/client";
+import { AppShell } from "@/components/AppShell";
+import { authedFetch } from "@/lib/api/authed-fetch";
 
 export const Route = createFileRoute("/_authenticated/profile")({
   head: () => ({
@@ -26,27 +27,8 @@ type MeResponse = {
   ai_profile: unknown;
 };
 
-// Mirrors the helper in routes/_authenticated/start.tsx. Will be hoisted to
-// src/lib/api/authed-fetch.ts in the AppShell + hooks phase.
-async function authedFetch(path: string, init?: RequestInit) {
-  const { data } = await supabase.auth.getSession();
-  const token = data.session?.access_token;
-  const res = await fetch(path, {
-    ...init,
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...(init?.headers ?? {}),
-    },
-  });
-  const body = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error((body as { error?: string }).error ?? `Request failed (${res.status})`);
-  return body;
-}
-
 function ProfilePage() {
   const { lang } = useLang();
-  const navigate = useNavigate();
   const t = (en: string, zh: string) => (lang === "zh" ? zh : en);
 
   const [me, setMe] = useState<MeResponse | null>(null);
@@ -56,7 +38,7 @@ function ProfilePage() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await authedFetch("/api/user/me", { method: "GET" });
+        const res = await authedFetch<{ data: MeResponse } | MeResponse>("/api/user/me", { method: "GET" });
         setMe((res as { data: MeResponse }).data ?? (res as MeResponse));
         setLoading(false);
       } catch (e) {
@@ -66,29 +48,11 @@ function ProfilePage() {
     })();
   }, []);
 
-  const signOut = async () => {
-    if (typeof window !== "undefined" && !window.confirm(t("Sign out of linQ?", "确定退出登录？"))) return;
-    await supabase.auth.signOut();
-    navigate({ to: "/", replace: true });
-  };
-
   const email = me?.user?.email ?? "";
   const initial = email ? email[0].toUpperCase() : "?";
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      {/* Header — inline for now; will be replaced by AppShell in the next phase. */}
-      <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
-          <Link to="/" className="text-lg font-semibold tracking-tight">
-            lin<span className="font-display text-primary text-2xl align-middle">Q</span>
-          </Link>
-          <Link to="/start" className="text-xs text-muted-foreground hover:text-foreground">
-            ← {t("Back", "返回")}
-          </Link>
-        </div>
-      </header>
-
+    <AppShell>
       <section className="mx-auto max-w-md px-6 py-12 sm:py-16">
         {loading ? (
           <div className="rounded-sm border border-border bg-background/40 p-12 text-center text-sm text-muted-foreground">
@@ -100,7 +64,6 @@ function ProfilePage() {
           </div>
         ) : me ? (
           <div className="space-y-8">
-            {/* User identity */}
             <div className="flex flex-col items-center gap-3 py-6">
               <div className="flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary/60 text-2xl font-semibold text-primary-foreground shadow-lg ring-2 ring-primary/20">
                 {initial}
@@ -108,7 +71,6 @@ function ProfilePage() {
               <div className="text-base font-medium">{email}</div>
             </div>
 
-            {/* Menu — Settings link is intentionally absent; that page is built in the next phase. */}
             <div className="overflow-hidden rounded-sm border border-border bg-background/40">
               <Link
                 to="/start"
@@ -144,20 +106,15 @@ function ProfilePage() {
               </Link>
             </div>
 
-            {/* Sign out */}
-            <button
-              onClick={signOut}
-              className="flex w-full items-center justify-center gap-2 rounded-sm border border-destructive/40 bg-destructive/5 px-4 py-3 text-sm font-medium text-destructive transition-colors hover:bg-destructive/10"
-            >
-              <LogOut className="h-4 w-4" />
-              {t("Sign out", "退出登录")}
-            </button>
+            {/* Hint that the app shell's account menu is the canonical sign-out entry */}
+            <p className="text-center text-xs text-muted-foreground">
+              {t("Sign out via the avatar menu (top right).", "点击右上角头像菜单退出登录。")}
+            </p>
 
-            {/* Version */}
             <div className="text-center text-xs text-muted-foreground">linQ v1.1.0 · Web</div>
           </div>
         ) : null}
       </section>
-    </main>
+    </AppShell>
   );
 }

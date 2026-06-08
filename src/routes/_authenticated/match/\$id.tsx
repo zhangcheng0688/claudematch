@@ -2,7 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Calendar, Copy, Loader2, Sparkles, ArrowRight } from "lucide-react";
 import { LanguageProvider, useLang } from "@/lib/i18n";
-import { supabase } from "@/integrations/supabase/client";
+import { AppShell } from "@/components/AppShell";
+import { authedFetch } from "@/lib/api/authed-fetch";
 import { PlanCard } from "@/components/shared/PlanCard";
 import type { MatchRow, MeetPlan } from "@/types/match";
 
@@ -20,22 +21,6 @@ export const Route = createFileRoute("/_authenticated/match/$id")({
   ),
 });
 
-async function authedFetch(path: string, init?: RequestInit) {
-  const { data } = await supabase.auth.getSession();
-  const token = data.session?.access_token;
-  const res = await fetch(path, {
-    ...init,
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...(init?.headers ?? {}),
-    },
-  });
-  const body = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error((body as { error?: string }).error ?? `Request failed (${res.status})`);
-  return body;
-}
-
 function MatchDetailPage() {
   const { lang } = useLang();
   const t = (en: string, zh: string) => (lang === "zh" ? zh : en);
@@ -52,10 +37,12 @@ function MatchDetailPage() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await authedFetch(`/api/match/${id}`, { method: "GET" });
-        const data = (res as { data: { match: MatchRow; plan: MeetPlan | null } }).data;
-        setMatch(data.match);
-        setPlan(data.plan);
+        const res = await authedFetch<{ data: { match: MatchRow; plan: MeetPlan | null } }>(
+          `/api/match/${id}`,
+          { method: "GET" },
+        );
+        setMatch(res.data.match);
+        setPlan(res.data.plan);
         setLoading(false);
       } catch (e) {
         setErr(e instanceof Error ? e.message : "Failed to load");
@@ -68,11 +55,11 @@ function MatchDetailPage() {
     setErr(null);
     setGenerating(true);
     try {
-      const res = await authedFetch("/api/ai/meet-plan", {
+      const res = await authedFetch<{ data: MeetPlan }>("/api/ai/meet-plan", {
         method: "POST",
         body: JSON.stringify({ match_id: id, lang }),
       });
-      setPlan((res as { data: MeetPlan }).data);
+      setPlan(res.data);
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Failed");
     } finally {
@@ -108,18 +95,18 @@ function MatchDetailPage() {
 
   if (loading) {
     return (
-      <CenterShell>
-        <div className="rounded-sm border border-border bg-background/40 p-12 text-center text-sm text-muted-foreground">
+      <AppShell>
+        <div className="mx-auto max-w-md px-6 py-20 text-center text-sm text-muted-foreground">
           {t("Loading…", "加载中…")}
         </div>
-      </CenterShell>
+      </AppShell>
     );
   }
 
   if (err || !match) {
     return (
-      <CenterShell>
-        <div className="space-y-3">
+      <AppShell back={{ to: "/match", labelEn: "Back to matches", labelZh: "返回匹配列表" }}>
+        <div className="mx-auto max-w-md px-6 py-20 space-y-3">
           <div className="rounded-sm border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
             {err ?? t("Match not found.", "未找到匹配。")}
           </div>
@@ -130,7 +117,7 @@ function MatchDetailPage() {
             ← {t("Back to matches", "返回匹配列表")}
           </Link>
         </div>
-      </CenterShell>
+      </AppShell>
     );
   }
 
@@ -139,18 +126,7 @@ function MatchDetailPage() {
   const showSummaryExpand = summary.length > 150;
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
-          <Link to="/" className="text-lg font-semibold tracking-tight">
-            lin<span className="font-display text-primary text-2xl align-middle">Q</span>
-          </Link>
-          <Link to="/match" className="text-xs text-muted-foreground hover:text-foreground">
-            ← {t("Back to matches", "返回匹配列表")}
-          </Link>
-        </div>
-      </header>
-
+    <AppShell back={{ to: "/match", labelEn: "Back to matches", labelZh: "返回匹配列表" }}>
       <section className="mx-auto max-w-2xl px-6 py-10 sm:py-14">
         <div className="flex flex-col items-center text-center">
           <div className="flex h-32 w-32 items-center justify-center rounded-full bg-gradient-to-br from-primary/20 to-primary/5 ring-2 ring-primary/30">
@@ -272,25 +248,7 @@ function MatchDetailPage() {
           </div>
         )}
       </section>
-    </main>
-  );
-}
-
-function CenterShell({ children }: { children: React.ReactNode }) {
-  return (
-    <main className="min-h-screen bg-background text-foreground">
-      <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
-          <Link to="/" className="text-lg font-semibold tracking-tight">
-            lin<span className="font-display text-primary text-2xl align-middle">Q</span>
-          </Link>
-          <Link to="/match" className="text-xs text-muted-foreground hover:text-foreground">
-            ← {`back`}
-          </Link>
-        </div>
-      </header>
-      <section className="mx-auto max-w-md px-6 py-20">{children}</section>
-    </main>
+    </AppShell>
   );
 }
 

@@ -2,7 +2,8 @@ import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Sparkles } from "lucide-react";
 import { LanguageProvider, useLang } from "@/lib/i18n";
-import { supabase } from "@/integrations/supabase/client";
+import { AppShell } from "@/components/AppShell";
+import { authedFetch } from "@/lib/api/authed-fetch";
 import { MatchCard } from "@/components/shared/MatchCard";
 import type { MatchRow } from "@/types/match";
 
@@ -20,24 +21,6 @@ export const Route = createFileRoute("/_authenticated/match")({
   ),
 });
 
-// Mirrors the helper in other authenticated routes.
-// Will be hoisted to src/lib/api/authed-fetch.ts in the AppShell phase.
-async function authedFetch(path: string, init?: RequestInit) {
-  const { data } = await supabase.auth.getSession();
-  const token = data.session?.access_token;
-  const res = await fetch(path, {
-    ...init,
-    headers: {
-      "Content-Type": "application/json",
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...(init?.headers ?? {}),
-    },
-  });
-  const body = await res.json().catch(() => ({}));
-  if (!res.ok) throw new Error((body as { error?: string }).error ?? `Request failed (${res.status})`);
-  return body;
-}
-
 function MatchListPage() {
   const { lang } = useLang();
   const navigate = useNavigate();
@@ -50,8 +33,8 @@ function MatchListPage() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await authedFetch("/api/match", { method: "GET" });
-        setMatches((res as { data: MatchRow[] }).data ?? []);
+        const res = await authedFetch<{ data: MatchRow[] } | MatchRow[]>("/api/match", { method: "GET" });
+        setMatches((res as { data: MatchRow[] }).data ?? (res as MatchRow[]));
         setLoading(false);
       } catch (e) {
         setErr(e instanceof Error ? e.message : "Failed to load");
@@ -61,19 +44,7 @@ function MatchListPage() {
   }, []);
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      {/* Header — inline for now; will be replaced by AppShell later. */}
-      <header className="sticky top-0 z-40 border-b border-border/60 bg-background/80 backdrop-blur-xl">
-        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
-          <Link to="/" className="text-lg font-semibold tracking-tight">
-            lin<span className="font-display text-primary text-2xl align-middle">Q</span>
-          </Link>
-          <Link to="/profile" className="text-xs text-muted-foreground hover:text-foreground">
-            ← {t("Back to profile", "返回个人中心")}
-          </Link>
-        </div>
-      </header>
-
+    <AppShell back={{ to: "/profile", labelEn: "Back to profile", labelZh: "返回个人中心" }}>
       <section className="mx-auto max-w-3xl px-6 py-12 sm:py-16">
         <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
           <span className="text-gold-glow">{t("Your matches", "你的匹配")}</span>
@@ -129,17 +100,13 @@ function MatchListPage() {
                   match={m}
                   active={false}
                   loading={false}
-                  onPlan={(e) => {
-                    // Don't navigate to match detail if user clicks the Plan button — let the card handle it
-                    e?.preventDefault();
-                    navigate({ to: "/match/$id", params: { id: m.id } });
-                  }}
+                  onPlan={() => navigate({ to: "/match/$id", params: { id: m.id } })}
                 />
               </Link>
             ))}
           </div>
         )}
       </section>
-    </main>
+    </AppShell>
   );
 }
