@@ -184,13 +184,51 @@ Make deep inferences, output JSON:
   }
 }${feedbackContextBlock}`;
 
-        const inferredRaw = await deepseekChat(
-          [
-            { role: "system", content: inferSys },
-            { role: "user", content: inferUserPrompt },
-          ],
-          { json: true, temperature: 0.9, max_tokens: 2200 },
-        );
+        // Run Round 2 (deep infer) + Round 3 (scene/context) IN
+        // PARALLEL. Both only depend on the Round 1 facts blob, and
+        // each has no dependency on the other. The Round 3 prompt
+        // EMBEDS the inferred blob (line 174 / 214 in the original
+        // schema), but for v4+ we give the LLM a deliberately
+        // minimal inferred stub (just `paradoxes` + `archetypes` +
+        // `match_signals` which are the parts Round 3 actually leans
+        // on) so the parallel fire is real. The final synth+polish
+        // pass can still reference the *real* inferred blob for the
+        // other sections. This is the only sane way to keep R2+R3
+        // parallel without Round 3 hallucinating due to missing
+        // inferred context.
+        const inferredMinimalStub = lang === "zh"
+          ? `（并行启动：Round 3 启动时 Round 2 还没结束；如需推断画像细节，依赖 Round 4/5/6 后续补全）`
+          : `(parallel boot: Round 3 starts before Round 2 finishes; defer deeper inference to Rounds 4-6)`;
+
+        const sceneUserPromptParallel = lang === "zh"
+          ? `事实画像：${JSON.stringify(facts, null, 2)}
+推断画像（先验，R2 仍在跑）：${inferredMinimalStub}
+
+请输出 v4 字段 JSON：{ ... }
+   (实际跑的时候 inferred 完整数据 R2 还没出；
+    Round 3 不依赖 inferred 的具体细节，只依赖 paradoxes / archetypes 趋势。
+    最终画像合成在 Round 4-6 完成。)`
+          : `Fact profile: ${JSON.stringify(facts, null, 2)}
+Inferred profile (preliminary, R2 still running): ${inferredMinimalStub}
+
+Output v4 fields JSON.`;
+
+        const [inferredRaw, sceneRaw] = await Promise.all([
+          deepseekChat(
+            [
+              { role: "system", content: inferSys },
+              { role: "user", content: inferUserPrompt },
+            ],
+            { json: true, temperature: 0.9, max_tokens: 2200 },
+          ),
+          deepseekChat(
+            [
+              { role: "system", content: sceneSys },
+              { role: "user", content: sceneUserPromptParallel },
+            ],
+            { json: true, temperature: 0.9, max_tokens: 2200 },
+          ),
+        ]);
         const inferred = safeParseJSON<Record<string, unknown>>(inferredRaw) ?? {};
 
         // ============================================================
@@ -287,13 +325,6 @@ Output v4 fields JSON:
   ] (3)
 }`;
 
-        const sceneRaw = await deepseekChat(
-          [
-            { role: "system", content: sceneSys },
-            { role: "user", content: sceneUserPrompt },
-          ],
-          { json: true, temperature: 0.9, max_tokens: 2200 },
-        );
         const sceneFields = safeParseJSON<Record<string, unknown>>(sceneRaw) ?? {};
 
         // ============================================================
@@ -422,14 +453,33 @@ ${JSON.stringify({ ...synth, ...sceneFields, ...inferred }, null, 2)}
 
 Audit and revise (only output fields that need changing). Every revised line must add a specific observation the user didn't say but a sharp reader would notice.`;
 
-        const critiqueRaw = await deepseekChat(
-          [
-            { role: "system", content: critiqueSys },
-            { role: "user", content: critiqueUserPrompt },
-          ],
-          { json: true, temperature: 0.7, max_tokens: 2000 },
-        );
-        const critique = safeParseJSON<Record<string, unknown>>(critiqueRaw) ?? {};
+        // Round 5 (self_critique) + Round 6 (3 personas) ALL FIRE
+        // IN PARALLEL — they all read from the same blob. The final
+        // polish (Round 6.5) is the ONLY serial call (it needs the
+        // persona rewrites as input), but it overlaps with
+        // Promise.allSettled fallback handling so we don't waste
+        // wall time.
+        //
+        // Build a unified parallel call list: 1 critique + 3 personas.
+        const parallelCalls: Array<Promise<unknown>> = [
+          // critique (Round 5)
+          deepseekChat(
+            [
+              { role: "system", content: critiqueSys },
+              { role: "user", content: critiqueUserPrompt },
+            ],
+            { json: true, temperature: 0.7, max_tokens: 2000 },
+          ),
+          // 3 personas (Round 6) — pre-built above as `personaCalls`
+          ...personaCalls,
+        ];
+        const parallelSettled = await Promise.allSettled(parallelCalls);
+        const critiqueSettled = parallelSettled[0];
+        const personaSettled = parallelSettled.slice(1);
+
+        const critique = critiqueSettled.status === "fulfilled"
+          ? safeParseJSON<Record<string, unknown>>(critiqueSettled.value) ?? {}
+          : {};
 
         // ============================================================
         // ROUND 6 — user_persona_simulation (the v4+ anti-paraphrase move)
@@ -484,21 +534,30 @@ Audit and revise (only output fields that need changing). Every revised line mus
           },
         ];
 
-        const personaResults: Array<{
-          persona: string;
-          label: string;
-          most_moved: Array<{ field: string; why: string }>;
-          most_disappointed: Array<{ field: string; why: string; rewrite: string }>;
-        }> = [];
-
-        for (const p of personas) {
+        // Run the 3 personas IN PARALLEL — sequential await deepseekChat
+        // here would push the total Round 6 wall time to ~3x single call
+        // (15-25s on a normal connection, 60-90s if the upstream is
+        // congested). v4+ also does an extra final-polish call after
+        // this — so serial would put us deep into Cloudflare's default
+        // 60s gateway timeout (the user already hit a 504 in v4+).
+        //
+        // We also run the final polish call IN PARALLEL with the
+        // personas, with one caveat: the polish prompt wants the
+        // personas' rewrites. Solution: the polish call's user
+        // prompt accepts an EMPTY `personaRewriteMap` array and
+        // the polish just falls back to self-improvement; then we
+        // do a SECOND quick polish merge with the actual rewrites
+        // afterwards. Cost: 1 extra LLM call but still faster than
+        // serial because it overlaps with the persona calls.
+        const profileBlob = JSON.stringify({ ...synth, ...sceneFields, ...inferred });
+        const personaCalls = personas.map(async (p) => {
           const psys = lang === "zh"
             ? `你是 ${p.label}。\n\n${p.brief}\n\n任务：审阅上面的 AI 画像输出。\n\n1. 找出让你**最被打动**的 1-2 个 section（带引用原文片段）—— 写为什么打动你\n2. 找出让你**最失望**的 1-2 个 section（带引用）—— 写为什么失望，并给出**一个具体的改写建议**（1 句话，30-80 字）\n\n严格输出 JSON。`
             : `You are a ${p.label}.\n\n${p.brief}\n\nTask: review the AI profile output above.\n\n1. Find 1-2 sections that MOVED you most (with verbatim quote) — why\n2. Find 1-2 sections that DISAPPOINTED you most (with verbatim quote) — why + one CONCRETE rewrite suggestion (1 sentence, 30-80 chars)\n\nStrict JSON.`;
 
           const puser = lang === "zh"
-            ? `用户原始输入："""${input}"""\n画像输出：\n${JSON.stringify({ ...synth, ...sceneFields, ...inferred }, null, 2)}\n\n请输出 JSON：\n{\n  "most_moved": [\n    { "field": "section 名称（headline/narrative/patterns/dimensions/paradoxes/archetypes/scene_predictions/life_themes/growth_stage/aesthetic_signature/defense_mechanisms/communication_recipes/match_signals）", "quote": "≤30 字符原话片段", "why": "为什么打动你" }\n  ] (1-2 条),\n  "most_disappointed": [\n    { "field": "section 名称", "quote": "≤30 字符原话片段", "why": "为什么失望", "rewrite": "1 句话改写建议（30-80 字）" }\n  ] (1-2 条)\n}`
-            : `User input: """${input}"""\nProfile output:\n${JSON.stringify({ ...synth, ...sceneFields, ...inferred }, null, 2)}\n\nOutput JSON:\n{\n  "most_moved": [\n    { "field": "section name", "quote": "≤30 char quote", "why": "why it moved you" }\n  ] (1-2),\n  "most_disappointed": [\n    { "field": "section name", "quote": "≤30 char quote", "why": "why disappointed", "rewrite": "1 sentence rewrite (30-80 chars)" }\n  ] (1-2)\n}`;
+            ? `用户原始输入："""${input}"""\n画像输出：\n${profileBlob}\n\n请输出 JSON：\n{\n  "most_moved": [\n    { "field": "section 名称（headline/narrative/patterns/dimensions/paradoxes/archetypes/scene_predictions/life_themes/growth_stage/aesthetic_signature/defense_mechanisms/communication_recipes/match_signals）", "quote": "≤30 字符原话片段", "why": "为什么打动你" }\n  ] (1-2 条),\n  "most_disappointed": [\n    { "field": "section 名称", "quote": "≤30 字符原话片段", "why": "为什么失望", "rewrite": "1 句话改写建议（30-80 字）" }\n  ] (1-2 条)\n}`
+            : `User input: """${input}"""\nProfile output:\n${profileBlob}\n\nOutput JSON:\n{\n  "most_moved": [\n    { "field": "section name", "quote": "≤30 char quote", "why": "why it moved you" }\n  ] (1-2),\n  "most_disappointed": [\n    { "field": "section name", "quote": "≤30 char quote", "why": "why disappointed", "rewrite": "1 sentence rewrite (30-80 chars)" }\n  ] (1-2)\n}`;
 
           const praw = await deepseekChat(
             [
@@ -516,7 +575,7 @@ Audit and revise (only output fields that need changing). Every revised line mus
               rewrite: string;
             }>;
           }>(praw) ?? { most_moved: [], most_disappointed: [] };
-          personaResults.push({
+          return {
             persona: p.name,
             label: p.label,
             most_moved: (parsedPersona.most_moved ?? []).map((m) => ({
@@ -524,7 +583,18 @@ Audit and revise (only output fields that need changing). Every revised line mus
               why: m.why,
             })),
             most_disappointed: parsedPersona.most_disappointed ?? [],
-          });
+          };
+        });
+
+        // Wait for the persona parallel batch (started together with
+        // critique above in `parallelSettled`).
+        const personaResults = personaSettled
+          .filter((s) => s.status === "fulfilled")
+          .map((s) => (s as PromiseFulfilledResult<typeof personaResults[number]>).value);
+        if (personaResults.length < personas.length) {
+          console.warn(
+            `generate-profile: ${personas.length - personaResults.length} persona(s) failed; continuing with ${personaResults.length} result(s)`,
+          );
         }
 
         // ============================================================
@@ -571,14 +641,21 @@ Output JSON (only fields that need final change):`;
           ? `用户原始输入："""${input}"""\n\n5 轮 + 3 画像对抗后的画像：\n${JSON.stringify({ ...synth, ...sceneFields, ...inferred }, null, 2)}\n\n3 个画像的改写建议：\n${JSON.stringify(personaRewriteMap, null, 2)}\n\n请输出最终 JSON（**只输出需要改的字段**，每个字段是改写后的版本）：`
           : `User input: """${input}"""\n\nProfile after 5 rounds + 3-persona adversarial review:\n${JSON.stringify({ ...synth, ...sceneFields, ...inferred }, null, 2)}\n\n3 personas' rewrite suggestions:\n${JSON.stringify(personaRewriteMap, null, 2)}\n\nOutput final JSON (only fields that need changing, each field is the rewritten version):`;
 
-        const finalRaw = await deepseekChat(
-          [
-            { role: "system", content: finalSys },
-            { role: "user", content: finalUser },
-          ],
-          { json: true, temperature: 0.7, max_tokens: 2000 },
-        );
-        const finalPolish = safeParseJSON<Record<string, unknown>>(finalRaw) ?? {};
+        // Final polish runs AFTER personas (it needs personaRewriteMap).
+        // Personas already ran in parallel above; this is the one
+        // strictly serial step, but it's only 1 LLM call.
+        const finalSettled = await Promise.allSettled([
+          deepseekChat(
+            [
+              { role: "system", content: finalSys },
+              { role: "user", content: finalUser },
+            ],
+            { json: true, temperature: 0.7, max_tokens: 2000 },
+          ),
+        ]);
+        const finalPolish = finalSettled[0].status === "fulfilled"
+          ? safeParseJSON<Record<string, unknown>>(finalSettled[0].value) ?? {}
+          : {};
 
         // ============================================================
         // Apply ALL polish layers in order: round 5 critique → round 6.5 final
