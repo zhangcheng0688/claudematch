@@ -23,7 +23,8 @@ export const Route = createFileRoute("/_authenticated/match/$id")({
 
 function MatchDetailPage() {
   const { lang } = useLang();
-  const t = (en: string, zh: string) => (lang === "zh" ? zh : en);
+  const t = (en: string, zh: string, yue: string) =>
+    lang === "yue" ? yue : lang === "zh" ? zh : en;
   const { id } = Route.useParams();
 
   const [match, setMatch] = useState<MatchRow | null>(null);
@@ -69,7 +70,7 @@ function MatchDetailPage() {
 
   const copyPlanText = async () => {
     if (!plan) return;
-    const text = renderPlanText(plan);
+    const text = renderPlanText(plan, lang);
     try {
       await navigator.clipboard.writeText(text);
       setCopied("text");
@@ -97,7 +98,7 @@ function MatchDetailPage() {
     return (
       <AppShell>
         <div className="mx-auto max-w-md px-6 py-20 text-center text-sm text-muted-foreground">
-          {t("Loading…", "加载中…")}
+          {t("Loading…", "加载中…", "載入中…")}
         </div>
       </AppShell>
     );
@@ -105,16 +106,16 @@ function MatchDetailPage() {
 
   if (err || !match) {
     return (
-      <AppShell back={{ to: "/match", labelEn: "Back to matches", labelZh: "返回匹配列表" }}>
+      <AppShell back={{ to: "/match", labelEn: "Back to matches", labelZh: "返回匹配列表", labelYue: "返回配對列表" }}>
         <div className="mx-auto max-w-md px-6 py-20 space-y-3">
           <div className="rounded-sm border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
-            {err ?? t("Match not found.", "未找到匹配。")}
+            {err ?? t("Match not found.", "未找到匹配。", "搵唔到配對。")}
           </div>
           <Link
             to="/match"
             className="inline-flex h-9 items-center rounded-sm border border-border bg-background px-4 text-xs font-medium hover:bg-accent"
           >
-            ← {t("Back to matches", "返回匹配列表")}
+            ← {t("Back to matches", "返回匹配列表", "返回配對列表")}
           </Link>
         </div>
       </AppShell>
@@ -126,7 +127,7 @@ function MatchDetailPage() {
   const showSummaryExpand = summary.length > 150;
 
   return (
-    <AppShell back={{ to: "/match", labelEn: "Back to matches", labelZh: "返回匹配列表" }}>
+    <AppShell back={{ to: "/match", labelEn: "Back to matches", labelZh: "返回匹配列表", labelYue: "返回配對列表" }}>
       <section className="mx-auto max-w-2xl px-6 py-10 sm:py-14">
         <div className="flex flex-col items-center text-center">
           <div className="flex h-32 w-32 items-center justify-center rounded-full bg-gradient-to-br from-primary/20 to-primary/5 ring-2 ring-primary/30">
@@ -135,12 +136,12 @@ function MatchDetailPage() {
                 {match.match_score.toFixed(1)}
               </div>
               <div className="text-[10px] uppercase tracking-[0.2em] text-muted-foreground">
-                {t("Match Score", "匹配度")}
+                {t("Match Score", "匹配度", "配對分")}
               </div>
             </div>
           </div>
           <h1 className="mt-6 text-2xl font-semibold tracking-tight sm:text-3xl">
-            <span className="text-gold-glow">{d.name ?? t("Match", "匹配对象")}</span>
+            <span className="text-gold-glow">{d.name ?? t("Match", "匹配对象", "配對對象")}</span>
             {d.age && <span className="ml-2 text-base font-normal text-muted-foreground">{d.age}</span>}
             {d.city && <span className="ml-1 text-base font-normal text-muted-foreground">· {d.city}</span>}
           </h1>
@@ -150,7 +151,7 @@ function MatchDetailPage() {
         {(summary || (d.shared_interests && d.shared_interests.length > 0)) && (
           <div className="mt-10 overflow-hidden rounded-sm border border-border bg-background/40 p-6">
             <div className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
-              {t("About the match", "关于这次匹配")}
+              {t("About the match", "关于这次匹配", "關於呢次配對")}
             </div>
             {summary && (
               <div className="mt-3">
@@ -174,7 +175,7 @@ function MatchDetailPage() {
                     onClick={() => setShowFullSummary((v) => !v)}
                     className="mt-1 text-xs text-primary hover:underline"
                   >
-                    {showFullSummary ? t("Collapse", "收起") : t("Show more", "展开更多")}
+                    {showFullSummary ? t("Collapse", "收起", "收埋") : t("Show more", "展开更多", "展開更多")}
                   </button>
                 )}
               </div>
@@ -193,7 +194,7 @@ function MatchDetailPage() {
             )}
             {d.reason && (
               <p className="mt-4 rounded-sm border-l-2 border-primary/60 bg-primary/5 px-3 py-2 text-xs text-muted-foreground">
-                <span className="font-medium text-primary">{t("Why", "为何匹配")}: </span>
+                <span className="font-medium text-primary">{t("Why", "为何匹配", "點解配")}: </span>
                 {d.reason}
               </p>
             )}
@@ -210,14 +211,14 @@ function MatchDetailPage() {
                   className="inline-flex h-10 items-center gap-2 rounded-sm border border-border bg-background px-4 text-xs font-medium hover:bg-accent"
                 >
                   <Copy className="h-3.5 w-3.5" />
-                  {copied === "text" ? t("Copied!", "已复制!") : t("Copy plan", "复制方案")}
+                  {copied === "text" ? t("Copied!", "已复制!", "複製咗!") : t("Copy plan", "复制方案", "複製方案")}
                 </button>
                 <button
                   onClick={downloadIcs}
                   className="inline-flex h-10 items-center gap-2 rounded-sm border border-border bg-background px-4 text-xs font-medium hover:bg-accent"
                 >
                   <Calendar className="h-3.5 w-3.5" />
-                  {copied === "ics" ? t("Downloaded ✓", "已下载 ✓") : t("Add to calendar (.ics)", "加入日历")}
+                  {copied === "ics" ? t("Downloaded ✓", "已下载 ✓", "下載咗 ✓") : t("Add to calendar (.ics)", "加入日历", "加入日曆")}
                 </button>
                 <button
                   onClick={generatePlan}
@@ -225,7 +226,7 @@ function MatchDetailPage() {
                   className="inline-flex h-10 items-center gap-2 rounded-sm border border-primary/40 bg-primary/10 px-4 text-xs font-medium text-primary hover:bg-primary/20 disabled:opacity-60"
                 >
                   {generating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
-                  {generating ? t("Regenerating…", "重新生成中…") : t("Regenerate", "重新生成")}
+                  {generating ? t("Regenerating…", "重新生成中…", "重新整理緊…") : t("Regenerate", "重新生成", "重新整理")}
                 </button>
               </div>
             </>
@@ -236,7 +237,7 @@ function MatchDetailPage() {
               className="flex w-full items-center justify-center gap-2 rounded-sm border border-primary/40 bg-primary/10 px-4 py-4 text-sm font-medium text-primary hover:bg-primary/20 disabled:opacity-60"
             >
               {generating ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-              {generating ? t("AI is drafting your plan…", "AI 正在生成方案…") : t("Plan a meet-up", "生成见面方案")}
+              {generating ? t("AI is drafting your plan…", "AI 正在生成方案…", "AI 寫緊方案…") : t("Plan a meet-up", "生成见面方案", "整個見面方案")}
               <ArrowRight className="h-4 w-4" />
             </button>
           )}
@@ -252,16 +253,29 @@ function MatchDetailPage() {
   );
 }
 
-function renderPlanText(plan: MeetPlan): string {
+function renderPlanText(plan: MeetPlan, lang: "en" | "zh" | "yue"): string {
   const p = plan.plan_content?.ai ?? {};
+  const scenario = plan.plan_content?.scenario ?? "";
+  const titleMap: Record<string, { en: string; zh: string; yue: string }> = {
+    dating: { en: "Dating", zh: "恋爱", yue: "拍拖" },
+    business: { en: "Business", zh: "工作", yue: "工作" },
+    partner: { en: "Local friends", zh: "本地朋友", yue: "本地朋友" },
+  };
+  const title = titleMap[scenario]?.[lang] ?? scenario;
+  const labels: Record<"en" | "zh" | "yue", { w: string; wt: string; d: string; dc: string; b: string }> = {
+    en: { w: "When", wt: "Where", d: "Duration", dc: "Dress code", b: "Budget" },
+    zh: { w: "时间", wt: "地点", d: "时长", dc: "着装", b: "人均消费" },
+    yue: { w: "時間", wt: "地點", d: "時長", dc: "著裝", b: "人均消費" },
+  };
+  const L = labels[lang];
   return [
-    `【linQ】${plan.plan_content?.scenario ?? ""} 见面方案`,
+    `【linQ】${title} 见面方案`,
     ``,
-    `⏰ When: ${p.when ?? "TBD"}`,
-    `📍 Where: ${p.where ?? "TBD"}${p.location_intro ? ` (${p.location_intro})` : ""}`,
-    p.duration ? `🕐 Duration: ${p.duration}` : "",
-    p.dress_code ? `👔 Dress code: ${p.dress_code}` : "",
-    p.budget ? `💰 Budget: ${p.budget}` : "",
+    `⏰ ${L.w}: ${p.when ?? "TBD"}`,
+    `📍 ${L.wt}: ${p.where ?? "TBD"}${p.location_intro ? ` (${p.location_intro})` : ""}`,
+    p.duration ? `🕐 ${L.d}: ${p.duration}` : "",
+    p.dress_code ? `👔 ${L.dc}: ${p.dress_code}` : "",
+    p.budget ? `💰 ${L.b}: ${p.budget}` : "",
     ``,
     p.icebreakers && p.icebreakers.length
       ? `💬 Icebreakers:\n${p.icebreakers.map((q, i) => `  ${i + 1}. ${q}`).join("\n")}`

@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 
-export type Lang = "en" | "zh";
+export type Lang = "en" | "zh" | "yue";
 
 type Dict = Record<string, string | string[] | Record<string, string>>;
 
@@ -151,6 +151,80 @@ export const translations: Record<Lang, Dict> = {
     footer_cookies: "Cookies",
     footer_dpa: "数据协议",
   },
+  // 粵語（香港）— 繁體 + 口语（嘅／係／唔／喺／咩／嘢／嗰／咗／嚟／俾／睇／搞掂／傾偈／唔該）
+  yue: {
+    nav_why: "點解揀 linQ",
+    nav_how: "點運作",
+    nav_moments: "精彩時刻",
+    nav_compare: "同其他比較",
+    nav_trust: "信任",
+    nav_support: "7×24 客服",
+    nav_getStarted: "即刻開始",
+    hero_badge: "Claude 模型原生配對平台",
+    hero_claude: "Claude 驅動",
+    hero_connections: "連繫",
+    hero_for: "為",
+    hero_work: "工作",
+    hero_love: "愛情",
+    hero_life: "生活",
+    hero_desc: "少啲負擔，多啲有意義嘅連繫。\n商業拍檔、拍拖、本地朋友 —— 一個 AI 連繫全部幫你搞掂。唔使填表，唔使貼標籤，俾最真實嘅你。",
+    hero_joinNow: "即刻加入",
+    weekly_kicker: "每個禮拜三",
+    weekly_title1: "每星期",
+    weekly_title2: "一次約會。",
+    weekly_desc: "一個精選配對。一份現成方案。每個禮拜三晚 7 點準時送到 —— 似一場長期預約，同你真正想見嘅人。",
+    weekly_days: "日",
+    weekly_hrs: "時",
+    weekly_min: "分",
+    weekly_sec: "秒",
+    weekly_next: "下次配對日：",
+    weekly_joined: "已加入：",
+    send_badge: "一撳搞掂，唔使填表。",
+    send_title1: "將最真實嘅你",
+    send_title2: "傳俾你嘅配對。",
+    send_desc: "唔使精心包裝嘅自介，唔使濾鏡相。Claude 模型會將你最真實嘅信號 —— 你嘅諗法、關心嘅嘢、真實狀態 —— 打包傳俾另一邊嘅人。",
+    send_cta: "將真實嘅我傳俾配對對象",
+    send_terms: "繼續即表示同意我哋嘅條款同私隱政策。",
+    values_kicker: "點解揀 linQ",
+    values_title: "一種建基於真實行為嘅全新配對方式。",
+    how_kicker: "點運作",
+    how_title: "由註冊到面對面，只差一步。",
+    compare_kicker: "比較",
+    compare_title: "點解 linQ 贏過傳統配對。",
+    compare_col_trad: "傳統平台",
+    compare_col_linq: "linQ",
+    trust_kicker: "信任同合規",
+    trust_title: "私隱就係產品本身。",
+    cta_start: "開始",
+    cta_matching: "配對",
+    cta_real: "今次，嚟真嘅。",
+    cta_btn: "即刻配對",
+    moments_kicker: "精彩時刻",
+    moments_title1: "難忘嘅",
+    moments_title2: "美好時光。",
+    moments_desc: "真實嘅人，真實嘅相聚。由 Claude 模型精心策劃，由你親身經歷。",
+    footer_bubble: "一位由 Claude 模型驅動嘅朋友，直接將現成嘅配對推送俾你。",
+    footer_tag: "面向商業、約會同本地生活嘅 Claude 模型原生配對平台。",
+    footer_product: "產品",
+    footer_resources: "資源",
+    footer_support: "支援",
+    footer_careers: "招聘",
+    footer_manifesto: "理念",
+    footer_press: "媒體資料",
+    footer_blog: "網誌",
+    footer_chat: "7×24 網上客服",
+    footer_trust: "信任同安全",
+    footer_help: "幫助中心",
+    footer_news_title: "我哋只配對，唔打廣告。",
+    footer_news_desc: "每月一封簡短電郵。冇垃圾訊息，隨時退訂。",
+    footer_news_placeholder: "you@somewhere.com",
+    footer_news_join: "加入",
+    footer_copy: "linQ Labs Inc. · 為真實嘅連繫而生。",
+    footer_terms: "條款",
+    footer_privacy: "私隱",
+    footer_cookies: "Cookies",
+    footer_dpa: "數據協議",
+  },
 };
 
 export const valuesI18n = {
@@ -163,6 +237,11 @@ export const valuesI18n = {
     { title: "零负担 AI 档案", body: "无需填表，无需贴标签。AI 默默从你的行为中理解你真正是谁 —— 而不是你如何描述自己。" },
     { title: "三大场景，一个平台", body: "商业合作、约会、本地伙伴。一个账号覆盖你需要的所有人际连接。" },
     { title: "AI保驾护航", body: "从匹配到见面 —— linQ 为整场约会规划一切。不再有尴尬寒暄，不再放鸽子，只有真实的结果。" },
+  ],
+  yue: [
+    { title: "零負擔 AI 檔案", body: "唔使填表，唔使貼標籤。AI 會默默由你嘅行為入面，知道你真正係邊個 —— 而唔係你點形容自己。" },
+    { title: "三大場景，一個平台", body: "商業合作、拍拖、本地朋友。一個帳號已經覆蓋晒你需要嘅所有人際連繫。" },
+    { title: "AI 幫你搞掂約會", body: "由配對到見面 —— linQ 幫你成場規劃晒。唔使再尷尬寒暄，唔使再被放飛機，只有真實嘅結果。" },
   ],
 };
 
@@ -178,6 +257,12 @@ export const stepsI18n = {
     { n: "02", title: "AI 档案构建", body: "行为信号被默默分析，生成一份多维度的真实自我画像。" },
     { n: "03", title: "智能匹配", body: "AI 动态权衡每个场景，为你当下的需求呈现最契合的人。" },
     { n: "04", title: "AI 规划的见面", body: "拿到完整的见面方案 —— 时间、地点、破冰话题。你只管赴约，其余交给 linQ。" },
+  ],
+  yue: [
+    { n: "01", title: "註冊同授權", body: "註冊並按場景俾返相應權限。喺第一日開始，私隱就由你話事。" },
+    { n: "02", title: "AI 建立你嘅檔案", body: "你嘅行為會被默默分析，幫你整一份多維度嘅真實自我畫像。" },
+    { n: "03", title: "智能配對", body: "AI 會動態平衡唔同場景，為你當下嘅需要，搵出最夾嘅人。" },
+    { n: "04", title: "由 AI 規劃嘅見面", body: "拎到完整嘅見面方案 —— 時間、地點、破冰話題。你負責赴約，其他嘢由 linQ 幫你搞掂。" },
   ],
 };
 
@@ -200,6 +285,15 @@ export const compareRowsI18n = {
     ["见面成本", "匹配后还要寒暄 100+ 条消息", "AI 规划好见面，你只管赴约。"],
     ["结果", "已读不回、放鸽子、聊死的对话", "真实的约会、生意与友谊"],
   ],
+  yue: [
+    ["檔案建立", "Tinder / Hinge —— 停唔到嘅 swipe 同精心包裝嘅人設", "由 Claude 模型驅動嘅零負擔檔案"],
+    ["真實度", "小紅書 · Coffee Chat —— 表演式嘅帖文同濾鏡後嘅自己", "源自你真實行為嘅誠實信號"],
+    ["入門", "社交媒體 —— 自介、tag、MBTI、興趣、相、語音…", "乜都唔使填，Claude 模型讀得明你真實嘅行為。"],
+    ["收到回覆", "WhatsApp / WeChat —— 加好友、等通過、send 50 個 message，可能先見到面", "一撳搞掂，AI 即刻將現成嘅邀請送俾雙方。"],
+    ["場景", "散晒嘅 App：LinkedIn 做嘢、Hinge 拍拖、Meetup 識朋友", "商業、拍拖、本地 —— 同一張人際圖譜"],
+    ["見面成本", "配對完仲要 send 100+ 個 message 吹水", "AI 幫你規劃好晒見面，你負責赴約。"],
+    ["結果", "已讀不回、放飛機、吹死死嘅對話", "真實嘅約會、生意同友誼"],
+  ],
 };
 
 export const trustI18n = {
@@ -212,6 +306,11 @@ export const trustI18n = {
     { title: "三层隐私管理", body: "细粒度授权，跨场景的数据层在物理上彼此隔离。" },
     { title: "拒绝数据滥用", body: "绝不出售，绝不强制收集。合规是底线，不是目标。" },
     { title: "监管下的深度AI", body: "每一次匹配都有理由可循。公平、可审计、有责可究。" },
+  ],
+  yue: [
+    { title: "三層私隱管理", body: "細緻嘅授權，唔同場景嘅數據層喺物理上完全隔離。" },
+    { title: "拒絕濫用數據", body: "絕對唔會出售，絕對唔會強制收集。合規只係最基本嘅要求，唔係目標。" },
+    { title: "可解釋嘅 AI", body: "每次配對都會有原因。公平、可以審查、有問責嘅設計。" },
   ],
 };
 
@@ -232,6 +331,14 @@ export const momentsI18n = {
     { tag: "初次约会 · 东京", name: "Mia & Daniel", quote: "AI 选了地点，我们选了彼此。" },
     { tag: "本地好友 · 奥斯汀", name: "桌游之夜", quote: "一键找到了我的周日固定朋友。" },
   ],
+  yue: [
+    { tag: "Coffee Chat · 三藩市", name: "Leo & Maya", quote: "AI 捉到我哋嘅 frequency，兩個鐘轉眼就過。" },
+    { tag: "天台 · 紐約", name: "Jay & Priya", quote: "好過同時同 10 個人喺 Hinge 傾偈。" },
+    { tag: "商業 · 上海", name: "創辦人晚宴", quote: "喺 linQ 識到 Co-founder，6 個禮拜搞掂 seed round。" },
+    { tag: "合作 · 倫敦", name: "Alex & Jordan", quote: "慳返 20 個 LinkedIn DM，一見如故。" },
+    { tag: "第一次約會 · 東京", name: "Mia & Daniel", quote: "AI 揀咗地點，我哋揀咗對方。" },
+    { tag: "本地好友 · 奧斯汀", name: "Game Night 班底", quote: "一撳就搵到我嘅 Sunday 班。" },
+  ],
 };
 
 type Ctx = { lang: Lang; setLang: (l: Lang) => void; t: (k: string) => string };
@@ -240,9 +347,15 @@ const LangContext = createContext<Ctx | null>(null);
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [lang, setLangState] = useState<Lang>("en");
   useEffect(() => {
-    const saved = typeof window !== "undefined" ? (localStorage.getItem("lang") as Lang | null) : null;
-    if (saved === "en" || saved === "zh") setLangState(saved);
-    else if (typeof navigator !== "undefined" && navigator.language.toLowerCase().startsWith("zh")) setLangState("zh");
+    if (typeof window === "undefined") return;
+    const saved = localStorage.getItem("lang") as Lang | null;
+    if (saved === "en" || saved === "zh" || saved === "yue") {
+      setLangState(saved);
+      return;
+    }
+    const n = navigator.language.toLowerCase();
+    if (n.startsWith("zh-hk") || n.startsWith("yue")) setLangState("yue");
+    else if (n.startsWith("zh")) setLangState("zh");
   }, []);
   const setLang = (l: Lang) => {
     setLangState(l);

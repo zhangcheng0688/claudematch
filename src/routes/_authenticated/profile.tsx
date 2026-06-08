@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { LogOut, Settings, Sparkles } from "lucide-react";
+import { Settings, Sparkles } from "lucide-react";
 import { LanguageProvider, useLang } from "@/lib/i18n";
 import { AppShell } from "@/components/AppShell";
 import { authedFetch } from "@/lib/api/authed-fetch";
@@ -29,7 +29,8 @@ type MeResponse = {
 
 function ProfilePage() {
   const { lang } = useLang();
-  const t = (en: string, zh: string) => (lang === "zh" ? zh : en);
+  const t = (en: string, zh: string, yue: string) =>
+    lang === "yue" ? yue : lang === "zh" ? zh : en;
 
   const [me, setMe] = useState<MeResponse | null>(null);
   const [loading, setLoading] = useState(true);
@@ -56,7 +57,7 @@ function ProfilePage() {
       <section className="mx-auto max-w-md px-6 py-12 sm:py-16">
         {loading ? (
           <div className="rounded-sm border border-border bg-background/40 p-12 text-center text-sm text-muted-foreground">
-            {t("Loading…", "加载中…")}
+            {t("Loading…", "加载中…", "載入中…")}
           </div>
         ) : err ? (
           <div className="rounded-sm border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
@@ -78,9 +79,11 @@ function ProfilePage() {
               >
                 <Sparkles className="h-4 w-4 text-muted-foreground" />
                 <div className="flex-1">
-                  <div className="text-sm font-medium">{t("Edit AI profile", "完善 AI 画像")}</div>
+                  <div className="text-sm font-medium">
+                    {t("Edit AI profile", "完善 AI 画像", "編輯 AI 檔案")}
+                  </div>
                   <div className="text-xs text-muted-foreground">
-                    {t("Update how AI sees you", "更新 AI 对你的理解")}
+                    {t("Update how AI sees you", "更新 AI 对你的理解", "更新 AI 對你嘅理解")}
                   </div>
                 </div>
                 <span className="text-muted-foreground">→</span>
@@ -91,24 +94,25 @@ function ProfilePage() {
               >
                 <Settings className="h-4 w-4 text-muted-foreground" />
                 <div className="flex-1">
-                  <div className="text-sm font-medium">{t("Matching preferences", "匹配偏好")}</div>
+                  <div className="text-sm font-medium">
+                    {t("Matching preferences", "匹配偏好", "配對偏好")}
+                  </div>
                   <div className="text-xs text-muted-foreground">
                     {[
-                      me.authorizations?.business && t("Business", "工作"),
-                      me.authorizations?.dating && t("Dating", "恋爱"),
-                      me.authorizations?.partner && t("Local friends", "本地朋友"),
+                      me.authorizations?.business && t("Business", "工作", "工作"),
+                      me.authorizations?.dating && t("Dating", "恋爱", "拍拖"),
+                      me.authorizations?.partner && t("Local friends", "本地朋友", "本地朋友"),
                     ]
                       .filter(Boolean)
-                      .join(" · ") || t("No scenarios enabled", "未启用任何场景")}
+                      .join(" · ") || t("No scenarios enabled", "未启用任何场景", "未啟用任何場景")}
                   </div>
                 </div>
                 <span className="text-muted-foreground">→</span>
               </Link>
             </div>
 
-            {/* Hint that the app shell's account menu is the canonical sign-out entry */}
             <p className="text-center text-xs text-muted-foreground">
-              {t("Sign out via the avatar menu (top right).", "点击右上角头像菜单退出登录。")}
+              {t("Sign out via the avatar menu (top right).", "点击右上角头像菜单退出登录。", "撳右上角個樣登出。")}
             </p>
 
             <div className="text-center text-xs text-muted-foreground">linQ v1.1.0 · Web</div>

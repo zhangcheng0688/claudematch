@@ -29,7 +29,8 @@ type Scenarios = { business: boolean; dating: boolean; partner: boolean };
 
 function SettingsPage() {
   const { lang } = useLang();
-  const t = (en: string, zh: string) => (lang === "zh" ? zh : en);
+  const t = (en: string, zh: string, yue: string) =>
+    lang === "yue" ? yue : lang === "zh" ? zh : en;
 
   const [scenarios, setScenarios] = useState<Scenarios>({ business: false, dating: false, partner: false });
   const [loaded, setLoaded] = useState(false);
@@ -53,7 +54,7 @@ function SettingsPage() {
 
   const save = async () => {
     if (!scenarios.business && !scenarios.dating && !scenarios.partner) {
-      setErr(t("Enable at least one scenario.", "至少开启一个场景。"));
+      setErr(t("Enable at least one scenario.", "至少开启一个场景。", "最少開一個場景。"));
       return;
     }
     setErr(null);
@@ -72,36 +73,40 @@ function SettingsPage() {
   };
 
   return (
-    <AppShell back={{ to: "/profile", labelEn: "Back to profile", labelZh: "返回个人中心" }}>
+    <AppShell back={{ to: "/profile", labelEn: "Back to profile", labelZh: "返回个人中心", labelYue: "返回個人中心" }}>
       <section className="mx-auto max-w-md px-6 py-12 sm:py-16">
         <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
-          <span className="text-gold-glow">{t("Settings", "设置")}</span>
+          <span className="text-gold-glow">{t("Settings", "设置", "設定")}</span>
         </h1>
         <p className="mt-2 text-sm text-muted-foreground">
-          {t("Choose which matching scenarios you'd like to be discovered for.", "选择你想被匹配的场景。")}
+          {t(
+            "Choose which matching scenarios you'd like to be discovered for.",
+            "选择你想被匹配的场景。",
+            "揀你想被配對嘅場景。",
+          )}
         </p>
 
         <div className="mt-8 overflow-hidden rounded-sm border border-border bg-background/40">
           <ScenarioRow
             icon={<Heart className="h-4 w-4" />}
-            label={t("Dating", "恋爱")}
-            desc={t("Find a date", "寻找约会对象")}
+            label={t("Dating", "恋爱", "拍拖")}
+            desc={t("Find a date", "寻找约会对象", "搵個約會對象")}
             checked={scenarios.dating}
             onChange={(v) => setScenarios((s) => ({ ...s, dating: v }))}
             disabled={!loaded}
           />
           <ScenarioRow
             icon={<Briefcase className="h-4 w-4" />}
-            label={t("Business", "工作")}
-            desc={t("Find collaborators or mentors", "寻找合作者或导师")}
+            label={t("Business", "工作", "工作")}
+            desc={t("Find collaborators or mentors", "寻找合作者或导师", "搵合作拍檔或者師傅")}
             checked={scenarios.business}
             onChange={(v) => setScenarios((s) => ({ ...s, business: v }))}
             disabled={!loaded}
           />
           <ScenarioRow
             icon={<Users className="h-4 w-4" />}
-            label={t("Local friends", "本地朋友")}
-            desc={t("Find hobby buddies", "寻找兴趣搭子")}
+            label={t("Local friends", "本地朋友", "本地朋友")}
+            desc={t("Find hobby buddies", "寻找兴趣搭子", "搵興趣班底")}
             checked={scenarios.partner}
             onChange={(v) => setScenarios((s) => ({ ...s, partner: v }))}
             disabled={!loaded}
@@ -115,12 +120,12 @@ function SettingsPage() {
           className="mt-6 flex w-full items-center justify-center gap-2 rounded-sm bg-primary px-4 py-3 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-60"
         >
           <Save className="h-4 w-4" />
-          {saving ? t("Saving…", "保存中…") : t("Save preferences", "保存设置")}
+          {saving ? t("Saving…", "保存中…", "儲存緊…") : t("Save preferences", "保存设置", "儲存設定")}
         </button>
 
         {savedAt && !err && (
           <p className="mt-3 text-center text-xs text-primary">
-            {t("Saved ✓", "已保存 ✓")}
+            {t("Saved ✓", "已保存 ✓", "儲存咗 ✓")}
           </p>
         )}
         {err && (

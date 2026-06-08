@@ -12,7 +12,7 @@ import { LogOut, ChevronDown, Settings as SettingsIcon, Sparkles, User as UserIc
 import { useLang } from "@/lib/i18n";
 import { supabase } from "@/integrations/supabase/client";
 
-export type AppShellBack = { to: string; labelEn: string; labelZh: string };
+export type AppShellBack = { to: string; labelEn: string; labelZh?: string; labelYue?: string };
 
 export function AppShell({
   children,
@@ -66,18 +66,36 @@ export function AppShell({
                 to={back.to}
                 className="px-2 py-1 transition-colors hover:text-foreground"
               >
-                ← {lang === "zh" ? back.labelZh : back.labelEn}
+                ← {lang === "yue"
+                  ? (back.labelYue ?? back.labelEn)
+                  : lang === "zh"
+                  ? (back.labelZh ?? back.labelEn)
+                  : back.labelEn}
               </Link>
             )}
 
-            <button
-              type="button"
-              onClick={() => setLang(lang === "zh" ? "en" : "zh")}
-              aria-label="Toggle language"
-              className="inline-flex h-8 items-center rounded-sm border border-border bg-background/40 px-2.5 text-[11px] font-medium text-muted-foreground transition-colors hover:text-foreground"
+            {/* Language switcher — 3-way segment control */}
+            <div
+              role="group"
+              aria-label="Language"
+              className="inline-flex h-8 items-center overflow-hidden rounded-sm border border-border bg-background/40 text-[11px] font-medium"
             >
-              {lang === "zh" ? "EN" : "中文"}
-            </button>
+              {(["en", "zh", "yue"] as const).map((l) => (
+                <button
+                  key={l}
+                  type="button"
+                  onClick={() => setLang(l)}
+                  aria-pressed={lang === l}
+                  className={`h-full px-2.5 transition-colors ${
+                    lang === l
+                      ? "bg-primary/20 text-foreground"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  {l === "en" ? "EN" : l === "zh" ? "中文" : "粵語"}
+                </button>
+              ))}
+            </div>
 
             {/* Account menu */}
             <div className="relative" ref={menuRef}>
