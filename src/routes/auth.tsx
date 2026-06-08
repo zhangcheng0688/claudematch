@@ -136,10 +136,10 @@ function AuthPage() {
         {tab === "wechat" ? (
           <ComingSoon
             icon={<QrCode className="h-10 w-10 text-primary/70" />}
-            title={t("WeChat QR sign-in", "微信扫码登录")}
+            title={t("WeChat sign-in — one tap, 30s", "微信登录 —— 一键登录，30 秒进站")}
             body={t(
-              "Coming soon — we're getting WeChat Open Platform verified. For now, please sign in with email.",
-              "即将开放 —— 微信开放平台资质审核中。请暂时使用邮箱登录。",
+              "Scan with WeChat to enter linQ. (Web QR is rolling out — for now please use email.)",
+              "微信扫一扫进入 linQ。（网页扫码灰度中，请暂时使用邮箱登录。）",
             )}
             cta={t("Use email instead", "改用邮箱登录")}
             onCta={() => setTab("email")}

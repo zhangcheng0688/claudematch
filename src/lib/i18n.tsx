@@ -156,27 +156,27 @@ export const translations: Record<Lang, Dict> = {
 export const valuesI18n = {
   en: [
     { title: "Effortless AI profile", body: "No forms, no tags. AI quietly learns who you really are from the way you act — not the way you self-describe." },
-    { title: "Three scenarios, one platform", body: "Business collaboration, dating, and local companions. One account covers every kind of human connection you need." },
+    { title: "Three worlds, one account", body: "Business, dating, local. AI quietly figures out which is right for you — no picking required." },
     { title: "AI meeting co-pilot", body: "From match to meet-up — linQ plans the entire encounter. No awkward chats, no flaked plans, just real-world results." },
   ],
   zh: [
     { title: "零负担 AI 档案", body: "无需填表，无需贴标签。AI 默默从你的行为中理解你真正是谁 —— 而不是你如何描述自己。" },
-    { title: "三大场景，一个平台", body: "商业合作、约会、本地伙伴。一个账号覆盖你需要的所有人际连接。" },
+    { title: "三个世界，一个账号", body: "商业、约会、本地。AI 默默判断哪个才是你需要的 —— 无需你主动选择。" },
     { title: "AI保驾护航", body: "从匹配到见面 —— linQ 为整场约会规划一切。不再有尴尬寒暄，不再放鸽子，只有真实的结果。" },
   ],
 };
 
 export const stepsI18n = {
   en: [
-    { n: "01", title: "Sign up & authorize", body: "Register and grant scenario-level permissions. Privacy stays in your control from day one." },
+    { n: "01", title: "Sign up in 30s", body: "WeChat one-tap. We learn everything else from how you use linQ, not from forms you fill out." },
     { n: "02", title: "AI profile builds", body: "Behavioral signals are analyzed silently. A multi-dimensional profile of the real you is generated." },
-    { n: "03", title: "Smart matching", body: "AI dynamically weights each scenario and surfaces the highest-fit people for what you need now." },
+    { n: "03", title: "Wednesday reveal", body: "Every Wednesday 7pm, AI curates one match. No swiping, no comparing, no choosing. Just one person, one plan, one date." },
     { n: "04", title: "Meet with AI plan", body: "Get a full meet-up plan — time, place, ice-breakers. Just show up. linQ handles the rest." },
   ],
   zh: [
-    { n: "01", title: "注册与授权", body: "注册并按场景授予权限。隐私从第一天起就在你掌控中。" },
+    { n: "01", title: "30 秒注册", body: "微信一键登录。其它一切都由 AI 从你使用 linQ 的方式中学习，无需填表。" },
     { n: "02", title: "AI 档案构建", body: "行为信号被默默分析，生成一份多维度的真实自我画像。" },
-    { n: "03", title: "智能匹配", body: "AI 动态权衡每个场景，为你当下的需求呈现最契合的人。" },
+    { n: "03", title: "周三揭晓", body: "每周三晚 7 点，AI 精心策划一场约会。不滑动，不比较，不挑选。只有一个人、一份方案、一场约会。" },
     { n: "04", title: "AI 规划的见面", body: "拿到完整的见面方案 —— 时间、地点、破冰话题。你只管赴约，其余交给 linQ。" },
   ],
 };
