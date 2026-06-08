@@ -182,7 +182,7 @@ Make deep inferences, output JSON:
     "gifts": [{ "what": "unique value they give", "why": "why this is their gift (1 sentence)" }] (2-3),
     "risks": [{ "what": "friction the other person will feel", "impact": "how this plays out if not noticed (1 sentence)" }] (2-3)
   }
-}`;
+}${feedbackContextBlock}`;
 
         const inferredRaw = await deepseekChat(
           [
@@ -340,7 +340,7 @@ Output final profile JSON:
       "signals": string[] (3-5 specific behavioral signals, 'they will do Y in X situation')
     }
   ] (exactly 5 items, all keys present, same order as above)
-}`;
+}${feedbackContextBlock}`;
 
         const synthRaw = await deepseekChat(
           [
@@ -430,6 +430,159 @@ Audit and revise (only output fields that need changing). Every revised line mus
           { json: true, temperature: 0.7, max_tokens: 2000 },
         );
         const critique = safeParseJSON<Record<string, unknown>>(critiqueRaw) ?? {};
+
+        // ============================================================
+        // ROUND 6 — user_persona_simulation (the v4+ anti-paraphrase move)
+        //
+        // We've had the LLM critique its own output (Round 5). But the LLM
+        // is fundamentally bad at empathizing with users — it knows the
+        // shape of "good insight" but not the felt experience of reading
+        // one. So we add a 6th round that ASKS THE LLM to simulate 3
+        // *different* user personas reading this output, and have them
+        // compete in a small "tournament":
+        //
+        //   persona_1: a skeptical, analytically-minded user (the kind
+        //              who would call out hand-waving)
+        //   persona_2: an emotionally-engaged user (the kind who would
+        //              feel 'seen' or feel 'cheated')
+        //   persona_3: a result-oriented user (the kind who would judge
+        //              purely on "can I use this to find a match?")
+        //
+        // For each persona we extract: (1) which section makes them
+        // feel MOST understood, (2) which section disappoints them
+        // most, (3) one specific rewrite suggestion per disappointment.
+        //
+        // We then do a final synthesis that ADOPTS the most-cited
+        // rewrites. This adversarial loop is the strongest anti-
+        // paraphrase mechanism we have — each persona is essentially
+        // a different "user story" the LLM has to satisfy.
+        // ============================================================
+        const personas = [
+          {
+            name: "skeptical_analyst",
+            label: lang === "zh" ? "理性怀疑型" : "skeptical analyst",
+            brief:
+              lang === "zh"
+                ? "你是一个 35 岁的产品经理，习惯拆解一切'看起来深刻'的话术。你看任何 AI 输出都会先问：'这是 paraphrase 吗？'、'有具体行为可观察吗？'、'这个洞察能让我做出更好的决策吗？'。你不会被'诗意'打动 —— 你只会被'具体'打动。"
+                : "You are a 35-year-old product manager. You habitually dismantle anything that 'looks deep'. You ask: 'is this paraphrase?' / 'are there observable behaviors?' / 'can I make a better decision with this?'. You aren't moved by poetry — only by specifics.",
+          },
+          {
+            name: "emotionally_engaged",
+            label: lang === "zh" ? "情感共鸣型" : "emotionally engaged",
+            brief:
+              lang === "zh"
+                ? "你是一个 28 岁的设计师，最近结束了一段 3 年的关系，正在寻找深度连接。你最想从 AI 画像里看到的是'被看见'的感觉。如果你读到一段话心里想说'这说的就是我'，你会非常信任 AI。如果你读到一段话觉得'AI 不知道我'，你会完全关掉页面。"
+                : "You are a 28-year-old designer, just out of a 3-year relationship, looking for a deep connection. You most want the AI profile to make you feel SEEN. If you read something and think 'this is exactly me', you'll trust the AI deeply. If you read something and think 'AI doesn't know me', you'll close the page.",
+          },
+          {
+            name: "result_oriented",
+            label: lang === "zh" ? "结果导向型" : "result-oriented",
+            brief:
+              lang === "zh"
+                ? "你是一个 32 岁的创业者，用 linQ 是为了'尽快找到合适的合作者/约会对象'。你不关心 AI 多懂你，你关心 AI 给出的画像能不能'帮到我配对人'。如果 AI 画像能让你匹配到的人更准，你愿意付钱；否则你就是来浪费时间的。"
+                : "You are a 32-year-old founder using linQ to find collaborators/dates ASAP. You don't care how well AI understands you; you care whether the AI profile actually helps you find a better match. If it does, you'll pay; otherwise you're wasting time.",
+          },
+        ];
+
+        const personaResults: Array<{
+          persona: string;
+          label: string;
+          most_moved: Array<{ field: string; why: string }>;
+          most_disappointed: Array<{ field: string; why: string; rewrite: string }>;
+        }> = [];
+
+        for (const p of personas) {
+          const psys = lang === "zh"
+            ? `你是 ${p.label}。\n\n${p.brief}\n\n任务：审阅上面的 AI 画像输出。\n\n1. 找出让你**最被打动**的 1-2 个 section（带引用原文片段）—— 写为什么打动你\n2. 找出让你**最失望**的 1-2 个 section（带引用）—— 写为什么失望，并给出**一个具体的改写建议**（1 句话，30-80 字）\n\n严格输出 JSON。`
+            : `You are a ${p.label}.\n\n${p.brief}\n\nTask: review the AI profile output above.\n\n1. Find 1-2 sections that MOVED you most (with verbatim quote) — why\n2. Find 1-2 sections that DISAPPOINTED you most (with verbatim quote) — why + one CONCRETE rewrite suggestion (1 sentence, 30-80 chars)\n\nStrict JSON.`;
+
+          const puser = lang === "zh"
+            ? `用户原始输入："""${input}"""\n画像输出：\n${JSON.stringify({ ...synth, ...sceneFields, ...inferred }, null, 2)}\n\n请输出 JSON：\n{\n  "most_moved": [\n    { "field": "section 名称（headline/narrative/patterns/dimensions/paradoxes/archetypes/scene_predictions/life_themes/growth_stage/aesthetic_signature/defense_mechanisms/communication_recipes/match_signals）", "quote": "≤30 字符原话片段", "why": "为什么打动你" }\n  ] (1-2 条),\n  "most_disappointed": [\n    { "field": "section 名称", "quote": "≤30 字符原话片段", "why": "为什么失望", "rewrite": "1 句话改写建议（30-80 字）" }\n  ] (1-2 条)\n}`
+            : `User input: """${input}"""\nProfile output:\n${JSON.stringify({ ...synth, ...sceneFields, ...inferred }, null, 2)}\n\nOutput JSON:\n{\n  "most_moved": [\n    { "field": "section name", "quote": "≤30 char quote", "why": "why it moved you" }\n  ] (1-2),\n  "most_disappointed": [\n    { "field": "section name", "quote": "≤30 char quote", "why": "why disappointed", "rewrite": "1 sentence rewrite (30-80 chars)" }\n  ] (1-2)\n}`;
+
+          const praw = await deepseekChat(
+            [
+              { role: "system", content: psys },
+              { role: "user", content: puser },
+            ],
+            { json: true, temperature: 0.85, max_tokens: 1200 },
+          );
+          const parsedPersona = safeParseJSON<{
+            most_moved?: Array<{ field: string; quote?: string; why: string }>;
+            most_disappointed?: Array<{
+              field: string;
+              quote?: string;
+              why: string;
+              rewrite: string;
+            }>;
+          }>(praw) ?? { most_moved: [], most_disappointed: [] };
+          personaResults.push({
+            persona: p.name,
+            label: p.label,
+            most_moved: (parsedPersona.most_moved ?? []).map((m) => ({
+              field: m.field,
+              why: m.why,
+            })),
+            most_disappointed: parsedPersona.most_disappointed ?? [],
+          });
+        }
+
+        // ============================================================
+        // ROUND 6.5 — Final synthesis: adopt rewrites from personas.
+        // The LLM is asked to incorporate the persona rewrites into a
+        // final pass. This is the LAST gate before the UI sees the
+        // profile.
+        // ============================================================
+        const personaRewriteMap = personaResults.flatMap((p) =>
+          p.most_disappointed.map((d) => ({
+            persona: p.label,
+            field: d.field,
+            rewrite: d.rewrite,
+          })),
+        );
+
+        const finalSys = lang === "zh"
+          ? `你是 linQ 最终的 AI 画像打磨师。
+
+任务：3 个不同的用户画像（理性怀疑型、情感共鸣型、结果导向型）已经审阅了上面的画像，每个画像给出了 ta 最失望的 section 和改写建议。你现在要做的是：**把这些改写建议综合起来，对最终输出做最后一次打磨**。
+
+**关键原则**：
+- 不是机械地套用每个改写 —— 是提炼出 3 个画像的共同诉求
+- 如果 3 个画像的失望指向同一处（"这段还是 paraphrase"、"这段不够具体"）—— 那一定改
+- 如果 3 个画像的失望各指不同地方 —— 优先改"情感共鸣型"和"结果导向型"指出的（理性怀疑型太挑剔）
+- 改写后必须**比原版更具体**（不能只是"换种说法"）
+- 不要画蛇添足 —— 如果 3 个画像都满意的地方，保持原样
+
+输出 JSON（**只输出需要最终修改的字段**）：`
+          : `You are linQ's final AI profile polisher.
+
+Task: 3 different user personas (skeptical analyst, emotionally engaged, result-oriented) have reviewed the profile above. Each gave their most-disappointed section + a rewrite suggestion. Your job: synthesize those rewrites into one final pass.
+
+Key principles:
+- Don't mechanically apply each rewrite — extract the COMMON demand across the 3 personas
+- If all 3 point at the same field (e.g. "this is still paraphrase" or "this is too vague") — must change
+- If they point at different fields — prioritize emotionally_engaged + result_oriented
+- The final version must be MORE SPECIFIC than the original
+- Don't over-engineer — keep fields all 3 personas liked
+
+Output JSON (only fields that need final change):`;
+
+        const finalUser = lang === "zh"
+          ? `用户原始输入："""${input}"""\n\n5 轮 + 3 画像对抗后的画像：\n${JSON.stringify({ ...synth, ...sceneFields, ...inferred }, null, 2)}\n\n3 个画像的改写建议：\n${JSON.stringify(personaRewriteMap, null, 2)}\n\n请输出最终 JSON（**只输出需要改的字段**，每个字段是改写后的版本）：`
+          : `User input: """${input}"""\n\nProfile after 5 rounds + 3-persona adversarial review:\n${JSON.stringify({ ...synth, ...sceneFields, ...inferred }, null, 2)}\n\n3 personas' rewrite suggestions:\n${JSON.stringify(personaRewriteMap, null, 2)}\n\nOutput final JSON (only fields that need changing, each field is the rewritten version):`;
+
+        const finalRaw = await deepseekChat(
+          [
+            { role: "system", content: finalSys },
+            { role: "user", content: finalUser },
+          ],
+          { json: true, temperature: 0.7, max_tokens: 2000 },
+        );
+        const finalPolish = safeParseJSON<Record<string, unknown>>(finalRaw) ?? {};
+
+        // ============================================================
+        // Apply ALL polish layers in order: round 5 critique → round 6.5 final
+        // ============================================================
 
         // ============================================================
         // Merge the 5 rounds. If synthesis failed, fall back to a v4-shaped
@@ -577,41 +730,59 @@ Audit and revise (only output fields that need changing). Every revised line mus
 
         const useFallback = !synth || !synth.headline;
 
-        // Apply Round 5 critique to Round 4 synthesis (in-place revisions).
-        // The critique may revise: headline, narrative, patterns, dimensions.
+        // Apply Round 5 critique + Round 6.5 final polish to Round 4
+        // synthesis (in-place revisions). The critique may revise:
+        // headline, narrative, patterns, dimensions.
+        //
+        // The finalPolish from Round 6.5 (3-persona adversarial) has the
+        // same shape but is the LAST revision gate — wins over the
+        // single-LLM critique when both have revisions for the same field.
         const applyCritique = (base: Record<string, unknown>) => {
           const out: Record<string, unknown> = { ...base };
-          if (critique.headline && typeof critique.headline === "string") {
+          if (finalPolish.headline && typeof finalPolish.headline === "string") {
+            out.headline = finalPolish.headline;
+          } else if (critique.headline && typeof critique.headline === "string") {
             out.headline = critique.headline;
           }
-          if (critique.narrative && typeof critique.narrative === "string") {
+          if (finalPolish.narrative && typeof finalPolish.narrative === "string") {
+            out.narrative = finalPolish.narrative;
+          } else if (critique.narrative && typeof critique.narrative === "string") {
             out.narrative = critique.narrative;
           }
           // Patterns: critique returns a list of insight strings, in original order.
-          if (Array.isArray(critique.patterns) && Array.isArray(out.patterns)) {
+          if (Array.isArray(out.patterns)) {
             const revisedPatterns = (out.patterns as Array<Record<string, unknown>>).map(
               (p, i) => {
-                const newInsight = (critique.patterns as unknown[])[i];
-                if (typeof newInsight === "string" && newInsight.trim().length > 0) {
-                  return { ...p, insight: newInsight };
-                }
+                const fpNew = (finalPolish.patterns as unknown[] | undefined)?.[i];
+                const cNew = (critique.patterns as unknown[] | undefined)?.[i];
+                const winner =
+                  typeof fpNew === "string" && fpNew.trim().length > 0
+                    ? fpNew
+                    : typeof cNew === "string" && cNew.trim().length > 0
+                      ? cNew
+                      : null;
+                if (winner) return { ...p, insight: winner };
                 return p;
               },
             );
             out.patterns = revisedPatterns;
           }
           // Dimensions: critique returns a list of { key, why, signals }.
-          if (Array.isArray(critique.dimensions) && Array.isArray(out.dimensions)) {
+          if (Array.isArray(out.dimensions)) {
             const revisedDims = (out.dimensions as Array<Record<string, unknown>>).map(
               (d) => {
-                const match = (critique.dimensions as Array<Record<string, unknown>>).find(
+                const fpMatch = (finalPolish.dimensions as Array<Record<string, unknown>> | undefined)?.find(
                   (cd) => cd.key === d.key,
                 );
-                if (match) {
+                const cMatch = (critique.dimensions as Array<Record<string, unknown>> | undefined)?.find(
+                  (cd) => cd.key === d.key,
+                );
+                const winner = fpMatch ?? cMatch;
+                if (winner) {
                   return {
                     ...d,
-                    why: typeof match.why === "string" ? match.why : d.why,
-                    signals: Array.isArray(match.signals) ? match.signals : d.signals,
+                    why: typeof winner.why === "string" ? winner.why : d.why,
+                    signals: Array.isArray(winner.signals) ? winner.signals : d.signals,
                   };
                 }
                 return d;
@@ -627,14 +798,20 @@ Audit and revise (only output fields that need changing). Every revised line mus
           : {
               ...applyCritique(synth),
               patterns: (() => {
-                const cPatterns = critique.patterns;
-                if (Array.isArray(cPatterns) && Array.isArray(inferred.patterns)) {
+                const fp = finalPolish.patterns;
+                const cp = critique.patterns;
+                if (Array.isArray(inferred.patterns)) {
                   return (inferred.patterns as Array<Record<string, unknown>>).map(
                     (p, i) => {
-                      const newInsight = (cPatterns as unknown[])[i];
-                      if (typeof newInsight === "string" && newInsight.trim().length > 0) {
-                        return { ...p, insight: newInsight };
-                      }
+                      const fpNew = (fp as unknown[] | undefined)?.[i];
+                      const cNew = (cp as unknown[] | undefined)?.[i];
+                      const winner =
+                        typeof fpNew === "string" && fpNew.trim().length > 0
+                          ? fpNew
+                          : typeof cNew === "string" && cNew.trim().length > 0
+                            ? cNew
+                            : null;
+                      if (winner) return { ...p, insight: winner };
                       return p;
                     },
                   );
@@ -651,16 +828,79 @@ Audit and revise (only output fields that need changing). Every revised line mus
               aesthetic_signature: sceneFields.aesthetic_signature,
               defense_mechanisms: sceneFields.defense_mechanisms,
               communication_recipes: sceneFields.communication_recipes,
+              // v4+ (Round 6) — keep the persona tournament results for
+              // debugging + future analytics. The UI doesn't show this
+              // yet — but it's there for when you want to A/B test
+              // which personas' complaints correlate with real
+              // user feedback.
+              _persona_tournament: personaResults.map((p) => ({
+                persona: p.persona,
+                label: p.label,
+                most_moved: p.most_moved,
+                most_disappointed: p.most_disappointed.map((d) => ({
+                  field: d.field,
+                  why: d.why,
+                  rewrite: d.rewrite,
+                })),
+              })),
             };
 
+        // ============================================================
+        // MEMORY LAYER — fetch user's past pattern_feedback (agree/disagree)
+        // and inject it into the prompt context for the next generation.
+        // The feedback is fetched BEFORE the LLM pipeline runs, but for
+        // minimal latency we re-fetch here as a quick read.
+        // ============================================================
+        let feedbackContext: { agrees: string[]; disagrees: string[] } = {
+          agrees: [],
+          disagrees: [],
+        };
+        try {
+          const { data: fbRows } = await supabase
+            .from("pattern_feedback")
+            .select("pattern_text, verdict")
+            .eq("user_id", userId)
+            .order("created_at", { ascending: false })
+            .limit(20);
+          if (Array.isArray(fbRows)) {
+            feedbackContext.agrees = fbRows
+              .filter((r) => r.verdict === "agree")
+              .map((r) => String(r.pattern_text ?? ""))
+              .filter(Boolean)
+              .slice(0, 10);
+            feedbackContext.disagrees = fbRows
+              .filter((r) => r.verdict === "disagree")
+              .map((r) => String(r.pattern_text ?? ""))
+              .filter(Boolean)
+              .slice(0, 10);
+          }
+        } catch {
+           /* feedback table may not exist yet; ignore */
+        }
+
+        // Inject the feedback signal into the inference prompt so future
+        // generations can lean into what the user agreed with and away
+        // from what they disagreed with. This is a no-op on the first
+        // generation (no history yet).
+        const feedbackContextBlock =
+          feedbackContext.agrees.length > 0 || feedbackContext.disagrees.length > 0
+            ? lang === "zh"
+              ? `\n\n【用户过去反馈 - 必须参考】\n用户过去同意过的洞察方向（这些方向应该强化）：\n${feedbackContext.agrees.map((s) => `  - ${s}`).join("\n")}\n用户过去否定过的洞察方向（这些方向应该避开或换角度）：\n${feedbackContext.disagrees.map((s) => `  - ${s}`).join("\n")}\n`
+              : `\n\n[User's past feedback — must consider]\nDirections the user agreed with (lean into these):\n${feedbackContext.agrees.map((s) => `  - ${s}`).join("\n")}\nDirections the user disagreed with (avoid or reframe these):\n${feedbackContext.disagrees.map((s) => `  - ${s}`).join("\n")}\n`
+            : "";
+
         const profile_data = {
-          version: "v4",
+          version: "v4+",
           scenario,
           lang,
           input,
           ai,
           facts,
-          ai_provider: useFallback ? "fallback" : "deepseek-5round",
+          feedback_used: {
+            agrees_count: feedbackContext.agrees.length,
+            disagrees_count: feedbackContext.disagrees.length,
+          },
+          ai_provider: useFallback ? "fallback" : "deepseek-6round",
           generated_at: new Date().toISOString(),
         };
 

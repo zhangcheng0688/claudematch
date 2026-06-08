@@ -577,43 +577,27 @@ function ProfileCard({
           </p>
           <div className="space-y-2.5">
             {patterns.map((p, i) => (
-              <details
+              <PatternRow
                 key={i}
-                className="group rounded-sm border border-primary/20 bg-primary/5 transition-colors hover:border-primary/40"
-              >
-                <summary className="cursor-pointer list-none p-4">
-                  <p className="text-sm leading-relaxed text-foreground/95">
-                    {p.insight}
-                  </p>
-                  {p.evidence && (
-                    <p className="mt-2 border-l-2 border-border pl-2 text-xs italic text-muted-foreground">
-                      {t("You said:", "你说过：", "你講過：")}「{p.evidence}」
-                    </p>
-                  )}
-                  {p.reasoning_chain && p.reasoning_chain.length > 0 && (
-                    <p className="mt-2 text-[10px] uppercase tracking-wider text-muted-foreground/70 group-open:hidden">
-                      {t("Tap to see AI's reasoning", "展开推理过程", "展開推理過程")} →
-                    </p>
-                  )}
-                </summary>
-                {p.reasoning_chain && p.reasoning_chain.length > 0 && (
-                  <div className="border-t border-primary/20 px-4 pb-4 pt-3">
-                    <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-                      {t("AI's reasoning chain", "AI 的推理过程", "AI 嘅推理過程")}
-                    </p>
-                    <ol className="mt-2 space-y-1.5 text-xs leading-relaxed text-foreground/85">
-                      {p.reasoning_chain.map((step, j) => (
-                        <li key={j} className="flex gap-2">
-                          <span className="shrink-0 font-mono text-muted-foreground/70">
-                            {j + 1}.
-                          </span>
-                          <span>{step}</span>
-                        </li>
-                      ))}
-                    </ol>
-                  </div>
-                )}
-              </details>
+                insight={p.insight}
+                evidence={p.evidence}
+                reasoningChain={p.reasoning_chain}
+                t={t}
+                onFeedback={async (verdict) => {
+                  try {
+                    await authedFetch("/api/feedback/pattern", {
+                      method: "POST",
+                      body: JSON.stringify({
+                        pattern_text: p.insight,
+                        section: "patterns",
+                        verdict,
+                      }),
+                    });
+                  } catch {
+                    /* swallow — feedback is best-effort */
+                  }
+                }}
+              />
             ))}
           </div>
         </div>
@@ -870,5 +854,107 @@ function Row({ label, value }: { label: string; value: string }) {
       <dt className="text-xs uppercase tracking-wider text-muted-foreground">{label}</dt>
       <dd className="mt-1">{value}</dd>
     </div>
+  );
+}
+
+function PatternRow({
+  insight,
+  evidence,
+  reasoningChain,
+  t,
+  onFeedback,
+}: {
+  insight: string;
+  evidence?: string;
+  reasoningChain?: string[];
+  t: (en: string, zh: string, yue: string) => string;
+  onFeedback: (verdict: "agree" | "disagree") => void;
+}) {
+  const [verdict, setVerdict] = useState<"agree" | "disagree" | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  const submit = async (v: "agree" | "disagree") => {
+    if (submitting) return;
+    setSubmitting(true);
+    setVerdict(v);
+    try {
+      await onFeedback(v);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <details
+      className="group rounded-sm border border-primary/20 bg-primary/5 transition-colors hover:border-primary/40"
+    >
+      <summary className="cursor-pointer list-none p-4">
+        <p className="text-sm leading-relaxed text-foreground/95">{insight}</p>
+        {evidence && (
+          <p className="mt-2 border-l-2 border-border pl-2 text-xs italic text-muted-foreground">
+            {t("You said:", "你说过：", "你講過：")}「{evidence}」
+          </p>
+        )}
+        {reasoningChain && reasoningChain.length > 0 && (
+          <p className="mt-2 text-[10px] uppercase tracking-wider text-muted-foreground/70 group-open:hidden">
+            {t("Tap to see AI's reasoning", "展开推理过程", "展開推理過程")} →
+          </p>
+        )}
+        {/* Feedback row */}
+        <div
+          className="mt-3 flex items-center gap-2 border-t border-primary/10 pt-2"
+          onClick={(e) => e.stopPropagation()}
+        >
+          <span className="text-[10px] uppercase tracking-wider text-muted-foreground/80">
+            {t("Does this fit you?", "这说的对吗？", "呢句啱唔啱？")}
+          </span>
+          <button
+            type="button"
+            disabled={submitting}
+            onClick={() => submit("agree")}
+            aria-label={t("Agree", "同意", "同意")}
+            className={`inline-flex h-7 items-center gap-1 rounded-sm border px-2 text-xs transition-colors ${
+              verdict === "agree"
+                ? "border-emerald-500/60 bg-emerald-500/15 text-emerald-400"
+                : "border-border bg-background/40 text-muted-foreground hover:border-emerald-500/40 hover:text-emerald-400"
+            } disabled:opacity-60`}
+          >
+            <ThumbsUp className="h-3 w-3" />
+            {verdict === "agree" ? t("Got it", "说对了", "啱") : t("Yes", "对", "啱")}
+          </button>
+          <button
+            type="button"
+            disabled={submitting}
+            onClick={() => submit("disagree")}
+            aria-label={t("Disagree", "不同意", "唔啱")}
+            className={`inline-flex h-7 items-center gap-1 rounded-sm border px-2 text-xs transition-colors ${
+              verdict === "disagree"
+                ? "border-rose-500/60 bg-rose-500/15 text-rose-400"
+                : "border-border bg-background/40 text-muted-foreground hover:border-rose-500/40 hover:text-rose-400"
+            } disabled:opacity-60`}
+          >
+            <ThumbsDown className="h-3 w-3" />
+            {verdict === "disagree" ? t("Not me", "不是我", "唔係我") : t("No", "不对", "唔啱")}
+          </button>
+        </div>
+      </summary>
+      {reasoningChain && reasoningChain.length > 0 && (
+        <div className="border-t border-primary/20 px-4 pb-4 pt-3">
+          <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+            {t("AI's reasoning chain", "AI 的推理过程", "AI 嘅推理過程")}
+          </p>
+          <ol className="mt-2 space-y-1.5 text-xs leading-relaxed text-foreground/85">
+            {reasoningChain.map((step, j) => (
+              <li key={j} className="flex gap-2">
+                <span className="shrink-0 font-mono text-muted-foreground/70">
+                  {j + 1}.
+                </span>
+                <span>{step}</span>
+              </li>
+            ))}
+          </ol>
+        </div>
+      )}
+    </details>
   );
 }
