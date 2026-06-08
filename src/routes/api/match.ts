@@ -1,4 +1,4 @@
-// src/routes/api/match/index.ts
+// src/routes/api/match.ts
 // GET /api/match — list the signed-in user's past matches (read-only).
 // Distinct from /api/ai/match (which creates a new match + emails both sides).
 // Required by the /match list page so it can render history without side effects.
@@ -6,7 +6,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { json, preflight, requireUser } from "@/lib/api/_helpers.server";
 
-export const Route = createFileRoute("/api/match/")({
+export const Route = createFileRoute("/api/match")({
   server: {
     handlers: {
       OPTIONS: async () => preflight(),
