@@ -20,13 +20,19 @@ import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ApiWaitlistRouteImport } from './routes/api/waitlist'
 import { Route as ApiStatsRouteImport } from './routes/api/stats'
+import { Route as ApiMatchRouteImport } from './routes/api/match'
 import { Route as ApiLoginRouteImport } from './routes/api/login'
 import { Route as ApiAuthorizeRouteImport } from './routes/api/authorize'
 import { Route as AuthenticatedStartRouteImport } from './routes/_authenticated/start'
+import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
+import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
+import { Route as AuthenticatedMatchRouteImport } from './routes/_authenticated/match'
 import { Route as ApiUserMeRouteImport } from './routes/api/user/me'
+import { Route as ApiMatchIdRouteImport } from './routes/api/match/$id'
 import { Route as ApiAiMeetPlanRouteImport } from './routes/api/ai/meet-plan'
 import { Route as ApiAiMatchRouteImport } from './routes/api/ai/match'
 import { Route as ApiAiGenerateProfileRouteImport } from './routes/api/ai/generate-profile'
+import { Route as AuthenticatedMatchIdRouteImport } from './routes/_authenticated/match.$id'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
@@ -85,6 +91,11 @@ const ApiStatsRoute = ApiStatsRouteImport.update({
   path: '/api/stats',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiMatchRoute = ApiMatchRouteImport.update({
+  id: '/api/match',
+  path: '/api/match',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiLoginRoute = ApiLoginRouteImport.update({
   id: '/api/login',
   path: '/api/login',
@@ -100,10 +111,30 @@ const AuthenticatedStartRoute = AuthenticatedStartRouteImport.update({
   path: '/start',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedSettingsRoute = AuthenticatedSettingsRouteImport.update({
+  id: '/settings',
+  path: '/settings',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedProfileRoute = AuthenticatedProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedMatchRoute = AuthenticatedMatchRouteImport.update({
+  id: '/match',
+  path: '/match',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const ApiUserMeRoute = ApiUserMeRouteImport.update({
   id: '/api/user/me',
   path: '/api/user/me',
   getParentRoute: () => rootRouteImport,
+} as any)
+const ApiMatchIdRoute = ApiMatchIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => ApiMatchRoute,
 } as any)
 const ApiAiMeetPlanRoute = ApiAiMeetPlanRouteImport.update({
   id: '/api/ai/meet-plan',
@@ -119,6 +150,11 @@ const ApiAiGenerateProfileRoute = ApiAiGenerateProfileRouteImport.update({
   id: '/api/ai/generate-profile',
   path: '/api/ai/generate-profile',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedMatchIdRoute = AuthenticatedMatchIdRouteImport.update({
+  id: '/$id',
+  path: '/$id',
+  getParentRoute: () => AuthenticatedMatchRoute,
 } as any)
 const LovableEmailQueueProcessRoute =
   LovableEmailQueueProcessRouteImport.update({
@@ -146,14 +182,20 @@ export interface FileRoutesByFullPath {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/trust': typeof TrustRoute
+  '/match': typeof AuthenticatedMatchRouteWithChildren
+  '/profile': typeof AuthenticatedProfileRoute
+  '/settings': typeof AuthenticatedSettingsRoute
   '/start': typeof AuthenticatedStartRoute
   '/api/authorize': typeof ApiAuthorizeRoute
   '/api/login': typeof ApiLoginRoute
+  '/api/match': typeof ApiMatchRouteWithChildren
   '/api/stats': typeof ApiStatsRoute
   '/api/waitlist': typeof ApiWaitlistRoute
+  '/match/$id': typeof AuthenticatedMatchIdRoute
   '/api/ai/generate-profile': typeof ApiAiGenerateProfileRoute
   '/api/ai/match': typeof ApiAiMatchRoute
   '/api/ai/meet-plan': typeof ApiAiMeetPlanRoute
+  '/api/match/$id': typeof ApiMatchIdRoute
   '/api/user/me': typeof ApiUserMeRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -168,14 +210,20 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/trust': typeof TrustRoute
+  '/match': typeof AuthenticatedMatchRouteWithChildren
+  '/profile': typeof AuthenticatedProfileRoute
+  '/settings': typeof AuthenticatedSettingsRoute
   '/start': typeof AuthenticatedStartRoute
   '/api/authorize': typeof ApiAuthorizeRoute
   '/api/login': typeof ApiLoginRoute
+  '/api/match': typeof ApiMatchRouteWithChildren
   '/api/stats': typeof ApiStatsRoute
   '/api/waitlist': typeof ApiWaitlistRoute
+  '/match/$id': typeof AuthenticatedMatchIdRoute
   '/api/ai/generate-profile': typeof ApiAiGenerateProfileRoute
   '/api/ai/match': typeof ApiAiMatchRoute
   '/api/ai/meet-plan': typeof ApiAiMeetPlanRoute
+  '/api/match/$id': typeof ApiMatchIdRoute
   '/api/user/me': typeof ApiUserMeRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -192,14 +240,20 @@ export interface FileRoutesById {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/trust': typeof TrustRoute
+  '/_authenticated/match': typeof AuthenticatedMatchRouteWithChildren
+  '/_authenticated/profile': typeof AuthenticatedProfileRoute
+  '/_authenticated/settings': typeof AuthenticatedSettingsRoute
   '/_authenticated/start': typeof AuthenticatedStartRoute
   '/api/authorize': typeof ApiAuthorizeRoute
   '/api/login': typeof ApiLoginRoute
+  '/api/match': typeof ApiMatchRouteWithChildren
   '/api/stats': typeof ApiStatsRoute
   '/api/waitlist': typeof ApiWaitlistRoute
+  '/_authenticated/match/$id': typeof AuthenticatedMatchIdRoute
   '/api/ai/generate-profile': typeof ApiAiGenerateProfileRoute
   '/api/ai/match': typeof ApiAiMatchRoute
   '/api/ai/meet-plan': typeof ApiAiMeetPlanRoute
+  '/api/match/$id': typeof ApiMatchIdRoute
   '/api/user/me': typeof ApiUserMeRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
@@ -216,14 +270,20 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/terms'
     | '/trust'
+    | '/match'
+    | '/profile'
+    | '/settings'
     | '/start'
     | '/api/authorize'
     | '/api/login'
+    | '/api/match'
     | '/api/stats'
     | '/api/waitlist'
+    | '/match/$id'
     | '/api/ai/generate-profile'
     | '/api/ai/match'
     | '/api/ai/meet-plan'
+    | '/api/match/$id'
     | '/api/user/me'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -238,14 +298,20 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/terms'
     | '/trust'
+    | '/match'
+    | '/profile'
+    | '/settings'
     | '/start'
     | '/api/authorize'
     | '/api/login'
+    | '/api/match'
     | '/api/stats'
     | '/api/waitlist'
+    | '/match/$id'
     | '/api/ai/generate-profile'
     | '/api/ai/match'
     | '/api/ai/meet-plan'
+    | '/api/match/$id'
     | '/api/user/me'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -261,14 +327,20 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/terms'
     | '/trust'
+    | '/_authenticated/match'
+    | '/_authenticated/profile'
+    | '/_authenticated/settings'
     | '/_authenticated/start'
     | '/api/authorize'
     | '/api/login'
+    | '/api/match'
     | '/api/stats'
     | '/api/waitlist'
+    | '/_authenticated/match/$id'
     | '/api/ai/generate-profile'
     | '/api/ai/match'
     | '/api/ai/meet-plan'
+    | '/api/match/$id'
     | '/api/user/me'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
@@ -287,6 +359,7 @@ export interface RootRouteChildren {
   TrustRoute: typeof TrustRoute
   ApiAuthorizeRoute: typeof ApiAuthorizeRoute
   ApiLoginRoute: typeof ApiLoginRoute
+  ApiMatchRoute: typeof ApiMatchRouteWithChildren
   ApiStatsRoute: typeof ApiStatsRoute
   ApiWaitlistRoute: typeof ApiWaitlistRoute
   ApiAiGenerateProfileRoute: typeof ApiAiGenerateProfileRoute
@@ -377,6 +450,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiStatsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/match': {
+      id: '/api/match'
+      path: '/api/match'
+      fullPath: '/api/match'
+      preLoaderRoute: typeof ApiMatchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/login': {
       id: '/api/login'
       path: '/api/login'
@@ -398,12 +478,40 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedStartRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/settings': {
+      id: '/_authenticated/settings'
+      path: '/settings'
+      fullPath: '/settings'
+      preLoaderRoute: typeof AuthenticatedSettingsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/profile': {
+      id: '/_authenticated/profile'
+      path: '/profile'
+      fullPath: '/profile'
+      preLoaderRoute: typeof AuthenticatedProfileRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/match': {
+      id: '/_authenticated/match'
+      path: '/match'
+      fullPath: '/match'
+      preLoaderRoute: typeof AuthenticatedMatchRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/api/user/me': {
       id: '/api/user/me'
       path: '/api/user/me'
       fullPath: '/api/user/me'
       preLoaderRoute: typeof ApiUserMeRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/api/match/$id': {
+      id: '/api/match/$id'
+      path: '/$id'
+      fullPath: '/api/match/$id'
+      preLoaderRoute: typeof ApiMatchIdRouteImport
+      parentRoute: typeof ApiMatchRoute
     }
     '/api/ai/meet-plan': {
       id: '/api/ai/meet-plan'
@@ -425,6 +533,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/ai/generate-profile'
       preLoaderRoute: typeof ApiAiGenerateProfileRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/match/$id': {
+      id: '/_authenticated/match/$id'
+      path: '/$id'
+      fullPath: '/match/$id'
+      preLoaderRoute: typeof AuthenticatedMatchIdRouteImport
+      parentRoute: typeof AuthenticatedMatchRoute
     }
     '/lovable/email/queue/process': {
       id: '/lovable/email/queue/process'
@@ -450,16 +565,45 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface AuthenticatedMatchRouteChildren {
+  AuthenticatedMatchIdRoute: typeof AuthenticatedMatchIdRoute
+}
+
+const AuthenticatedMatchRouteChildren: AuthenticatedMatchRouteChildren = {
+  AuthenticatedMatchIdRoute: AuthenticatedMatchIdRoute,
+}
+
+const AuthenticatedMatchRouteWithChildren =
+  AuthenticatedMatchRoute._addFileChildren(AuthenticatedMatchRouteChildren)
+
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedMatchRoute: typeof AuthenticatedMatchRouteWithChildren
+  AuthenticatedProfileRoute: typeof AuthenticatedProfileRoute
+  AuthenticatedSettingsRoute: typeof AuthenticatedSettingsRoute
   AuthenticatedStartRoute: typeof AuthenticatedStartRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedMatchRoute: AuthenticatedMatchRouteWithChildren,
+  AuthenticatedProfileRoute: AuthenticatedProfileRoute,
+  AuthenticatedSettingsRoute: AuthenticatedSettingsRoute,
   AuthenticatedStartRoute: AuthenticatedStartRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
+interface ApiMatchRouteChildren {
+  ApiMatchIdRoute: typeof ApiMatchIdRoute
+}
+
+const ApiMatchRouteChildren: ApiMatchRouteChildren = {
+  ApiMatchIdRoute: ApiMatchIdRoute,
+}
+
+const ApiMatchRouteWithChildren = ApiMatchRoute._addFileChildren(
+  ApiMatchRouteChildren,
+)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -473,6 +617,7 @@ const rootRouteChildren: RootRouteChildren = {
   TrustRoute: TrustRoute,
   ApiAuthorizeRoute: ApiAuthorizeRoute,
   ApiLoginRoute: ApiLoginRoute,
+  ApiMatchRoute: ApiMatchRouteWithChildren,
   ApiStatsRoute: ApiStatsRoute,
   ApiWaitlistRoute: ApiWaitlistRoute,
   ApiAiGenerateProfileRoute: ApiAiGenerateProfileRoute,
