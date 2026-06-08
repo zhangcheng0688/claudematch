@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
-import { Bell, ArrowRight, Calendar } from "lucide-react";
+import { Bell, ArrowRight, Calendar, User } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/match")({
   ssr: false,
@@ -95,13 +95,22 @@ function MatchConsole() {
           <Link to="/" className="text-lg font-semibold tracking-tight">
             lin<span className="font-display text-primary text-2xl align-middle">Q</span>
           </Link>
-          <button
-            type="button"
-            className="rounded-full p-2 text-muted-foreground hover:text-foreground"
-            aria-label="通知"
-          >
-            <Bell className="h-5 w-5" />
-          </button>
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              className="rounded-full p-2 text-muted-foreground hover:text-foreground"
+              aria-label="通知"
+            >
+              <Bell className="h-5 w-5" />
+            </button>
+            <Link
+              to="/me"
+              className="rounded-full p-2 text-muted-foreground hover:text-foreground"
+              aria-label="我的"
+            >
+              <User className="h-5 w-5" />
+            </Link>
+          </div>
         </div>
       </header>
 
