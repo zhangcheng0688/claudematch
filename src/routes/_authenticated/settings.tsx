@@ -4,6 +4,7 @@ import { Briefcase, Heart, Save, Users } from "lucide-react";
 import { LanguageProvider, useLang } from "@/lib/i18n";
 import { AppShell } from "@/components/AppShell";
 import { authedFetch } from "@/lib/api/authed-fetch";
+import { translateError } from "@/lib/api/translate-error";
 
 export const Route = createFileRoute("/_authenticated/settings")({
   head: () => ({
@@ -46,7 +47,7 @@ function SettingsPage() {
         setScenarios(me.authorizations ?? { business: false, dating: false, partner: false });
         setLoaded(true);
       } catch (e) {
-        setErr(e instanceof Error ? e.message : "Failed to load");
+        setErr(translateError(e instanceof Error ? e.message : "Failed to load", lang));
         setLoaded(true);
       }
     })();
@@ -66,7 +67,7 @@ function SettingsPage() {
       });
       setSavedAt(Date.now());
     } catch (e) {
-      setErr(e instanceof Error ? e.message : "Save failed");
+      setErr(translateError(e instanceof Error ? e.message : "Save failed", lang));
     } finally {
       setSaving(false);
     }

@@ -139,10 +139,18 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 });
 
 function RootShell({ children }: { children: ReactNode }) {
+  // P2-key-3: sync <html lang> with the active i18n language.
+  // The SSR pass emits lang="en" (the default in LanguageProvider).
+  // The client-side LanguageProvider reads localStorage on mount;
+  // when that resolves to a non-English locale we update the <html>
+  // element in a useEffect (not in render — that would hydration-
+  // mismatch). suppressHydrationWarning on <html> tells React to
+  // accept the post-hydration attribute change.
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
         <HeadContent />
+        <HtmlLangSync />
       </head>
       <body>
         {children}
@@ -150,6 +158,53 @@ function RootShell({ children }: { children: ReactNode }) {
       </body>
     </html>
   );
+}
+
+/**
+ * Tiny client-only effect that keeps document.documentElement.lang
+ * in sync with the active LanguageProvider state. Lives as a separate
+ * component (rather than inlined in RootShell) so it gets its own
+ * hook scope — without this, we'd need to call useLang in RootShell,
+ * which is rendered before any LanguageProvider wraps it.
+ *
+ * Renders nothing.
+ */
+function HtmlLangSync() {
+  // We import dynamically so this only runs in the browser.
+  // (The LanguageProvider is per-page; we read localStorage directly
+  // here because we can't rely on a provider existing at the root.)
+  useEffect(() => {
+    const sync = () => {
+      try {
+        const v = localStorage.getItem("lang") as "en" | "zh" | "yue" | null;
+        let lang: "en" | "zh" | "yue" = "en";
+        if (v === "en" || v === "zh" || v === "yue") {
+          lang = v;
+        } else if (typeof navigator !== "undefined") {
+          const n = navigator.language.toLowerCase();
+          if (n.startsWith("zh-hk") || n.startsWith("yue")) lang = "yue";
+          else if (n.startsWith("zh")) lang = "zh";
+        }
+        if (document.documentElement.lang !== lang) {
+          document.documentElement.lang = lang;
+        }
+      } catch {
+        /* ignore */
+      }
+    };
+    sync();
+    // React to localStorage changes from other tabs + in-tab updates
+    // (LanguageProvider writes to localStorage on every lang change).
+    window.addEventListener("storage", sync);
+    // Poll every 1s to catch in-tab updates without the SPA telling us
+    // (cheaper than wiring a custom event just for this).
+    const id = window.setInterval(sync, 1000);
+    return () => {
+      window.removeEventListener("storage", sync);
+      window.clearInterval(id);
+    };
+  }, []);
+  return null;
 }
 
 function RootComponent() {

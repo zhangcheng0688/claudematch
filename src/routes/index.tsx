@@ -2,13 +2,8 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Check, Minus, Headphones, Mail, MessageCircle, Sparkles, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { CookieBanner } from "@/components/CookieBanner";
+import { MomentsImg } from "@/components/shared/MomentsImg";
 const ogImageUrl = "/og-image.jpg";
-import moment1 from "@/assets/moment-1.jpg";
-import moment2 from "@/assets/moment-2.jpg";
-import moment3 from "@/assets/moment-3.jpg";
-import moment4 from "@/assets/moment-4.jpg";
-import moment5 from "@/assets/moment-5.jpg";
-import moment6 from "@/assets/moment-6.jpg";
 import {
   LanguageProvider,
   useLang,
@@ -236,14 +231,14 @@ function WeeklyDate() {
             <div className="absolute inset-0 -z-10 blur-3xl opacity-50"
               style={{ background: "radial-gradient(40% 40% at 50% 50%, oklch(0.85 0.17 90 / 0.35), transparent 70%)" }} />
             <figure className="polaroid -rotate-3 w-[240px] md:w-[280px]">
-              <img src={moment2} alt="Weekly match meet-up" loading="lazy" className="aspect-[4/5] w-full object-cover" />
+              <MomentsImg base="moment-2" alt="Weekly match meet-up" className="aspect-[4/5] w-full object-cover" />
               <figcaption className="mt-3 px-1 text-left">
                 <div className="text-[10px] font-medium uppercase tracking-wider" style={{ color: "oklch(0.45 0.03 260)" }}>Match Day · Wed</div>
                 <div className="mt-1 text-sm font-medium" style={{ color: "oklch(0.2 0.03 260)" }}>Jay & Priya</div>
               </figcaption>
             </figure>
             <figure className="polaroid rotate-6 absolute right-2 top-8 w-[170px] md:w-[200px]">
-              <img src={moment5} alt="Weekly match meet-up" loading="lazy" className="aspect-square w-full object-cover" />
+              <MomentsImg base="moment-5" alt="Weekly match meet-up" className="aspect-square w-full object-cover" />
             </figure>
           </div>
         </div>
@@ -434,9 +429,11 @@ function FinalCTA() {
 
 function Moments() {
   const { lang, t } = useLang();
-  const imgs = [moment1, moment2, moment3, moment4, moment5, moment6];
+  // 6 moments. The base identifier maps 1:1 with our momentsI18n[lang]
+  // array; we render each twice in a marquee loop for visual density.
+  const bases = ["moment-1", "moment-2", "moment-3", "moment-4", "moment-5", "moment-6"] as const;
   const rotates = ["-rotate-3", "rotate-2", "-rotate-2", "rotate-1", "-rotate-1", "rotate-3"];
-  const moments = momentsI18n[lang].map((m, i) => ({ ...m, src: imgs[i], rotate: rotates[i] }));
+  const moments = momentsI18n[lang].map((m, i) => ({ ...m, base: bases[i]!, rotate: rotates[i]! }));
   const loop = [...moments, ...moments];
   return (
     <section id="moments" className="border-b border-border/60">
@@ -465,12 +462,9 @@ function Moments() {
                 key={i}
                 className={`polaroid ${m.rotate} w-[220px] shrink-0 md:w-[260px]`}
               >
-                <img
-                  src={m.src}
+                <MomentsImg
+                  base={m.base}
                   alt={`${m.name} — ${m.tag}`}
-                  loading="lazy"
-                  width={1024}
-                  height={1024}
                   className="aspect-square w-full object-cover"
                 />
                 <figcaption className="mt-3 px-1 text-left">

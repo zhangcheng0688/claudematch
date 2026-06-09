@@ -4,6 +4,7 @@
 
 import { createFileRoute } from "@tanstack/react-router";
 import { json, preflight, requireUser, safeError } from "@/lib/api/_helpers.server";
+import { migrateAiProfile } from "@/lib/api/migrate-profile";
 
 export const Route = createFileRoute("/api/user/me")({
   server: {
@@ -14,7 +15,7 @@ export const Route = createFileRoute("/api/user/me")({
         if ("error" in auth) return auth.error;
         const { userId, supabase, email } = auth;
 
-        const [{ data: profile }, { data: authz }, { data: aiProfile }] = await Promise.all([
+        const [{ data: profile }, { data: authz }, { data: aiProfileRow }] = await Promise.all([
           supabase.from("profiles").select("*").eq("id", userId).maybeSingle(),
           supabase.from("user_authorizations").select("*").eq("user_id", userId).maybeSingle(),
           supabase
@@ -42,12 +43,32 @@ export const Route = createFileRoute("/api/user/me")({
           wechatBound = Boolean(wa?.user_id);
         }
 
+        // P1-3: normalize the AI profile through migrateAiProfile so
+        // the SPA never has to defend-read v1/v2/v3 vs v4 fields.
+        // The raw row's `profile_data` may be a v1 shape (legacy
+        // users bound via WeChat before v2), so the migration is
+        // necessary even though generate-profile.ts now writes v4.
+        const rawAi = (aiProfileRow as { profile_data?: unknown } | null)?.profile_data;
+        const aiProfile = rawAi
+          ? {
+              ...(aiProfileRow as Record<string, unknown>),
+              profile_data: {
+                ...(typeof rawAi === "object" && rawAi !== null ? (rawAi as Record<string, unknown>) : {}),
+                ai: migrateAiProfile(
+                  typeof rawAi === "object" && rawAi !== null
+                    ? (rawAi as { ai?: unknown }).ai
+                    : undefined,
+                ),
+              },
+            }
+          : null;
+
         return json({
           data: {
             user: { id: userId, email, wechat_bound: wechatBound },
             profile: profile ?? null,
             authorizations: authz ?? { business: false, dating: false, partner: false },
-            ai_profile: aiProfile ?? null,
+            ai_profile: aiProfile,
           },
         }, undefined, request);
       },

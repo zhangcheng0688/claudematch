@@ -32,15 +32,22 @@ export const Route = createFileRoute("/api/ai/generate-profile")({
         if ("error" in auth) return auth.error;
         const { userId, supabase } = auth;
 
+        // P1-1: one traceId threads through every deepseek call in this
+        // request. The SPA can include the traceId in support tickets;
+        // we can grep Cloudflare logs for it to find every call site
+        // in a single user-initiated generation.
+        const traceId = (crypto as { randomUUID?: () => string })?.randomUUID?.() ??
+          Math.random().toString(36).slice(2) + Date.now().toString(36);
+
         let body: { input?: unknown; scenario?: unknown; lang?: unknown } = {};
         try {
           body = await request.json();
         } catch {
-          return json({ error: "Invalid JSON body" }, { status: 400 });
+          return json({ error: "Invalid JSON body" }, { status: 400 }, request);
         }
         const input = typeof body.input === "string" ? body.input.trim() : "";
         if (input.length < 4 || input.length > 4000) {
-          return json({ error: "input must be 4-4000 chars" }, { status: 400 });
+          return json({ error: "input must be 4-4000 chars" }, { status: 400 }, request);
         }
         const scenario =
           typeof body.scenario === "string" && VALID_SCENARIOS.has(body.scenario)
@@ -96,7 +103,7 @@ Extract objective facts, output JSON:
             { role: "system", content: extractSys },
             { role: "user", content: extractUserPrompt },
           ],
-          { json: true, temperature: 0.3, max_tokens: 1200 },
+          { json: true, temperature: 0.3, max_tokens: 1200, label: "round-1-extract", traceId, timeoutMs: 12_000 },
         );
         const facts = safeParseJSON<Record<string, unknown>>(extractedRaw) ?? {};
 
@@ -219,14 +226,14 @@ Output v4 fields JSON.`;
               { role: "system", content: inferSys },
               { role: "user", content: inferUserPrompt },
             ],
-            { json: true, temperature: 0.9, max_tokens: 2200 },
+            { json: true, temperature: 0.9, max_tokens: 2200, label: "round-2-infer", traceId, timeoutMs: 25_000 },
           ),
           deepseekChat(
             [
               { role: "system", content: sceneSys },
               { role: "user", content: sceneUserPromptParallel },
             ],
-            { json: true, temperature: 0.9, max_tokens: 2200 },
+            { json: true, temperature: 0.9, max_tokens: 2200, label: "round-3-scene", traceId, timeoutMs: 25_000 },
           ),
         ]);
         const inferred = safeParseJSON<Record<string, unknown>>(inferredRaw) ?? {};
@@ -378,7 +385,7 @@ Output final profile JSON:
             { role: "system", content: synthSys },
             { role: "user", content: synthUserPrompt },
           ],
-          { json: true, temperature: 0.85, max_tokens: 1500 },
+          { json: true, temperature: 0.85, max_tokens: 1500, label: "round-4-synth", traceId, timeoutMs: 25_000 },
         );
         const synth = safeParseJSON<Record<string, unknown>>(synthRaw) ?? {};
 
@@ -468,7 +475,7 @@ Audit and revise (only output fields that need changing). Every revised line mus
               { role: "system", content: critiqueSys },
               { role: "user", content: critiqueUserPrompt },
             ],
-            { json: true, temperature: 0.7, max_tokens: 2000 },
+            { json: true, temperature: 0.7, max_tokens: 2000, label: "round-5-critique", traceId, timeoutMs: 25_000 },
           ),
           // 3 personas (Round 6) — pre-built above as `personaCalls`
           ...personaCalls,
@@ -550,7 +557,7 @@ Audit and revise (only output fields that need changing). Every revised line mus
         // afterwards. Cost: 1 extra LLM call but still faster than
         // serial because it overlaps with the persona calls.
         const profileBlob = JSON.stringify({ ...synth, ...sceneFields, ...inferred });
-        const personaCalls = personas.map(async (p) => {
+        const personaCalls = personas.map(async (p, i) => {
           const psys = lang === "zh"
             ? `你是 ${p.label}。\n\n${p.brief}\n\n任务：审阅上面的 AI 画像输出。\n\n1. 找出让你**最被打动**的 1-2 个 section（带引用原文片段）—— 写为什么打动你\n2. 找出让你**最失望**的 1-2 个 section（带引用）—— 写为什么失望，并给出**一个具体的改写建议**（1 句话，30-80 字）\n\n严格输出 JSON。`
             : `You are a ${p.label}.\n\n${p.brief}\n\nTask: review the AI profile output above.\n\n1. Find 1-2 sections that MOVED you most (with verbatim quote) — why\n2. Find 1-2 sections that DISAPPOINTED you most (with verbatim quote) — why + one CONCRETE rewrite suggestion (1 sentence, 30-80 chars)\n\nStrict JSON.`;
@@ -564,7 +571,7 @@ Audit and revise (only output fields that need changing). Every revised line mus
               { role: "system", content: psys },
               { role: "user", content: puser },
             ],
-            { json: true, temperature: 0.85, max_tokens: 1200 },
+            { json: true, temperature: 0.85, max_tokens: 1200, label: `round-6-persona-${i}-${p.label.slice(0, 24).replace(/[^a-z0-9]+/gi, "-")}`, traceId, timeoutMs: 25_000 },
           );
           const parsedPersona = safeParseJSON<{
             most_moved?: Array<{ field: string; quote?: string; why: string }>;
@@ -650,7 +657,7 @@ Output JSON (only fields that need final change):`;
               { role: "system", content: finalSys },
               { role: "user", content: finalUser },
             ],
-            { json: true, temperature: 0.7, max_tokens: 2000 },
+            { json: true, temperature: 0.7, max_tokens: 2000, label: "round-6-5-final-polish", traceId, timeoutMs: 30_000 },
           ),
         ]);
         const finalPolish = finalSettled[0].status === "fulfilled"

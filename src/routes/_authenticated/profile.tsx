@@ -4,6 +4,7 @@ import { Settings, Sparkles, MessageCircle, CheckCircle2, Loader2, Unlink } from
 import { LanguageProvider, useLang } from "@/lib/i18n";
 import { AppShell } from "@/components/AppShell";
 import { authedFetch } from "@/lib/api/authed-fetch";
+import { translateError } from "@/lib/api/translate-error";
 
 export const Route = createFileRoute("/_authenticated/profile")({
   head: () => ({
@@ -44,7 +45,7 @@ function ProfilePage() {
         setMe((res as { data: MeResponse }).data ?? (res as MeResponse));
         setLoading(false);
       } catch (e) {
-        setErr(e instanceof Error ? e.message : "Failed to load");
+        setErr(translateError(e instanceof Error ? e.message : "Failed to load", lang));
         setLoading(false);
       }
     })();
@@ -99,9 +100,15 @@ function ProfilePage() {
     setErr(null);
     setWxBusy(true);
     try {
+      // P1-5: send an Idempotency-Key so a page-refresh mid-flight
+      // doesn't double-unbind. The key is regenerated per click.
+      const idempotencyKey =
+        typeof crypto !== "undefined" && "randomUUID" in crypto
+          ? crypto.randomUUID()
+          : `${Date.now()}-${Math.random()}`;
       const res = await authedFetch<{ data?: { unbound?: boolean }; error?: string }>(
         "/api/auth/wechat/unbind",
-        { method: "POST" },
+        { method: "POST", headers: { "Idempotency-Key": idempotencyKey } },
       );
       if (res.error || !res.data?.unbound) {
         setErr(
@@ -116,7 +123,7 @@ function ProfilePage() {
       });
       setMe((fresh as { data: MeResponse }).data ?? (fresh as MeResponse));
     } catch (e) {
-      setErr(e instanceof Error ? e.message : "Failed to unbind");
+      setErr(translateError(e instanceof Error ? e.message : "Failed to unbind", lang));
     } finally {
       setWxBusy(false);
     }
