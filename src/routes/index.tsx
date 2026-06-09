@@ -140,8 +140,8 @@ function Hero() {
               href="/auth"
               className="group relative inline-flex h-14 items-center gap-3 rounded-sm bg-primary pl-3 pr-6 text-sm font-medium text-primary-foreground shadow-[0_20px_60px_-12px_oklch(0.85_0.17_90/0.65),0_0_0_1px_oklch(0.85_0.17_90/0.4),inset_0_1px_0_oklch(1_0_0/0.35)] transition-all hover:-translate-y-0.5 hover:shadow-[0_28px_80px_-12px_oklch(0.85_0.17_90/0.8),0_0_0_1px_oklch(0.85_0.17_90/0.6),inset_0_1px_0_oklch(1_0_0/0.45)]"
             >
-              <span className="font-display text-2xl leading-none tabular-nums text-primary-foreground/95 drop-shadow-[0_1px_0_oklch(0.30_0.10_80)]">
-                156,070
+              <span className="font-display text-base leading-none text-primary-foreground/95">
+                {lang === "zh" ? "每周三晚 7 点" : lang === "yue" ? "每個禮拜三晚 7 點" : "Every Wed · 7pm"}
               </span>
               <span className="h-6 w-px bg-primary-foreground/25" />
               <span className="tracking-wide uppercase">{t("hero_joinNow")}</span>
@@ -228,7 +228,7 @@ function WeeklyDate() {
 
             <div className="mt-6 space-y-1 text-sm text-muted-foreground">
               <p>{t("weekly_next")} <span className="text-foreground">{dateLabel}</span></p>
-              <p>{t("weekly_joined")} <span className="text-foreground">156,070</span></p>
+              <p>{t("weekly_joined")} <span className="text-foreground">{t("weekly_joined_value")}</span></p>
             </div>
           </div>
 

@@ -3,12 +3,12 @@
 // profile, scenario authorizations, and latest AI profile.
 
 import { createFileRoute } from "@tanstack/react-router";
-import { json, preflight, requireUser } from "@/lib/api/_helpers.server";
+import { json, preflight, requireUser, safeError } from "@/lib/api/_helpers.server";
 
 export const Route = createFileRoute("/api/user/me")({
   server: {
     handlers: {
-      OPTIONS: async () => preflight(),
+      OPTIONS: async ({ request }) => preflight(request),
       GET: async ({ request }) => {
         const auth = await requireUser(request);
         if ("error" in auth) return auth.error;
@@ -26,12 +26,21 @@ export const Route = createFileRoute("/api/user/me")({
             .maybeSingle(),
         ]);
 
-        // WeChat binding flag — populated by /api/auth/wechat/callback when
-        // a WeChat user links an account. The wechat_openid column is added
-        // by supabase/migrations/20260608_add_wechat_openid.sql.
-        const wechatBound = Boolean(
+        // WeChat binding flag. After P0-7 the canonical source of truth is
+        // the `wechat_auth` table (which the callback now writes to). The
+        // profile.wechat_openid column is kept for legacy rows; the OR
+        // below ensures either path still flips the bound state correctly.
+        let wechatBound = Boolean(
           (profile as { wechat_openid?: string | null } | null)?.wechat_openid,
         );
+        if (!wechatBound) {
+          const { data: wa } = await supabase
+            .from("wechat_auth")
+            .select("user_id")
+            .eq("user_id", userId)
+            .maybeSingle();
+          wechatBound = Boolean(wa?.user_id);
+        }
 
         return json({
           data: {
@@ -40,7 +49,7 @@ export const Route = createFileRoute("/api/user/me")({
             authorizations: authz ?? { business: false, dating: false, partner: false },
             ai_profile: aiProfile ?? null,
           },
-        });
+        }, undefined, request);
       },
     },
   },

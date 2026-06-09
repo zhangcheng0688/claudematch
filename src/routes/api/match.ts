@@ -4,12 +4,12 @@
 // Required by the /match list page so it can render history without side effects.
 
 import { createFileRoute } from "@tanstack/react-router";
-import { json, preflight, requireUser } from "@/lib/api/_helpers.server";
+import { json, preflight, requireUser, safeError } from "@/lib/api/_helpers.server";
 
 export const Route = createFileRoute("/api/match")({
   server: {
     handlers: {
-      OPTIONS: async () => preflight(),
+      OPTIONS: async ({ request }) => preflight(request),
       GET: async ({ request }) => {
         const auth = await requireUser(request);
         if ("error" in auth) return auth.error;
@@ -21,8 +21,8 @@ export const Route = createFileRoute("/api/match")({
           .eq("user_id", userId)
           .order("created_at", { ascending: false });
 
-        if (error) return json({ error: error.message }, { status: 500 });
-        return json({ data: data ?? [] });
+        if (error) return json({ error: safeError(error) }, { status: 500 }, request);
+        return json({ data: data ?? [] }, undefined, request);
       },
     },
   },

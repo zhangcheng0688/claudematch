@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { json, preflight, requireUser } from "@/lib/api/_helpers.server";
+import { json, preflight, requireUser, safeError } from "@/lib/api/_helpers.server";
 import { deepseekChat, safeParseJSON } from "@/lib/api/_deepseek.server";
 
 const VALID_SCENARIOS = new Set(["business", "dating", "partner"]);
@@ -22,7 +22,7 @@ const SCENARIO_LABEL: Record<string, string> = {
 export const Route = createFileRoute("/api/ai/match")({
   server: {
     handlers: {
-      OPTIONS: async () => preflight(),
+      OPTIONS: async ({ request }) => preflight(request),
       POST: async ({ request }) => {
         const auth = await requireUser(request);
         if ("error" in auth) return auth.error;
@@ -48,7 +48,7 @@ export const Route = createFileRoute("/api/ai/match")({
           .limit(1)
           .maybeSingle();
         if (!latestProfile) {
-          return json({ error: "Generate your profile first" }, { status: 400 });
+          return json({ error: "Generate your profile first" }, { status: 400 }, request);
         }
         const { data: meUser } = await supabaseAdmin.auth.admin.getUserById(userId);
         const myEmail = meUser?.user?.email ?? "";
@@ -402,7 +402,7 @@ Output v4 fields JSON:
           })
           .select("*")
           .single();
-        if (insErr) return json({ error: insErr.message }, { status: 500 });
+        if (insErr) return json({ error: safeError(insErr) }, { status: 500 }, request);
 
         await supabaseAdmin.from("matches").insert({
           user_id: matched.user_id,

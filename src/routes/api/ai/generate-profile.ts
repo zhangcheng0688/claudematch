@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { json, preflight, requireUser } from "@/lib/api/_helpers.server";
+import { json, preflight, requireUser, safeError } from "@/lib/api/_helpers.server";
 import { deepseekChat, safeParseJSON } from "@/lib/api/_deepseek.server";
 
 const VALID_SCENARIOS = new Set(["business", "dating", "partner"]);
@@ -26,7 +26,7 @@ const VALID_SCENARIOS = new Set(["business", "dating", "partner"]);
 export const Route = createFileRoute("/api/ai/generate-profile")({
   server: {
     handlers: {
-      OPTIONS: async () => preflight(),
+      OPTIONS: async ({ request }) => preflight(request),
       POST: async ({ request }) => {
         const auth = await requireUser(request);
         if ("error" in auth) return auth.error;
@@ -1009,7 +1009,7 @@ Output JSON (only fields that need final change):`;
           .select("*")
           .single();
 
-        if (error) return json({ error: error.message }, { status: 500 });
+        if (error) return json({ error: safeError(error) }, { status: 500 }, request);
         return json({ data, message: "AI profile generated", ai_provider: profile_data.ai_provider });
       },
     },

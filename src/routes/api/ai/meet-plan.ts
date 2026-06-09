@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { json, preflight, requireUser } from "@/lib/api/_helpers.server";
+import { json, preflight, requireUser, safeError } from "@/lib/api/_helpers.server";
 import { deepseekChat, safeParseJSON } from "@/lib/api/_deepseek.server";
 
 /**
@@ -16,7 +16,7 @@ import { deepseekChat, safeParseJSON } from "@/lib/api/_deepseek.server";
 export const Route = createFileRoute("/api/ai/meet-plan")({
   server: {
     handlers: {
-      OPTIONS: async () => preflight(),
+      OPTIONS: async ({ request }) => preflight(request),
       POST: async ({ request }) => {
         const auth = await requireUser(request);
         if ("error" in auth) return auth.error;
@@ -26,12 +26,12 @@ export const Route = createFileRoute("/api/ai/meet-plan")({
         try {
           body = await request.json();
         } catch {
-          return json({ error: "Invalid JSON body" }, { status: 400 });
+          return json({ error: "Invalid JSON body" }, { status: 400 }, request);
         }
         const match_id = body.match_id;
         const lang = body.lang === "zh" ? "zh" : "en";
         if (typeof match_id !== "string" || match_id.length < 8) {
-          return json({ error: "match_id is required" }, { status: 400 });
+          return json({ error: "match_id is required" }, { status: 400 }, request);
         }
 
         const { data: match, error: mErr } = await supabase
@@ -40,9 +40,9 @@ export const Route = createFileRoute("/api/ai/meet-plan")({
           .eq("id", match_id)
           .maybeSingle();
 
-        if (mErr) return json({ error: mErr.message }, { status: 500 });
+        if (mErr) return json({ error: safeError(mErr) }, { status: 500 }, request);
         if (!match || match.user_id !== userId) {
-          return json({ error: "Match not found" }, { status: 404 });
+          return json({ error: "Match not found" }, { status: 404 }, request);
         }
 
         const sys = lang === "zh"
@@ -217,8 +217,8 @@ ${lang === "zh" ? "全部用中文表达" : "Express in English"}.`;
           .select("*")
           .single();
 
-        if (error) return json({ error: error.message }, { status: 500 });
-        return json({ data, message: "Meet-up plan generated" });
+        if (error) return json({ error: safeError(error) }, { status: 500 }, request);
+        return json({ data, message: "Meet-up plan generated" }, undefined, request);
       },
     },
   },

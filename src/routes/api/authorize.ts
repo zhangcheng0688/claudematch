@@ -1,10 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { json, preflight, requireUser } from "@/lib/api/_helpers.server";
+import { json, preflight, requireUser, safeError } from "@/lib/api/_helpers.server";
 
 export const Route = createFileRoute("/api/authorize")({
   server: {
     handlers: {
-      OPTIONS: async () => preflight(),
+      OPTIONS: async ({ request }) => preflight(request),
       POST: async ({ request }) => {
         const auth = await requireUser(request);
         if ("error" in auth) return auth.error;
@@ -14,7 +14,7 @@ export const Route = createFileRoute("/api/authorize")({
         try {
           body = await request.json();
         } catch {
-          return json({ error: "Invalid JSON body" }, { status: 400 });
+          return json({ error: "Invalid JSON body" }, { status: 400 }, request);
         }
         const b = (body ?? {}) as Record<string, unknown>;
         const business = Boolean(b.business);
@@ -30,8 +30,8 @@ export const Route = createFileRoute("/api/authorize")({
           .select("*")
           .single();
 
-        if (error) return json({ error: error.message }, { status: 500 });
-        return json({ data, message: "Authorizations saved" });
+        if (error) return json({ error: safeError(error) }, { status: 500 }, request);
+        return json({ data, message: "Authorizations saved" }, undefined, request);
       },
     },
   },

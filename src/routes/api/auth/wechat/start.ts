@@ -9,12 +9,12 @@
 
 import { createFileRoute } from "@tanstack/react-router";
 import { createHmac, randomBytes } from "node:crypto";
-import { json, preflight } from "@/lib/api/_helpers.server";
+import { json, preflight, safeRedirectTo } from "@/lib/api/_helpers.server";
 
 export const Route = createFileRoute("/api/auth/wechat/start")({
   server: {
     handlers: {
-      OPTIONS: async () => preflight(),
+      OPTIONS: async ({ request }) => preflight(request),
       POST: async ({ request }) => {
         const appId = process.env.WECHAT_APP_ID;
         const appSecret = process.env.WECHAT_APP_SECRET;
@@ -27,6 +27,7 @@ export const Route = createFileRoute("/api/auth/wechat/start")({
                 "WeChat login is not configured. Set WECHAT_APP_ID, WECHAT_APP_SECRET, and WECHAT_REDIRECT_URI.",
             },
             { status: 503 },
+            request,
           );
         }
 
@@ -36,10 +37,8 @@ export const Route = createFileRoute("/api/auth/wechat/start")({
         } catch {
           /* allow empty body */
         }
-        const redirectTo =
-          typeof body.redirect_to === "string" && body.redirect_to.startsWith("/")
-            ? body.redirect_to
-            : "/start";
+        // P0-3: redirect_to is whitelisted to same-origin paths only.
+        const redirectTo = safeRedirectTo(body.redirect_to, "/start");
 
         const nonce = randomBytes(8).toString("hex");
         const ts = Date.now();
@@ -56,7 +55,7 @@ export const Route = createFileRoute("/api/auth/wechat/start")({
         });
         const url = `https://open.weixin.qq.com/connect/qrconnect?${params.toString()}`;
 
-        return json({ url });
+        return json({ url }, undefined, request);
       },
     },
   },

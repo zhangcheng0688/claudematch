@@ -3,19 +3,19 @@
 // recent meet plan, if any. Used by /match/$id detail page.
 
 import { createFileRoute } from "@tanstack/react-router";
-import { json, preflight, requireUser } from "@/lib/api/_helpers.server";
+import { json, preflight, requireUser, safeError } from "@/lib/api/_helpers.server";
 
 export const Route = createFileRoute("/api/match/$id")({
   server: {
     handlers: {
-      OPTIONS: async () => preflight(),
+      OPTIONS: async ({ request }) => preflight(request),
       GET: async ({ request, params }) => {
         const auth = await requireUser(request);
         if ("error" in auth) return auth.error;
         const { userId, supabase } = auth;
 
         const id = params.id;
-        if (!id) return json({ error: "Match id required" }, { status: 400 });
+        if (!id) return json({ error: "Match id required" }, { status: 400 }, request);
 
         const { data: match, error: mErr } = await supabase
           .from("matches")
@@ -24,8 +24,8 @@ export const Route = createFileRoute("/api/match/$id")({
           .eq("user_id", userId)
           .maybeSingle();
 
-        if (mErr) return json({ error: mErr.message }, { status: 500 });
-        if (!match) return json({ error: "Match not found" }, { status: 404 });
+        if (mErr) return json({ error: safeError(mErr) }, { status: 500 }, request);
+        if (!match) return json({ error: "Match not found" }, { status: 404 }, request);
 
         const { data: plan, error: pErr } = await supabase
           .from("meet_plans")
@@ -35,9 +35,9 @@ export const Route = createFileRoute("/api/match/$id")({
           .limit(1)
           .maybeSingle();
 
-        if (pErr) return json({ error: pErr.message }, { status: 500 });
+        if (pErr) return json({ error: safeError(pErr) }, { status: 500 }, request);
 
-        return json({ data: { match, plan: plan ?? null } });
+        return json({ data: { match, plan: plan ?? null } }, undefined, request);
       },
     },
   },
