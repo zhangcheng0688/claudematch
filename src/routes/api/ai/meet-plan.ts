@@ -6,12 +6,96 @@ import { deepseekChat, safeParseJSON } from "@/lib/api/_deepseek.server";
  * POST /api/ai/meet-plan
  * Body: { match_id: string, lang?: "en" | "zh" }
  *
- * v2 — multi-plan + activity design + venue templates + exit strategy.
- * Returns 3 alternative plans (A: quiet, B: interactive, C: balanced) so
- * the user can pick. Each plan includes venue_options, activity_design,
- * time_considerations, and exit_strategy. All grounded in the two
- * participants' profiles.
+ * v3 — venue-grounded planning. The previous version asked the LLM to
+ * "invent" venue names (`name_example: "xx 区 yy 路某品牌精品咖啡"`).
+ * That broke the **餐厅返点** revenue model: a user can't actually
+ * go to a fictional restaurant, and we have no way to track the
+ * conversion. The new version:
+ *
+ *   1. Queries the `venues` table (高德-sourced, see
+ *      scripts/scrape-amap.mjs) for ~30 candidate venues in the user's
+ *      city. Filters by `vibe_tags` when the user has expressed a
+ *      preference (otherwise random sample).
+ *   2. Hands the candidate list to the LLM. The LLM picks 3-4 per plan
+ *      and outputs their `venue_id` (UUID) — NOT a free-text name.
+ *   3. Server resolves the venue_ids back to full venue rows so the
+ *      client can render real names + addresses + a booking button.
+ *
+ * Edge cases:
+ *   - User has no city in profile → fall back to Shenzhen (default)
+ *   - venues table is empty for the city → graceful fallback
+ *     (LLM still returns text descriptions, with venue_id = null)
+ *   - LLM hallucinates a venue_id that doesn't exist in our table
+ *     → server-side validation drops it, keeps the rest
  */
+
+const DEFAULT_CITY = "shenzhen";
+const VENUE_SAMPLE_SIZE = 30;
+
+type VenueCandidate = {
+  id: string;
+  name: string;
+  district: string | null;
+  address: string | null;
+  cuisine_tags: string[];
+  vibe_tags: string[];
+  price_per_person: number | null;
+  rating: number | null;
+};
+
+async function loadVenuesForCity(
+  supabase: ReturnType<typeof Object>,
+  city: string,
+  preferredVibes: string[],
+): Promise<VenueCandidate[]> {
+  // Step 1: venues that match the vibe (if any)
+  // Step 2: top up with random sample to VENUE_SAMPLE_SIZE
+  // We use a service-role client bypass to read venues — RLS blocks
+  // the user JWT from reading this table (no public policies).
+  // requireUser() above gives us the per-user `supabase`; we need
+  // the admin client for the venues table read.
+  // We import it lazily to keep the import surface small.
+  const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+  const ordered: VenueCandidate[] = [];
+  const seenIds = new Set<string>();
+
+  if (preferredVibes.length > 0) {
+    const { data: vibeMatches } = await supabaseAdmin
+      .from("venues")
+      .select("id, name, district, address, cuisine_tags, vibe_tags, price_per_person, rating")
+      .eq("city", city)
+      .eq("is_active", true)
+      .overlaps("vibe_tags", preferredVibes) // any vibe match
+      .limit(20);
+    for (const v of vibeMatches ?? []) {
+      if (seenIds.has(v.id)) continue;
+      seenIds.add(v.id);
+      ordered.push(v as VenueCandidate);
+    }
+  }
+
+  // Top up with random sample (use a stable but per-call-different order
+  // — we sample by created_at desc and take the top N; pseudo-random
+  // enough for LLM context window).
+  if (ordered.length < VENUE_SAMPLE_SIZE) {
+    const { data: topUp } = await supabaseAdmin
+      .from("venues")
+      .select("id, name, district, address, cuisine_tags, vibe_tags, price_per_person, rating")
+      .eq("city", city)
+      .eq("is_active", true)
+      .order("rating", { ascending: false, nullsFirst: false })
+      .limit(VENUE_SAMPLE_SIZE * 2); // 2x so we can drop duplicates
+    for (const v of topUp ?? []) {
+      if (seenIds.has(v.id)) continue;
+      seenIds.add(v.id);
+      ordered.push(v as VenueCandidate);
+      if (ordered.length >= VENUE_SAMPLE_SIZE) break;
+    }
+  }
+
+  return ordered.slice(0, VENUE_SAMPLE_SIZE);
+}
 
 export const Route = createFileRoute("/api/ai/meet-plan")({
   server: {
@@ -45,6 +129,37 @@ export const Route = createFileRoute("/api/ai/meet-plan")({
           return json({ error: "Match not found" }, { status: 404 }, request);
         }
 
+        // Resolve the user's city. The match.details may carry it on
+        // the *other* user's profile (in v2 details.headline / city),
+        // but we want the requesting user's city. We read it from
+        // the user_profiles row.
+        const { data: myProfile } = await supabase
+          .from("user_profiles")
+          .select("profile_data")
+          .eq("user_id", userId)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        const myCity = (myProfile?.profile_data as { city?: string } | null)?.city ?? DEFAULT_CITY;
+
+        // Heuristic for preferred vibes: derive from scenario.
+        // - dating: 适合聊天 / 浪漫
+        // - business: 安静 / 适合聊天 / 高端
+        // - partner: 适合拍照 / 轻松 / 适合聊天
+        const scenarioVibes: Record<string, string[]> = {
+          dating: ["适合聊天", "浪漫"],
+          business: ["安静", "适合聊天", "高端"],
+          partner: ["适合拍照", "轻松", "适合聊天"],
+        };
+        const preferredVibes = scenarioVibes[match.scenario] ?? [];
+
+        // Load the candidate venue set.
+        const candidates = await loadVenuesForCity(supabase, myCity, preferredVibes);
+        const hasVenues = candidates.length > 0;
+
+        // LLM system prompt — same as v2, but explicitly notes that
+        // venue options are *real* restaurants and the model must
+        // pick from them (not invent).
         const sys = lang === "zh"
           ? `你是 linQ 的 AI 见面策划师 —— 一个比朋友更懂这两人的角色。
 
@@ -55,14 +170,15 @@ B = 互动型：偏向有共同参与的活动、活跃氛围、边做边聊
 C = 折中型：兼有两类元素
 
 每套方案必须包含：
-- venue_options：3-4 个具体场所建议（含类型/区域/为什么/价格档/距离）
-- activity_design：基于两人画像的活动设计（**不要泛泛的"喝咖啡"**——是"你们俩都内向，所以选一个能并行做事但不时被强迫说话的地方"）
+- venue_options：3-4 个**从下方候选清单中挑选**的具体餐厅/场所（含 venue_id, name, district, why, price_per_person 字段）
+- activity_design：基于两人画像的活动设计
 - time_considerations：最佳时间窗口/避免时间
 - exit_strategy：怎么体面结束 + 怎么留下"下一步约定"
 
 **关键**：
-- 方案设计必须**基于两人画像的细节**（不是"看天气"、"看预算"这种空话）
-- venue_options 的"为什么"必须**对得上两人的具体特质**
+- 方案设计必须基于两人画像的细节
+- venue_options **必须**用下面候选清单里的 venue_id（不要编造）
+- 如果候选清单里没有完美匹配的，挑最接近的 3-4 个，**不要**自己编
 - exit_strategy 不能是"说再见然后走"——要具体到"如果你感觉到 ta 在 60 分钟就开始看手机，你应该怎么接住这个信号"
 
 严格输出 JSON。`
@@ -75,16 +191,34 @@ B = interactive type: shared activity, lively atmosphere, doing-while-talking
 C = balanced type: mix of both
 
 Each plan must include:
-- venue_options: 3-4 specific venue suggestions (type/area/why/price level/distance)
+- venue_options: 3-4 venues **selected from the candidate list below** (with venue_id, name, district, why, price_per_person)
 - activity_design: activity designed for these two profiles specifically
 - time_considerations: best window / avoid window
 - exit_strategy: how to end gracefully + how to anchor the next step
 
-Critical: every design decision must be grounded in both participants' profiles.
+Critical:
+- every design decision must be grounded in both participants' profiles
+- venue_options MUST use venue_id from the candidate list — never invent a restaurant
+- if no perfect match exists in the candidates, pick the closest 3-4 — do not fabricate
+- exit_strategy must be specific (e.g. "if you notice them checking their phone at the 60-minute mark, pivot to...")
+
 Strict JSON output.`;
 
+        // User prompt: scenario + match details + candidate venue list.
+        const candidatesBlock = hasVenues
+          ? (lang === "zh"
+            ? `\n\n候选餐厅清单（必须从下面选，**不要**自己编）：\n${candidates
+                .map((v, i) => `[${i}] venue_id=${v.id}\n    name=${v.name}\n    district=${v.district ?? "?"}\n    cuisine=${v.cuisine_tags.join("/")}\n    vibe=${v.vibe_tags.join("/")}\n    price_per_person=${v.price_per_person ?? "?"} 元\n    rating=${v.rating ?? "?"}`)
+                .join("\n\n")}`
+            : `\n\nCandidate venues (pick from this list — DO NOT invent):\n${candidates
+                .map((v, i) => `[${i}] venue_id=${v.id}\n    name=${v.name}\n    district=${v.district ?? "?"}\n    cuisine=${v.cuisine_tags.join("/")}\n    vibe=${v.vibe_tags.join("/")}\n    price_per_person=${v.price_per_person ?? "?"} CNY\n    rating=${v.rating ?? "?"}`)
+                .join("\n\n")}`)
+          : (lang === "zh"
+            ? "\n\n注意：当前城市的餐厅数据尚未入库。请输出 venue_options 为空数组，activity_design 仍然生成。"
+            : "\n\nNote: no venue data available for this city. Output venue_options as an empty array, but still generate activity_design.");
+
         const prompt = `Scenario: ${match.scenario}
-Match details: ${JSON.stringify(match.details, null, 2)}
+Match details: ${JSON.stringify(match.details, null, 2)}${candidatesBlock}
 
 Return JSON of shape:
 {
@@ -95,11 +229,9 @@ Return JSON of shape:
       "description": "1 句描述（"适合你们的节奏"）",
       "venue_options": [
         {
-          "name_example": "具体场所名（如'xx 区 yy 路某品牌精品咖啡'）",
-          "district": "城市区域",
+          "venue_id": "从候选清单里挑出的 UUID（必填，**必须是真实存在的 ID**）",
           "why": "为什么这个场所适合这两人（**具体到两人特质**）",
-          "distance_walking_minutes": number (从双方中点步行分钟数),
-          "price_level": "¥¥" (人均价格档)
+          "distance_walking_minutes": number (从双方中点步行分钟数，估算)
         }
       ] (3-4 条),
       "activity_design": {
@@ -130,7 +262,7 @@ ${lang === "zh" ? "全部用中文表达" : "Express in English"}.`;
             { role: "system", content: sys },
             { role: "user", content: prompt },
           ],
-          { json: true, temperature: 0.9, max_tokens: 2400 },
+          { json: true, temperature: 0.9, max_tokens: 2800 },
         );
 
         const parsed = safeParseJSON<{
@@ -139,11 +271,9 @@ ${lang === "zh" ? "全部用中文表达" : "Express in English"}.`;
             label?: string;
             description?: string;
             venue_options?: Array<{
-              name_example?: string;
-              district?: string;
+              venue_id?: string;
               why?: string;
               distance_walking_minutes?: number;
-              price_level?: string;
             }>;
             activity_design?: {
               why_this_activity?: string;
@@ -162,7 +292,23 @@ ${lang === "zh" ? "全部用中文表达" : "Express in English"}.`;
           }>;
         }>(raw) ?? {};
 
-        // Fallback when DeepSeek is down
+        // Server-side validation: keep only venue_options whose
+        // venue_id is in our candidate set. This defends against
+        // the LLM hallucinating UUIDs.
+        const candidateIds = new Set(candidates.map((v) => v.id));
+        const validatedPlans = (parsed.multi_plan ?? []).map((plan) => ({
+          ...plan,
+          venue_options: (plan.venue_options ?? []).filter(
+            (vo) => typeof vo.venue_id === "string" && candidateIds.has(vo.venue_id),
+          ),
+        }));
+
+        // Build a venue-by-id lookup for the client (avoids a second
+        // roundtrip from the SPA).
+        const venueById = Object.fromEntries(candidates.map((v) => [v.id, v]));
+
+        // Fallback when DeepSeek is down — same as before, but now also
+        // carries the venue lookup so the client can render.
         const next = new Date();
         next.setUTCDate(next.getUTCDate() + 3);
         next.setUTCHours(19, 0, 0, 0);
@@ -172,15 +318,11 @@ ${lang === "zh" ? "全部用中文表达" : "Express in English"}.`;
               id: "A",
               label: lang === "zh" ? "安静型" : "Quiet",
               description: lang === "zh" ? "适合你们慢热的节奏" : "For your slow-burn rhythm",
-              venue_options: [
-                {
-                  name_example: lang === "zh" ? "市中心一家精品咖啡馆" : "A specialty coffee bar downtown",
-                  district: lang === "zh" ? "市中心" : "Downtown",
-                  why: lang === "zh" ? "环境安静，便于深度交谈" : "Quiet, conducive to depth conversation",
-                  distance_walking_minutes: 10,
-                  price_level: "¥¥",
-                },
-              ],
+              venue_options: candidates.slice(0, 1).map((v) => ({
+                venue_id: v.id,
+                why: lang === "zh" ? "环境安静，便于深度交谈" : "Quiet, conducive to depth conversation",
+                distance_walking_minutes: 10,
+              })),
               activity_design: {
                 why_this_activity: lang === "zh" ? "两人都是慢热型" : "Both introverted",
                 flow: {
@@ -204,10 +346,12 @@ ${lang === "zh" ? "全部用中文表达" : "Express in English"}.`;
         };
 
         const plan_content = {
-          version: "v2",
+          version: "v3",
           scenario: match.scenario,
-          ai: parsed.multi_plan ? parsed : fallback,
-          ai_provider: parsed.multi_plan ? "deepseek" : "fallback",
+          city: myCity,
+          ai: validatedPlans.length > 0 ? { multi_plan: validatedPlans } : fallback,
+          ai_provider: validatedPlans.length > 0 ? "deepseek" : "fallback",
+          venue_lookup: venueById, // client uses this to render
           generated_at: new Date().toISOString(),
         };
 

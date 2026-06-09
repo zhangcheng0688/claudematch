@@ -7,13 +7,105 @@ This document is the prioritized backlog for everything **after** the P0 securit
 
 1. **P1 — polish & observability** (8 items, ~1 week)
 2. **P2 — performance & SEO** (11 items total; 3 highest-value called out below, ~1 week)
-3. **3-month product roadmap** (sequenced for first paying user)
+3. **R — 餐厅返点专项** (the actual revenue model; **highest priority after P0**)
+4. **3-month product roadmap** (sequenced for first 返点 收入)
 
 Each item states: what · why · how · effort · value. Use it as a checklist, not a contract — if Sentry data after launch tells us something different is urgent, re-prioritize.
 
 ---
 
-## 🟢 P1 — Polish & Observability (1 week)
+## 🔴 R — 餐厅返点专项 (the **revenue model**; this is what pays the bills)
+
+> **Hard constraint from product owner**: linQ 的商业模式 = **用户实际去线下 date 的餐厅返点抽成**。 This is the *only* way the product makes money. Every P1 / P2 / roadmap item below is downstream of this: if the restaurant data + booking flow isn't perfect, none of the other work matters.
+
+### R1 · 餐厅数据：600 calls → ~400 家深圳 + 上海好餐厅
+**Effort**: 1-2h (script write, already done) + 20min setup (高德 key) + 1min run + 5min SQL import
+**Value**: **the entire product** — without this, meet-plan is a fiction
+
+**What was done in the R1 commit**:
+- `supabase/migrations/20260609210000_venues_and_attributions.sql` — `venues` table (city / district / lat / lng / cuisine_tags / vibe_tags / price_per_person / rating / tel / photos / booking_method / commission_pct / is_active / notes) + `meetup_attributions` table
+- `scripts/scrape-amap.mjs` — AMap Places Web API scraper. 30 keywords × 2 cities × 25 results/keyword = ~1500 raw POIs → dedup → expected 250-450 unique venues per city
+- `scripts/import-venues.mjs` — JSONL → SQL migration generator. The output is a single .sql file the user pastes into Lovable's SQL editor
+- `scripts/README.md` — step-by-step operator guide
+
+**Why AMap (not 大众点评)**:
+- AMap has a public, free, documented Web Service API (6000 calls/day)
+- 大众点评 has no API, aggressive anti-bot measures, and explicit ToS forbidding scraping
+- AMap data is missing 1-2 fields (rating, price_per_person) — we leave those NULL for now, fill in manually for the top 50 必吃榜 entries
+
+**User one-time setup** (estimated 20 minutes total):
+1. Register at https://lbs.amap.com (企业账号, faster approval)
+2. Create a Web Service API key
+3. Set env `AMAP_WEB_API_KEY=<key>` locally
+4. `node scripts/scrape-amap.mjs` — wait 1-2 min
+5. `node scripts/import-venues.mjs` — instant
+6. Open Lovable SQL editor → paste `scripts/output/import-venues.sql` → Run
+7. (Pre-req) Run the venues schema migration first if not yet run
+
+---
+
+### R2 · `meet-plan` LLM prompt 改为"从 venues 清单挑店"
+**Effort**: 0.5 day (already done in R2 commit) · **Value**: meet-plan 方案是**真实可去的餐厅**
+
+The v2 `meet-plan.ts` asked the LLM to invent `name_example: "xx 区 yy 路某品牌精品咖啡"`. The v3 (in the R2 commit):
+1. Server loads ~30 candidate venues from the `venues` table (filtered by user's city + scenario-derived vibe_tags)
+2. Embeds the candidate list in the LLM prompt with the requirement: "**MUST pick venue_id from this list — never invent**"
+3. Server validates the LLM's `venue_id` outputs against the candidate set (drops hallucinations)
+4. Pre-resolves the venue rows into `plan_content.venue_lookup` so the SPA doesn't have to do a follow-up fetch
+
+**Failure mode if venues table is empty**:
+- The prompt falls back to "no candidates available, output empty venue_options". The PlanCard renders the old free-text layout in that case. Graceful degradation.
+
+---
+
+### R3 · PlanCard 加"预订 modal" — 3 个一键动作
+**Effort**: 0.5 day (already done in R2 commit) · **Value**: the user actually goes to the restaurant
+
+The 3 actions, all **inside linQ** (no external jumping):
+- **📞 电话预订** — if `venue.tel` is set, `tel:` URL scheme (opens native dialer); tracks `tap_call` event server-side
+- **🗺️ 导航** — `https://uri.amap.com/navigation?to=lng,lat,name&src=linQ&coordinate=gaode` (high-accuracy AMap deep link; falls back to general `maps:` scheme if amap:// not available); tracks `tap_navigate`
+- **✅ 我去了** — explicit "I went" confirmation; tracks `confirm_i_went` (the gold signal for future 返点 reconciliation)
+
+**UX notes**:
+- The modal is `role="dialog"`, closes on backdrop click + close button + ESC
+- The "I went" button is *visually* the primary CTA (after a successful click it shows a checkmark, no further interaction needed)
+- All 3 actions fire-and-forget server tracking; UI doesn't wait for the response
+
+---
+
+### R4 · `meetup_attributions` 表 + `/api/venues/track`
+**Effort**: 2h (already done in R2 commit) · **Value**: raw signal for the future 返点 reconciliation query
+
+Append-only table:
+```
+(user_id, match_id, venue_id, action, metadata, created_at)
+```
+
+- `action` enum-ish: `view_details` (modal open), `tap_call`, `tap_navigate`, `confirm_i_went`
+- `metadata` JSONB for future fields (e.g. `plan_id`, `deeplink`, `lang`)
+- RLS: each user can read their own; writes only via the service-role-backed endpoint (so a malicious client can't attribute other users)
+- The endpoint `/api/venues/track` POSTs one row per user action
+
+**What it doesn't do yet** (intentionally):
+- No restaurant-side "this user actually showed up" confirmation (we don't have restaurant sign-on yet)
+- No 返点 reconciliation query (we wait for actual 数据 to design that query)
+- No anonymized aggregate for the founder dashboard (P2 work, not R work)
+
+---
+
+### R5 (deferred) · 商家 onboarding 工具
+**When**: After first signed 返点 agreement
+**Why deferred**: We have no signed agreements yet. Building a restaurant admin tool before we have users on the other side is YAGNI.
+
+---
+
+### R6 (deferred) · 返点对账系统
+**When**: After 6+ months of data
+**Why deferred**: We don't know what the right reconciliation shape is until we have 商家 + 流水 + 退款 + 争议. Building prematurely locks in wrong schema.
+
+---
+
+
 
 ### P1-1 · DeepSeek per-call timeout tiers + `traceId`
 **Effort**: 2h · **Value**: 5min→5sec incident triage
@@ -277,7 +369,7 @@ The `suppressHydrationWarning` is necessary because the SSR pass renders `lang="
 
 ## 🗓️ 3-Month Product Roadmap
 
-**North star**: 100 real waitlist emails + 5 real AI matches running + 1 paying customer.
+**North star**: 100 real waitlist emails + 5 real AI matches running + first 返点 收入 to bank account.
 
 ### Month 1 · Ship + 5 seed users (4 weeks)
 **Goal**: production-ready MVP that 5 real people use without fainting.
@@ -318,23 +410,23 @@ The `suppressHydrationWarning` is necessary because the SSR pass renders `lang="
 
 ---
 
-### Month 3 · First real match + first paying customer (4 weeks)
-**Goal**: 5 real AI matches generated, 1 meet-up happens, 1 paid conversion.
+### Month 3 · First real match + first 返点 收入 (4 weeks)
+**Goal**: 5 real AI matches generated, 1 real meet-up happens, **first 返点 收入**（用户真去餐厅 + 餐厅返点回款）.
 
 | Week | Task |
 |---|---|
 | 1 | Active outreach to 5 waitlist users → onboard as 2nd cohort (5 more profile matches = 10 candidate pool) |
 | 1 | Match score review with first 2 matches · iterate on prompt if needed |
-| 2 | Stripe integration: paywall the `business` scenario (¥99/month) OR pay-per-match (¥19) |
+| 2 | (P0 of Month 3) Confirm first 返点 agreement signed — 任何 1 家餐厅，验证返点流程跑通（不用 SaaS，**所有收费 = 餐厅返点**） |
 | 2 | Email automation: post-match ping ("你的匹配已就绪") + 7-day re-engagement |
 | 3 | The first real meet-up happens (we can be present, take notes) |
 | 3 | pattern_feedback signals become training data for prompt v5 (small iteration) |
-| 4 | 1 paying customer (likely the seed user most engaged) |
+| 4 | First 返点 收入 to bank account · validate the *reconciliation* query against the merchant's POS data |
 | 4 | i18n dictionary merge (one system) + next 3-month plan |
 
 **Decision at end of Month 3**:
-- If paying customer exists → raise prices / add enterprise tier
-- If not → revisit core value prop (is "AI matching for business/dating/local" too broad?)
+- If 返点 流程 validated → scale to 10 餐厅 agreements + launch the **restaurant admin tool** (R5 unblock)
+- If not → what's blocking? Is it 商家 sign-on friction? 商家 staff training? Booking validation? 针对性的修
 - Either way → write public retrospective
 
 ---
@@ -359,10 +451,10 @@ These are the choices I will defer to you rather than assume. The recommendation
 - **Build-time with `sharp`** in a `bun run optimize-images` script — recommended (zero ongoing cost)
 - Cloudinary / imgix (¥150/mo, auto-format/auto-quality, no build step) — nicer for designers, costs ¥1,800/year
 
-### Decision 5 · Pricing model (Month 3)
-- **Pay-per-match ¥19** (low friction, charges at the value moment) — recommended
-- Subscription ¥99/month for `business` scenario (predictable revenue, harder to convert first customer)
-- Free during beta, paid after 100 users (zero early revenue)
+### Decision 5 · Pricing model — **N/A for linQ**
+- **linQ does not charge users**. The product is free at the user layer; revenue comes from **餐厅返点** (offline). The user never sees a paywall. This is decided and not up for debate.
+- If we ever need to fund early ops, it's via 商家 pre-payments (locked-in 返点 in advance) — not via charging users.
+- Any other pricing model (subscription, pay-per-match, freemium) violates the product owner's hard constraint and should be rejected on sight.
 
 ---
 

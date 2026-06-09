@@ -273,16 +273,20 @@ export type MatchRow = {
 
 /** v2: 见面方案 v2 —— multi-plan + 场景化设计 + venue 模板 */
 export type AiVenueOption = {
-  /** 场所类型/名称示例（如"xx 区某品牌精品咖啡"） */
-  name_example: string;
+  /** 场所类型/名称示例（如"xx 区某品牌精品咖啡"） — v2 only */
+  name_example?: string;
+  /** v3: 真实 venue_id（指向 venues 表） */
+  venue_id?: string;
   /** 区域（用户所在城市） */
   district?: string;
   /** 为什么这个场所适合这两人 */
-  why: string;
+  why?: string;
   /** 步行距离（分钟，从双方中点） */
   distance_walking_minutes?: number;
   /** 价格档（人均 ¥） */
   price_level?: string;
+  /** v3: 人均价格（数字） */
+  price_per_person?: number;
 };
 
 export type AiActivityDesign = {
@@ -348,6 +352,27 @@ export type MeetPlan = {
     ai?: MeetPlanAi;
     version?: string;
     scenario?: string;
+    city?: string;
+    /** v3: server pre-resolves the LLM's venue_id references so the SPA
+     *  doesn't have to make a follow-up fetch to /api/venues/lookup. */
+    venue_lookup?: Record<string, {
+      id: string;
+      name: string;
+      city: string;
+      district: string | null;
+      address: string | null;
+      lat: number | null;
+      lng: number | null;
+      cuisine_tags: string[];
+      vibe_tags: string[];
+      price_per_person: number | null;
+      rating: number | null;
+      tel: string | null;
+      opening_hours: string | null;
+      photos: string[];
+      booking_method: "walk_in" | "phone" | "wechat";
+      commission_pct: number;
+    }>;
     ai_provider?: "deepseek" | "fallback";
     generated_at?: string;
   };
