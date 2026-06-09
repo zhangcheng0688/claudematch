@@ -23,6 +23,7 @@ import {
   MessageCircle,
 } from "lucide-react";
 import { useState } from "react";
+import { Sparkles } from "lucide-react";
 import { useLang } from "@/lib/i18n";
 import type { MatchRow } from "@/types/match";
 
@@ -62,12 +63,27 @@ export function MatchCard({ match, active, loading, onPlan }: MatchCardProps) {
     >
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
-          <div className="flex items-baseline gap-3">
+          <div className="flex flex-wrap items-baseline gap-3">
             <h3 className="text-lg font-semibold tracking-tight">
               {d.name ?? t("Match", "匹配对象", "配對對象")}
             </h3>
             {d.age && <span className="text-xs text-muted-foreground">{d.age}</span>}
             {d.city && <span className="text-xs text-muted-foreground">· {d.city}</span>}
+            {/* P0 cold-start: AI personas are openly disclosed in the
+                UI as "AI 角色" — never pretend to be a real user. */}
+            {d.is_real_user === false && (
+              <span
+                className="inline-flex items-center gap-1 rounded-full border border-violet-500/40 bg-violet-500/10 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wider text-violet-400"
+                title={t(
+                  "AI-generated character to show you the linQ experience until real matches are available.",
+                  "AI 生成的角色，用于在你周围暂无真人匹配时展示 linQ 的完整体验。",
+                  "AI 角色，用喺你周圍未有真人配對時展示 linQ 嘅完整體驗。",
+                )}
+              >
+                <Sparkles className="h-2.5 w-2.5" />
+                {t("AI persona", "AI 角色", "AI 角色")}
+              </span>
+            )}
           </div>
           {d.headline && (
             <p className="mt-1 text-sm text-muted-foreground">{d.headline}</p>

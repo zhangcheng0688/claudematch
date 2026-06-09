@@ -92,20 +92,58 @@ export const Route = createFileRoute("/api/ai/match")({
           }
         }
 
-        // 3) No real candidate → add to waitlist.
+        // 3) No real candidate → fall back to AI personas.
+        // Cold-start solution: the ai_personas table holds 200+ curated
+        // profiles (100 深圳 + 100 上海) so the first user — with zero
+        // other real users — still gets a complete matching experience.
+        // Personas are openly tagged as 'is_real_user: false' in the UI;
+        // they do NOT trigger the mutual-email flow.
         if (candidates.length === 0) {
-          if (myEmail) {
-            await supabaseAdmin.from("waitlist").insert({
-              email: myEmail,
-              status: `waiting:${scenario}`,
+          // Load the user's city from their latest profile, default
+          // to shenzhen.
+          const myCity = (latestProfile.profile_data as { city?: string } | null)?.city ?? "shenzhen";
+
+          // Pull 5 random active personas matching the scenario, in
+          // the user's city. We use admin to bypass RLS on the
+          // ai_personas table (which is service-role-only).
+          const { data: personas } = await supabaseAdmin
+            .from("ai_personas")
+            .select("id, name, age, city, occupation, headline, bio, scenario_tags, profile_data, image_url, match_count")
+            .eq("is_active", true)
+            .eq("city", myCity)
+            .contains("scenario_tags", [scenario])
+            .order("display_priority", { ascending: false })
+            .order("last_matched_at", { ascending: false, nullsFirst: false })
+            .limit(5);
+
+          if (!personas || personas.length === 0) {
+            // No personas in this city for this scenario — still
+            // nothing to match. Drop to waitlist as before.
+            if (myEmail) {
+              await supabaseAdmin.from("waitlist").insert({
+                email: myEmail,
+                status: `waiting:${scenario}`,
+              });
+            }
+            return json({
+              data: [],
+              waitlisted: true,
+              scenario,
+              message: "暂无匹配，已加入等待池，待有合适人选时我们将通过邮件通知您。",
             });
           }
-          return json({
-            data: [],
-            waitlisted: true,
-            scenario,
-            message: "暂无匹配，已加入等待池，待有合适人选时我们将通过邮件通知您。",
-          });
+
+          // We have personas. Skip the waitlist (the user has 5
+          // viable AI candidates) and let the LLM scoring run on
+          // them as if they were real users — the prompt doesn't
+          // know the difference, and the match row gets a
+          // is_real_user: false flag.
+          for (const p of personas) {
+            candidates.push({
+              user_id: p.id,        // ai_personas.id is reused as the user_id slot
+              profile_data: { ...(p.profile_data as Record<string, unknown>), _is_ai_persona: true, _ai_persona_meta: { name: p.name, age: p.age, occupation: p.occupation, headline: p.headline, bio: p.bio, image_url: p.image_url } },
+            });
+          }
         }
 
         // 4) DeepSeek: pick best match + craft meeting plan + give deep
@@ -386,11 +424,22 @@ Output v4 fields JSON:
           follow_up_strategy: deep.follow_up_strategy ?? null,
           // legacy (back-compat with /match detail page that may still read it)
           reason: parsed.reason ?? "",
-          is_real_user: true,
+          // P0 of the cold-start solution: the matched.user_id might
+          // be an AI persona, not a real user. Surface that to the
+          // UI as a flag. We detect it via the _is_ai_persona marker
+          // we set on the candidate's profile_data above.
+          is_real_user: !(matched as { _is_ai_persona?: boolean })._is_ai_persona,
           ai_provider: raw ? "deepseek-2round" : "fallback",
         };
 
-        // 5) Persist match for requester + reverse row for the matched user.
+        const isAIPersona = Boolean(
+          (matched as { _is_ai_persona?: boolean })._is_ai_persona,
+        );
+
+        // 5) Persist match for requester. For AI personas, we DON'T
+        //    write a reverse row on the persona side (they have no
+        //    auth.users row, and the foreign key would reject). The
+        //    persona is "matched" only from the user's perspective.
         const { data: myMatch, error: insErr } = await supabase
           .from("matches")
           .insert({
@@ -404,13 +453,28 @@ Output v4 fields JSON:
           .single();
         if (insErr) return json({ error: safeError(insErr) }, { status: 500 }, request);
 
-        await supabaseAdmin.from("matches").insert({
-          user_id: matched.user_id,
-          matched_user_id: userId,
-          match_score: score,
-          scenario,
-          details: { ...details, name: "您的匹配对象" } as never,
-        });
+        // Only create a reverse row + email flow for REAL matches.
+        // AI persona matches skip both — no other party to email,
+        // and we'd hit FK violations on matched_user_id.
+        if (!isAIPersona) {
+          await supabaseAdmin.from("matches").insert({
+            user_id: matched.user_id,
+            matched_user_id: userId,
+            match_score: score,
+            scenario,
+            details: { ...details, name: "您的匹配对象" } as never,
+          });
+        } else {
+          // Bump the persona's match_count + last_matched_at for
+          // analytics (which personas get picked most).
+          await supabaseAdmin
+            .from("ai_personas")
+            .update({
+              match_count: (matched as { _ai_match_count?: number })._ai_match_count ? (matched as { _ai_match_count?: number })._ai_match_count! + 1 : 1,
+              last_matched_at: new Date().toISOString(),
+            })
+            .eq("id", matched.user_id);
+        }
 
         // 6) Persist meet plan.
         const plan_content = {
