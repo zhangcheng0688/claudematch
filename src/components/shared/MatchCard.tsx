@@ -63,7 +63,23 @@ export function MatchCard({ match, active, loading, onPlan }: MatchCardProps) {
     >
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
-          <div className="flex flex-wrap items-baseline gap-3">
+          <div className="flex flex-wrap items-center gap-3">
+            {/* 漏洞 D: persona avatar. For AI personas (is_real_user=false)
+                we generate a deterministic DiceBear URL from the persona's
+                stable id so the same persona always shows the same face
+                (key to making them feel like real people across sessions).
+                For real users we'd swap to a real image_url when we have
+                one — the schema already has it. */}
+            {d.is_real_user === false && d.name && (
+              <img
+                src={`https://api.dicebear.com/9.x/notionists-neutral/svg?seed=${encodeURIComponent(d.name)}&backgroundColor=transparent`}
+                alt={d.name}
+                width={40}
+                height={40}
+                className="h-10 w-10 shrink-0 rounded-full border border-violet-500/30 bg-violet-500/5"
+                loading="lazy"
+              />
+            )}
             <h3 className="text-lg font-semibold tracking-tight">
               {d.name ?? t("Match", "匹配对象", "配對對象")}
             </h3>
@@ -121,7 +137,7 @@ export function MatchCard({ match, active, loading, onPlan }: MatchCardProps) {
             [
               { key: "resonance", label: t("Res", "共鸣", "共鳴"), color: "bg-primary" },
               { key: "complementarity", label: t("Comp", "互补", "互補"), color: "bg-emerald-500" },
-              { key: "friction_risk", label: t("Risk", "摩擦", "摩擦"), color: "bg-rose-500" },
+              { key: "friction_risk", label: t("Risk", "摩擦", "摩擦嘅地方"), color: "bg-rose-500" },
               { key: "chemistry", label: t("Chem", "反应", "反應"), color: "bg-violet-500" },
               { key: "growth_potential", label: t("Grow", "成长", "成長"), color: "bg-amber-500" },
             ] as const
@@ -205,7 +221,7 @@ export function MatchCard({ match, active, loading, onPlan }: MatchCardProps) {
           className={`h-3 w-3 transition-transform ${expanded ? "rotate-180" : ""}`}
         />
         {expanded
-          ? t("Hide deep analysis", "收起深度分析", "收起深度分析")
+          ? t("Hide deep analysis", "收起深度分析", "收埋深度分析")
           : t("Show deep analysis", "展开深度分析", "展開深度分析")}
       </button>
 

@@ -5,6 +5,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { json, preflight, requireUser, safeError } from "@/lib/api/_helpers.server";
 import { migrateAiProfile } from "@/lib/api/migrate-profile";
+import { drainAllQueuesFireAndForget } from "@/lib/email/scheduler";
 
 export const Route = createFileRoute("/api/user/me")({
   server: {
@@ -62,6 +63,10 @@ export const Route = createFileRoute("/api/user/me")({
               },
             }
           : null;
+
+        // 漏洞 B + H: drain the email queues lazily. Any API hit
+        // becomes a scheduler tick. 0 cron required (架构债 I).
+        drainAllQueuesFireAndForget();
 
         return json({
           data: {

@@ -30,7 +30,7 @@ function StartPage() {
   const t = (en: string, zh: string, yue: string) =>
     lang === "yue" ? yue : lang === "zh" ? zh : en;
 
-  const [step, setStep] = useState<1 | 2 | 3>(1);
+  const [step, setStep] = useState<0 | 1 | 2 | 3>(0);
   const [scenario, setScenario] = useState<Scenario>("dating");
   const [input, setInput] = useState("");
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -40,6 +40,12 @@ function StartPage() {
   const [loading, setLoading] = useState<null | "profile" | "match" | "plan">(null);
   const [err, setErr] = useState<string | null>(null);
   const [waitlistMsg, setWaitlistMsg] = useState<string | null>(null);
+  // 漏洞 C: city is a required field — feeding it to the meet-plan LLM
+  // gives us real restaurants in the right city (no more 深圳 fallback
+  // for 上海 users). Stored on the user_profiles row so it survives
+  // refreshes and shows up in meet-plan queries.
+  const [city, setCity] = useState<"shenzhen" | "shanghai" | null>(null);
+  const [citySaving, setCitySaving] = useState(false);
 
   const scenarios = useMemo(
     () => [
@@ -49,6 +55,47 @@ function StartPage() {
     ],
     [lang],
   );
+
+  // 漏洞 C: load user's city from latest user_profiles row (if any).
+  // If they've been here before, skip step 0 and jump straight to step 1.
+  useEffect(() => {
+    (async () => {
+      try {
+        const res = await authedFetch<{ data: { profile_data?: { city?: string } } | null }>(
+          "/api/user/me",
+          { method: "GET" },
+        );
+        const me = (res as { data?: { ai_profile?: { profile_data?: { city?: string } } } }).data?.ai_profile;
+        const c = me?.profile_data?.city;
+        if (c === "shenzhen" || c === "shanghai") {
+          setCity(c);
+          setStep(1); // already chose — skip step 0
+        }
+      } catch {
+        /* ignore; user just hits step 0 */
+      }
+    })();
+  }, []);
+
+  const saveCityAndContinue = async (c: "shenzhen" | "shanghai") => {
+    setCitySaving(true);
+    try {
+      // Persist via a lightweight endpoint — we re-use the me endpoint
+      // shape by writing the city into user_profiles.profile_data.city
+      // through a new tiny endpoint /api/user/set-city. (We don't
+      // reuse /api/user/me because that's a GET; we need a write.)
+      await authedFetch("/api/user/set-city", {
+        method: "POST",
+        body: JSON.stringify({ city: c }),
+      });
+      setCity(c);
+      setStep(1);
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Failed to save city");
+    } finally {
+      setCitySaving(false);
+    }
+  };
 
   const generateProfile = async () => {
     setErr(null);
@@ -66,7 +113,7 @@ function StartPage() {
     try {
       const res = await authedFetch<{ data: Profile }>("/api/ai/generate-profile", {
         method: "POST",
-        body: JSON.stringify({ input, scenario, lang }),
+        body: JSON.stringify({ input, scenario, lang, city }),
       });
       setProfile(res.data);
       setStep(2);
@@ -131,6 +178,54 @@ function StartPage() {
     <AppShell>
       <section className="mx-auto max-w-3xl px-6 py-12 sm:py-16">
         <Stepper step={step} t={t} />
+
+        {/* Step 0 (漏洞 C): city picker. Required — feeds real restaurants
+            to the meet-plan LLM so 上海 users don't get 深圳 venues. */}
+        {step === 0 && (
+          <div className="mt-10 space-y-6">
+            <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
+              <span className="text-gold-glow">
+                {t("Where are you based?", "你在哪座城市？", "你喺邊個城市？")}
+              </span>
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              {t(
+                "We'll use this to recommend real restaurants near you. linQ currently operates in two cities — more coming soon.",
+                "我们会用这个推荐你附近的真实餐厅。linQ 目前在两座城市运营 — 后续会扩展。",
+                "我哋會用呢個推薦你附近嘅真實餐廳。linQ 而家喺兩個城市營運 — 之後會擴。",
+              )}
+            </p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              {([
+                { id: "shenzhen" as const, name: "深圳 / Shenzhen", emoji: "🌃" },
+                { id: "shanghai" as const, name: "上海 / Shanghai", emoji: "🌆" },
+              ]).map((opt) => (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => saveCityAndContinue(opt.id)}
+                  disabled={citySaving}
+                  className="group flex items-center justify-between gap-3 rounded-sm border border-border bg-background/40 p-5 text-left transition-all hover:border-primary/60 hover:bg-primary/5 disabled:opacity-60"
+                >
+                  <div>
+                    <div className="text-2xl">{opt.emoji}</div>
+                    <div className="mt-2 text-sm font-medium">{opt.name}</div>
+                  </div>
+                  {citySaving ? (
+                    <Loader2 className="h-4 w-4 animate-spin text-primary" />
+                  ) : (
+                    <span className="text-xs text-muted-foreground group-hover:text-primary">
+                      {t("Continue →", "继续 →", "繼續 →")}
+                    </span>
+                  )}
+                </button>
+              ))}
+            </div>
+            {err && (
+              <p className="text-xs text-destructive">{err}</p>
+            )}
+          </div>
+        )}
 
         {step === 1 && (
           <div className="mt-10 space-y-6">
@@ -211,7 +306,7 @@ function StartPage() {
             />
             <div className="flex items-center justify-between">
               <button onClick={() => setStep(1)} className="text-xs text-muted-foreground hover:text-foreground">
-                ← {t("Edit description", "重新描述", "重新描述")}
+                ← {t("Edit description", "重新描述", "再講過")}
               </button>
               <button
                 onClick={findMatches}
@@ -292,7 +387,7 @@ function StartPage() {
 
 function Stepper({ step, t }: { step: number; t: (en: string, zh: string, yue: string) => string }) {
   const items = [
-    { n: 1, label: t("Describe", "描述", "描述") },
+    { n: 1, label: t("Describe", "描述", "講下你") },
     { n: 2, label: t("AI profile", "AI 画像", "AI 檔案") },
     { n: 3, label: t("Match & meet", "匹配 & 见面", "配對 & 見面") },
   ];

@@ -177,6 +177,8 @@ export function PlanCard({ plan, match }: PlanCardProps) {
                       why={v.why}
                       distanceWalkingMin={v.distance_walking_minutes}
                       matchId={match.id}
+                      planId={activePlan?.id}
+                      planLabel={activePlan?.label}
                       lang={lang}
                     />
                   );
@@ -242,7 +244,7 @@ export function PlanCard({ plan, match }: PlanCardProps) {
                 {activePlan.time_considerations.best_window && (
                   <div className="rounded-sm border border-emerald-500/30 bg-emerald-500/5 p-2">
                     <p className="text-[10px] uppercase tracking-wider text-emerald-400">
-                      {t("Best", "最佳", "最佳")}
+                      {t("Best", "最佳", "最好")}
                     </p>
                     <p className="mt-0.5 text-sm">
                       {activePlan.time_considerations.best_window}
@@ -310,6 +312,8 @@ function VenueCard({
   why,
   distanceWalkingMin,
   matchId,
+  planId,
+  planLabel,
   lang,
 }: {
   venue: VenueRow | undefined;
@@ -317,6 +321,8 @@ function VenueCard({
   why?: string;
   distanceWalkingMin?: number;
   matchId: string;
+  planId?: string;
+  planLabel?: string;
   lang: "en" | "zh" | "yue";
 }) {
   const t = (en: string, zh: string, yue?: string) =>
@@ -342,7 +348,7 @@ function VenueCard({
       >
         <div className="flex items-baseline justify-between gap-2">
           <p className="text-sm font-medium text-foreground/95">
-            {venue?.name ?? fallbackName ?? t("Venue TBD", "待定", "待定")}
+            {venue?.name ?? fallbackName ?? t("Venue TBD", "待定", "未定")}
           </p>
           {typeof venue?.price_per_person === "number" && (
             <span className="shrink-0 text-[10px] text-muted-foreground">
@@ -378,6 +384,8 @@ function VenueCard({
         <BookingModal
           venue={venue}
           matchId={matchId}
+          planId={planId}
+          planLabel={planLabel}
           open={modalOpen}
           onClose={() => setModalOpen(false)}
           lang={lang}
@@ -397,12 +405,20 @@ function VenueCard({
 function BookingModal({
   venue,
   matchId,
+  planId,
+  planLabel,
   open,
   onClose,
   lang,
 }: {
   venue: VenueRow;
   matchId: string;
+  /** PlanCard bug A: which plan (A / B / C) the user clicked through.
+   *  Stored on every attribution row so the reconciliation query
+   *  knows the user's intended plan, not just "they clicked
+   *  something". */
+  planId?: string;
+  planLabel?: string;
   open: boolean;
   onClose: () => void;
   lang: "en" | "zh" | "yue";
@@ -412,23 +428,34 @@ function BookingModal({
   const [confirming, setConfirming] = useState(false);
   const [confirmed, setConfirmed] = useState(false);
 
-  // Re-fetch fresh venue data if the modal opens stale (e.g. user
-  // opened it after a page refresh, and the plan_content.venue_lookup
-  // was older than 1h). We rely on the lookup only being passed in if
-  // it was recent.
-  useEffect(() => {
-    if (!open || !venue?.id) return;
+  // Helper that all 4 actions share — adds plan metadata to metadata.
+  // Non-fatal: tracking is best-effort; never blocks the user flow.
+  const track = (action: string, extra: Record<string, unknown> = {}) => {
+    if (!venue?.id) return;
     authedFetch("/api/venues/track", {
       method: "POST",
       body: JSON.stringify({
         match_id: matchId,
         venue_id: venue.id,
-        action: "view_details",
+        action,
+        metadata: {
+          plan_id: planId ?? null,
+          plan_label: planLabel ?? null,
+          venue_name: venue.name,
+          venue_city: venue.city,
+          venue_district: venue.district,
+          ...extra,
+        },
       }),
-    }).catch(() => {
-      /* non-fatal: tracking is best-effort */
-    });
-  }, [open, venue?.id, matchId]);
+    }).catch(() => {});
+  };
+
+  // view_details fires when the modal opens (top of funnel)
+  useEffect(() => {
+    if (!open) return;
+    track("view_details");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, venue?.id, planId]);
 
   if (!open) return null;
 
@@ -439,19 +466,13 @@ function BookingModal({
 
   const onCall = () => {
     if (!venue.tel) return;
-    authedFetch("/api/venues/track", {
-      method: "POST",
-      body: JSON.stringify({ match_id: matchId, venue_id: venue.id, action: "tap_call" }),
-    }).catch(() => {});
+    track("tap_call");
     window.location.href = `tel:${venue.tel}`;
   };
 
   const onNavigate = () => {
     if (!navigateUrl) return;
-    authedFetch("/api/venues/track", {
-      method: "POST",
-      body: JSON.stringify({ match_id: matchId, venue_id: venue.id, action: "tap_navigate" }),
-    }).catch(() => {});
+    track("tap_navigate");
     window.location.href = navigateUrl;
   };
 
@@ -460,7 +481,21 @@ function BookingModal({
     try {
       await authedFetch("/api/venues/track", {
         method: "POST",
-        body: JSON.stringify({ match_id: matchId, venue_id: venue.id, action: "confirm_i_went" }),
+        body: JSON.stringify({
+          match_id: matchId,
+          venue_id: venue.id,
+          action: "confirm_i_went",
+          metadata: {
+            plan_id: planId ?? null,
+            plan_label: planLabel ?? null,
+            venue_name: venue.name,
+            venue_city: venue.city,
+            venue_district: venue.district,
+            // 漏洞 B: marker that says we want the 24h follow-up
+            // email sent. The endpoint reads this and schedules.
+            request_24h_followup: true,
+          },
+        }),
       });
       setConfirmed(true);
     } catch {

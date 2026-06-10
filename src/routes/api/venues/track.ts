@@ -12,10 +12,16 @@
 // the authenticated session (not the request body) so a malicious
 // client can't attribute other users' actions. This is the data
 // that the future 餐厅返点 reconciliation will join on.
+//
+// 漏洞 B: when the user action is 'confirm_i_went' and the metadata
+// includes request_24h_followup: true, we ALSO insert a row into
+// visit_confirmations so the scheduler can send the 24h follow-up
+// email (漏洞 B) and the user can confirm/deny via the link.
 
 import { createFileRoute } from "@tanstack/react-router";
 import { json, preflight, requireUser, safeError } from "@/lib/api/_helpers.server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { scheduleVisitConfirm } from "@/lib/email/scheduler";
 
 const VALID_ACTIONS = new Set([
   "view_details",
@@ -48,7 +54,7 @@ export const Route = createFileRoute("/api/venues/track")({
         const venueId = typeof body.venue_id === "string" ? body.venue_id : "";
         const action = typeof body.action === "string" ? body.action : "";
         const matchId = typeof body.match_id === "string" ? body.match_id : null;
-        const metadata = body.metadata && typeof body.metadata === "object" ? body.metadata : null;
+        const metadata = (body.metadata && typeof body.metadata === "object" ? body.metadata : null) as Record<string, unknown> | null;
 
         if (!venueId) return json({ error: "venue_id required" }, { status: 400 }, request);
         if (!VALID_ACTIONS.has(action)) {
@@ -60,7 +66,7 @@ export const Route = createFileRoute("/api/venues/track")({
         // we eat it because bad rows are worse than bad latency.
         const { data: v } = await supabaseAdmin
           .from("venues")
-          .select("id")
+          .select("id, name, city, district")
           .eq("id", venueId)
           .maybeSingle();
         if (!v) {
@@ -80,7 +86,40 @@ export const Route = createFileRoute("/api/venues/track")({
           .single();
 
         if (error) return json({ error: safeError(error) }, { status: 500 }, request);
-        return json({ data, message: "Tracked" }, undefined, request);
+
+        // 漏洞 B: when the user "claims" they went and asks for the
+        // 24h follow-up, schedule a confirmation row. The DB trigger
+        // we wrote in 20260610220000_visit_confirmations.sql will
+        // propagate the eventual user click into meetup_attributions
+        // metadata.email_confirmed.
+        let confirmationToken: string | null = null;
+        if (action === "confirm_i_went" && metadata?.request_24h_followup === true) {
+          try {
+            const result = await scheduleVisitConfirm({
+              attributionId: data.id,
+              userId,
+              venueId,
+              venueName: v.name,
+              venueCity: v.city ?? "",
+            });
+            confirmationToken = result.token;
+          } catch (e) {
+            console.error(
+              JSON.stringify({
+                at: "schedule_visit_confirm_threw",
+                error: e instanceof Error ? e.message : String(e),
+                attribution_id: data.id,
+              }),
+            );
+            // non-fatal — track row is still persisted; the user
+            // can still see the "I went" success state.
+          }
+        }
+
+        return json({
+          data: { ...data, confirmation_token: confirmationToken },
+          message: "Tracked",
+        }, undefined, request);
       },
     },
   },
