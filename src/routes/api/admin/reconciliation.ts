@@ -79,6 +79,17 @@ export const Route = createFileRoute("/api/admin/reconciliation")({
           return json({ data }, undefined, request);
         }
 
+        if (url.searchParams.get("nps") === "true") {
+          // List recent NPS scores (漏洞 G dashboard)
+          const { data, error } = await admin
+            .from("user_feedback")
+            .select("id, user_id, kind, score, body, source, created_at")
+            .order("created_at", { ascending: false })
+            .limit(200);
+          if (error) return json({ error: safeError(error) }, { status: 500 }, request);
+          return json({ data }, undefined, request);
+        }
+
         if (venueId && month) {
           // Single venue × single month — the exact bill we send to a restaurant
           const { data, error } = await admin
