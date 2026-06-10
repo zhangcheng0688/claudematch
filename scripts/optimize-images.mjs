@@ -9,32 +9,52 @@
  *   moment-N.avif         (q=55)
  *
  * Usage:
+ *   bun add -d sharp
  *   node scripts/optimize-images.mjs
  *
- * Requires sharp (devDependency). If sharp isn't installed the script
- * exits with a friendly error — it's not a build blocker, just a perf
- * optimization. CI / local dev can run it once and commit the result.
+ * Run once after cloning, commit the generated .webp / .avif files.
+ * The <picture> tag in components/shared/MomentsImg.tsx picks them up
+ * automatically; if they're missing, the browser falls through to .jpg.
  *
- * Why we don't use a third-party SaaS (Cloudinary / imgix):
- *   - ¥150/mo recurring cost
- *   - Adds an external network round-trip per image render
- *   - We have 6 images today; build-time sharp is the right scale
+ * Why build-time (vs SaaS like Cloudinary / imgix):
+ *   - ¥150/mo recurring cost avoided
+ *   - No external network round-trip per image render
+ *   - 6 images today; build-time sharp is the right scale
+ *
+ * Why AVIF (vs WebP only):
+ *   - ~30% smaller than WebP at similar quality
+ *   - Modern Safari/Chrome/Firefox all support it
+ *   - The only "modern" format we can ship without polyfills
+ *
+ * Output:
+ *   src/assets/moment-*.{webp,avif}      — the variants
+ *   src/assets/moments-manifest.json     — a build-time sanity check
+ *                                          (records which variants exist)
  */
 
 import { readdir, stat, mkdir, writeFile } from "node:fs/promises";
 import { join, basename, extname } from "node:path";
 
 const SRC_DIR = "src/assets";
-const SIZES = [1024]; // single 1x is enough — we don't have retina-specific art
+const SIZES = [1024]; // single 1x is enough for our 220-280px rendered boxes
+const AVIF_QUALITY = 55;
+const WEBP_QUALITY = 75;
 
 let sharp;
 try {
   sharp = (await import("sharp")).default;
 } catch (e) {
   console.error(
-    "ERROR: 'sharp' is not installed.\n" +
-      "Run: bun add -d sharp\n" +
+    [
+      "ERROR: 'sharp' is not installed.",
+      "",
+      "Run one of:",
+      "  bun add -d sharp",
+      "  npm install --save-dev sharp",
+      "  yarn add -D sharp",
+      "",
       "Then re-run: node scripts/optimize-images.mjs",
+    ].join("\n"),
   );
   process.exit(1);
 }
@@ -48,7 +68,7 @@ if (files.length === 0) {
   process.exit(0);
 }
 
-console.log(`Processing ${files.length} images…`);
+console.log(`Processing ${files.length} images (q=avif:${AVIF_QUALITY}, q=webp:${WEBP_QUALITY})…`);
 
 const summary = [];
 
@@ -62,7 +82,7 @@ for (const f of files) {
   const webpPath = join(SRC_DIR, `${base}.webp`);
   await sharp(srcPath)
     .resize(SIZES[0], SIZES[0], { fit: "inside", withoutEnlargement: true })
-    .webp({ quality: 75 })
+    .webp({ quality: WEBP_QUALITY })
     .toFile(webpPath);
   const webpSizeKB = Math.round((await stat(webpPath)).size / 1024);
 
@@ -70,7 +90,7 @@ for (const f of files) {
   const avifPath = join(SRC_DIR, `${base}.avif`);
   await sharp(srcPath)
     .resize(SIZES[0], SIZES[0], { fit: "inside", withoutEnlargement: true })
-    .avif({ quality: 55 })
+    .avif({ quality: AVIF_QUALITY })
     .toFile(avifPath);
   const avifSizeKB = Math.round((await stat(avifPath)).size / 1024);
 
@@ -92,10 +112,11 @@ console.log(
   `\nTotal: ${totalJpg}KB (jpg) → ${totalAvif}KB (avif) — ${Math.round(((totalJpg - totalAvif) / totalJpg) * 100)}% smaller`,
 );
 
-// Generate a build-time assertion file. If an expected moment-N.jpg
-// exists but the .avif or .webp doesn't, we want the dev server /
-// build to fail loudly rather than silently fall back to jpg. This
-// avoids the "we forgot to re-run optimize-images" regression.
+// Build-time sanity check. If a future edit adds moment-7.jpg
+// without re-running this script, MomentsImg.tsx will silently
+// fall back to .jpg for that one. The manifest is a record of
+// what variants currently exist on disk; you can grep for it
+// from a build script to assert "every moment-N.jpg has a .avif".
 const expectedPairs = files.map((f) => basename(f, ".jpg"));
 const manifest = expectedPairs.map((base) => ({
   base,
@@ -108,3 +129,5 @@ await writeFile(
   JSON.stringify(manifest, null, 2),
 );
 console.log(`\nWrote src/assets/moments-manifest.json (${manifest.length} entries).`);
+console.log("\nNext: git add src/assets/moment-*.{webp,avif} src/assets/moments-manifest.json");
+console.log("       git commit -m 'chore(assets): generate AVIF + WebP variants'");

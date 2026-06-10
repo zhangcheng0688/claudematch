@@ -1,0 +1,55 @@
+# .github/workflows/cron-drain.yml
+#
+# 架构债 I: scheduled cron that pings /api/cron/drain every 6
+# hours. GitHub Actions free tier is 2000 minutes/month; this
+# workflow uses ~1 min × 4 runs × 30 days = 120 minutes. Well
+# within budget.
+#
+# To enable:
+#   1. Push this file to main.
+#   2. In GitHub: Settings → Secrets and variables → Actions
+#      Add CRON_DRAIN_URL    = https://claudematch.com/api/cron/drain
+#      Add CRON_DRAIN_SECRET = <the value of LINQ_CRON_SECRET in Lovable>
+#   3. GitHub Actions → cron-drain → Enable workflow.
+#
+# Why 6h cadence:
+#   - 24h visit confirmation has a 24h window; 6h granularity
+#     means the user gets their follow-up email at most ~6h late.
+#   - Weekly digest is window-gated inside the endpoint (only fires
+#     on Wed 18-20 UTC), so the 6h cadence is fine — the server
+#     decides whether to actually send.
+#   - If you have lots of users, drop to every 2h.
+
+name: cron-drain
+
+on:
+  schedule:
+    # 00:00, 06:00, 12:00, 18:00 UTC every day.
+    - cron: "0 */6 * * *"
+  workflow_dispatch:  # allow manual trigger from Actions tab
+
+jobs:
+  drain:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Ping the drain endpoint
+        env:
+          CRON_DRAIN_URL: ${{ secrets.CRON_DRAIN_URL }}
+          CRON_DRAIN_SECRET: ${{ secrets.CRON_DRAIN_SECRET }}
+        run: |
+          if [ -z "$CRON_DRAIN_URL" ] || [ -z "$CRON_DRAIN_SECRET" ]; then
+            echo "::error::CRON_DRAIN_URL and CRON_DRAIN_SECRET must be set in repo secrets."
+            exit 2
+          fi
+          response=$(curl -sS -w "\n%{http_code}" \
+            -H "X-Cron-Secret: $CRON_DRAIN_SECRET" \
+            "$CRON_DRAIN_URL?since_hours=24")
+          http_code=$(echo "$response" | tail -1)
+          body=$(echo "$response" | head -n -1)
+          echo "HTTP $http_code"
+          echo "$body" | head -c 800
+          if [ "$http_code" -lt 200 ] || [ "$http_code" -ge 300 ]; then
+            echo "::error::drain returned $http_code"
+            exit 1
+          fi
