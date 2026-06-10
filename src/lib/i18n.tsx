@@ -347,19 +347,46 @@ export const momentsI18n = {
 type Ctx = { lang: Lang; setLang: (l: Lang) => void; t: (k: string) => string };
 const LangContext = createContext<Ctx | null>(null);
 
-export function LanguageProvider({ children }: { children: ReactNode }) {
-  const [lang, setLangState] = useState<Lang>("en");
+/**
+ * P2-deferred 3: pass initialLang from the SSR layer so <html lang>
+ * matches on first paint. The provider still updates to the user's
+ * localStorage choice in a useEffect, but the initial render is
+ * already correct (no hydration mismatch warning, no 1s polling).
+ *
+ * When called from a server-rendered page, the caller can pass
+ * request.headers.get("accept-language") parsed into a Lang.
+ * When called from a client-only page, pass "en" and the effect
+ * will upgrade it on mount.
+ */
+export function detectLangFromHeader(acceptLanguage: string | null | undefined): Lang {
+  if (!acceptLanguage) return "en";
+  // accept-language can be "zh-CN,zh;q=0.9,en;q=0.8" — we just
+  // look for the first tag.
+  const first = acceptLanguage.split(",")[0]?.trim().toLowerCase() ?? "";
+  if (first.startsWith("zh-hk") || first.startsWith("yue")) return "yue";
+  if (first.startsWith("zh")) return "zh";
+  return "en";
+}
+
+export function LanguageProvider({
+  children,
+  initialLang = "en",
+}: {
+  children: ReactNode;
+  initialLang?: Lang;
+}) {
+  const [lang, setLangState] = useState<Lang>(initialLang);
   useEffect(() => {
     if (typeof window === "undefined") return;
+    // localStorage wins over the SSR initial (the user may have
+    // explicitly chosen a different language).
     const saved = localStorage.getItem("lang") as Lang | null;
-    if (saved === "en" || saved === "zh" || saved === "yue") {
+    if (saved === "en" || saved === "zh" || saved === "yue" && saved !== initialLang) {
       setLangState(saved);
       return;
     }
-    const n = navigator.language.toLowerCase();
-    if (n.startsWith("zh-hk") || n.startsWith("yue")) setLangState("yue");
-    else if (n.startsWith("zh")) setLangState("zh");
-  }, []);
+    // No localStorage choice — keep the SSR-detected lang.
+  }, [initialLang]);
   const setLang = (l: Lang) => {
     setLangState(l);
     if (typeof window !== "undefined") localStorage.setItem("lang", l);

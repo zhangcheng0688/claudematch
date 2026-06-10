@@ -969,11 +969,18 @@ function PatternRow({
   const [submitting, setSubmitting] = useState(false);
 
   const submit = async (v: "agree" | "disagree") => {
-    if (submitting) return;
+    if (submitting || verdict !== null) return;
     setSubmitting(true);
+    // Optimistic: flip the visual state immediately. The endpoint
+    // call is fire-and-forget; if it fails we revert.
     setVerdict(v);
     try {
       await onFeedback(v);
+    } catch {
+      // P2-deferred 6: rollback the optimistic update on failure.
+      // The user sees the button briefly flip, then snap back, with
+      // a tiny error toast. Better than a silent "nothing happened".
+      setVerdict(null);
     } finally {
       setSubmitting(false);
     }
