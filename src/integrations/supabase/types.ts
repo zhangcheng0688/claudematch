@@ -166,18 +166,30 @@ export type Database = {
           email: string
           id: string
           updated_at: string
+          wechat_openid: string | null
+          wechat_unionid: string | null
+          wechat_nickname: string | null
+          wechat_avatar: string | null
         }
         Insert: {
           created_at?: string
           email: string
           id: string
           updated_at?: string
+          wechat_openid?: string | null
+          wechat_unionid?: string | null
+          wechat_nickname?: string | null
+          wechat_avatar?: string | null
         }
         Update: {
           created_at?: string
           email?: string
           id?: string
           updated_at?: string
+          wechat_openid?: string | null
+          wechat_unionid?: string | null
+          wechat_nickname?: string | null
+          wechat_avatar?: string | null
         }
         Relationships: []
       }
@@ -277,9 +289,432 @@ export type Database = {
         }
         Relationships: []
       }
+
+      ai_personas: {
+        Row: {
+          id: string
+          name: string
+          age: number | null
+          city: string
+          occupation: string | null
+          headline: string
+          bio: string
+          scenario_tags: string[]
+          profile_data: Json
+          image_url: string | null
+          is_active: boolean
+          display_priority: number
+          match_count: number
+          last_matched_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          age?: number | null
+          city: string
+          occupation?: string | null
+          headline: string
+          bio: string
+          scenario_tags?: string[]
+          profile_data?: Json
+          image_url?: string | null
+          is_active?: boolean
+          display_priority?: number
+          match_count?: number
+          last_matched_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          age?: number | null
+          city?: string
+          occupation?: string | null
+          headline?: string
+          bio?: string
+          scenario_tags?: string[]
+          profile_data?: Json
+          image_url?: string | null
+          is_active?: boolean
+          display_priority?: number
+          match_count?: number
+          last_matched_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      venues: {
+        Row: {
+          id: string
+          amap_id: string | null
+          name: string
+          city: string
+          district: string | null
+          address: string | null
+          lat: number | null
+          lng: number | null
+          cuisine_tags: string[]
+          vibe_tags: string[]
+          price_per_person: number | null
+          rating: number | null
+          review_count: number | null
+          tel: string | null
+          opening_hours: string | null
+          photos: string[]
+          source: string
+          source_url: string | null
+          booking_method: string
+          commission_pct: number
+          is_active: boolean
+          notes: string | null
+          last_verified_at: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          amap_id?: string | null
+          name: string
+          city: string
+          district?: string | null
+          address?: string | null
+          lat?: number | null
+          lng?: number | null
+          cuisine_tags?: string[]
+          vibe_tags?: string[]
+          price_per_person?: number | null
+          rating?: number | null
+          review_count?: number | null
+          tel?: string | null
+          opening_hours?: string | null
+          photos?: string[]
+          source: string
+          source_url?: string | null
+          booking_method?: string
+          commission_pct?: number
+          is_active?: boolean
+          notes?: string | null
+          last_verified_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          amap_id?: string | null
+          name?: string
+          city?: string
+          district?: string | null
+          address?: string | null
+          lat?: number | null
+          lng?: number | null
+          cuisine_tags?: string[]
+          vibe_tags?: string[]
+          price_per_person?: number | null
+          rating?: number | null
+          review_count?: number | null
+          tel?: string | null
+          opening_hours?: string | null
+          photos?: string[]
+          source?: string
+          source_url?: string | null
+          booking_method?: string
+          commission_pct?: number
+          is_active?: boolean
+          notes?: string | null
+          last_verified_at?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      meetup_attributions: {
+        Row: {
+          id: string
+          user_id: string
+          match_id: string | null
+          venue_id: string | null
+          action: string
+          metadata: Json | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          match_id?: string | null
+          venue_id?: string | null
+          action: string
+          metadata?: Json | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          match_id?: string | null
+          venue_id?: string | null
+          action?: string
+          metadata?: Json | null
+          created_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meetup_attributions_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "matches"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meetup_attributions_venue_id_fkey"
+            columns: ["venue_id"]
+            isOneToOne: false
+            referencedRelation: "venues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      visit_confirmations: {
+        Row: {
+          id: string
+          attribution_id: string
+          user_id: string
+          venue_id: string
+          token: string
+          expires_at: string
+          email_sent_at: string | null
+          confirmed_at: string | null
+          denied_at: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          attribution_id: string
+          user_id: string
+          venue_id: string
+          token: string
+          expires_at: string
+          email_sent_at?: string | null
+          confirmed_at?: string | null
+          denied_at?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          attribution_id?: string
+          user_id?: string
+          venue_id?: string
+          token?: string
+          expires_at?: string
+          email_sent_at?: string | null
+          confirmed_at?: string | null
+          denied_at?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
+      pattern_feedback: {
+        Row: {
+          id: string
+          user_id: string
+          pattern_text: string
+          section: string | null
+          verdict: string
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          pattern_text: string
+          section?: string | null
+          verdict: string
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          pattern_text?: string
+          section?: string | null
+          verdict?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
+      user_feedback: {
+        Row: {
+          id: string
+          user_id: string
+          kind: string
+          score: number | null
+          body: string | null
+          source: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          kind: string
+          score?: number | null
+          body?: string | null
+          source?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          kind?: string
+          score?: number | null
+          body?: string | null
+          source?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
+      wechat_auth: {
+        Row: {
+          user_id: string
+          openid: string
+          unionid: string | null
+          nickname: string | null
+          avatar: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          user_id: string
+          openid: string
+          unionid?: string | null
+          nickname?: string | null
+          avatar?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          user_id?: string
+          openid?: string
+          unionid?: string | null
+          nickname?: string | null
+          avatar?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      blog_posts: {
+        Row: {
+          id: string
+          slug: string
+          locale: string
+          status: string
+          title: string
+          excerpt: string | null
+          body: string | null
+          cover_image_url: string | null
+          published_at: string | null
+          is_published: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          slug: string
+          locale?: string
+          status?: string
+          title: string
+          excerpt?: string | null
+          body?: string | null
+          cover_image_url?: string | null
+          published_at?: string | null
+          is_published?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          slug?: string
+          locale?: string
+          status?: string
+          title?: string
+          excerpt?: string | null
+          body?: string | null
+          cover_image_url?: string | null
+          published_at?: string | null
+          is_published?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+
     }
     Views: {
-      [_ in never]: never
+      v_user_visit_summary: {
+        Row: {
+          user_id: string | null
+          venue_id: string | null
+          year_month: string | null
+          viewed_modal: boolean | null
+          tapped_call: boolean | null
+          tapped_navigate: boolean | null
+          claimed_i_went: boolean | null
+          valid_visit: boolean | null
+          view_count: number | null
+          call_count: number | null
+          navigate_count: number | null
+          claim_count: number | null
+          first_seen_at: string | null
+          last_seen_at: string | null
+        }
+        Relationships: []
+      }
+      v_venue_monthly_reconciliation: {
+        Row: {
+          venue_id: string | null
+          venue_name: string | null
+          city: string | null
+          district: string | null
+          commission_pct: number | null
+          booking_method: string | null
+          venue_is_active: boolean | null
+          year_month: string | null
+          unique_users: number | null
+          total_views: number | null
+          total_call_taps: number | null
+          total_navigate_taps: number | null
+          total_claims: number | null
+          total_valid_visits: number | null
+          estimated_rebate_cny: number | null
+        }
+        Relationships: []
+      }
+      v_user_journey_funnel: {
+        Row: {
+          user_id: string | null
+          match_id: string | null
+          scenario: string | null
+          viewed_modal: boolean | null
+          took_booking_action: boolean | null
+          claimed_i_went: boolean | null
+          valid_visit: boolean | null
+          funnel_top_at: string | null
+          funnel_last_at: string | null
+        }
+        Relationships: []
+      }
+      v_pending_confirmations: {
+        Row: {
+          attribution_id: string | null
+          user_id: string | null
+          venue_id: string | null
+          venue_name: string | null
+          confirmed_at: string | null
+          hours_since_confirm: number | null
+          confirmation_status: string | null
+        }
+        Relationships: []
+      }
     }
     Functions: {
       delete_email: {
@@ -307,6 +742,20 @@ export type Database = {
           read_ct: number
         }[]
       }
+
+      get_funnel_summary: {
+        Args: { since_days?: number }
+        Returns: {
+          scope: string
+          total_users: number
+          total_matches: number
+          total_plan_views: number
+          total_booking_taps: number
+          total_claims: number
+          total_valid_visits: number
+        }[]
+      }
+
     }
     Enums: {
       [_ in never]: never

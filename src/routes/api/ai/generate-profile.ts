@@ -56,6 +56,51 @@ export const Route = createFileRoute("/api/ai/generate-profile")({
         const lang: "zh" | "en" = body.lang === "zh" ? "zh" : "en";
 
         // ============================================================
+        // MEMORY LAYER — fetch user's past pattern_feedback (agree/disagree)
+        // and inject it into the prompt context for the next generation.
+        // The feedback is fetched BEFORE the LLM pipeline runs, but for
+        // minimal latency we re-fetch here as a quick read.
+        // ============================================================
+        let feedbackContext: { agrees: string[]; disagrees: string[] } = {
+          agrees: [],
+          disagrees: [],
+        };
+        try {
+          const { data: fbRows } = await supabase
+            .from("pattern_feedback")
+            .select("pattern_text, verdict")
+            .eq("user_id", userId)
+            .order("created_at", { ascending: false })
+            .limit(20);
+          if (Array.isArray(fbRows)) {
+            feedbackContext.agrees = fbRows
+              .filter((r) => r.verdict === "agree")
+              .map((r) => String(r.pattern_text ?? ""))
+              .filter(Boolean)
+              .slice(0, 10);
+            feedbackContext.disagrees = fbRows
+              .filter((r) => r.verdict === "disagree")
+              .map((r) => String(r.pattern_text ?? ""))
+              .filter(Boolean)
+              .slice(0, 10);
+          }
+        } catch {
+           /* feedback table may not exist yet; ignore */
+        }
+
+        // Inject the feedback signal into the inference prompt so future
+        // generations can lean into what the user agreed with and away
+        // from what they disagreed with. This is a no-op on the first
+        // generation (no history yet).
+        const feedbackContextBlock =
+          feedbackContext.agrees.length > 0 || feedbackContext.disagrees.length > 0
+            ? lang === "zh"
+              ? `\n\n【用户过去反馈 - 必须参考】\n用户过去同意过的洞察方向（这些方向应该强化）：\n${feedbackContext.agrees.map((s) => `  - ${s}`).join("\n")}\n用户过去否定过的洞察方向（这些方向应该避开或换角度）：\n${feedbackContext.disagrees.map((s) => `  - ${s}`).join("\n")}\n`
+              : `\n\n[User's past feedback — must consider]\nDirections the user agreed with (lean into these):\n${feedbackContext.agrees.map((s) => `  - ${s}`).join("\n")}\nDirections the user disagreed with (avoid or reframe these):\n${feedbackContext.disagrees.map((s) => `  - ${s}`).join("\n")}\n`
+            : "";
+
+
+        // ============================================================
         // ROUND 1 — Fact extraction (no inference, pure structural parse)
         // ============================================================
         const extractSys = lang === "zh"
@@ -220,23 +265,7 @@ Inferred profile (preliminary, R2 still running): ${inferredMinimalStub}
 
 Output v4 fields JSON.`;
 
-        const [inferredRaw, sceneRaw] = await Promise.all([
-          deepseekChat(
-            [
-              { role: "system", content: inferSys },
-              { role: "user", content: inferUserPrompt },
-            ],
-            { json: true, temperature: 0.9, max_tokens: 2200, label: "round-2-infer", traceId, timeoutMs: 25_000 },
-          ),
-          deepseekChat(
-            [
-              { role: "system", content: sceneSys },
-              { role: "user", content: sceneUserPromptParallel },
-            ],
-            { json: true, temperature: 0.9, max_tokens: 2200, label: "round-3-scene", traceId, timeoutMs: 25_000 },
-          ),
-        ]);
-        const inferred = safeParseJSON<Record<string, unknown>>(inferredRaw) ?? {};
+
 
         // ============================================================
         // ROUND 3 — Scene predictions + life context (v4 additions)
@@ -268,6 +297,23 @@ Key:
 
 Strict JSON output.`;
 
+        const [inferredRaw, sceneRaw] = await Promise.all([
+          deepseekChat(
+            [
+              { role: "system", content: inferSys },
+              { role: "user", content: inferUserPrompt },
+            ],
+            { json: true, temperature: 0.9, max_tokens: 2200, label: "round-2-infer", traceId, timeoutMs: 25_000 },
+          ),
+          deepseekChat(
+            [
+              { role: "system", content: sceneSys },
+              { role: "user", content: sceneUserPromptParallel },
+            ],
+            { json: true, temperature: 0.9, max_tokens: 2200, label: "round-3-scene", traceId, timeoutMs: 25_000 },
+          ),
+        ]);
+        const inferred = safeParseJSON<Record<string, unknown>>(inferredRaw) ?? {};
         const sceneUserPrompt = lang === "zh"
           ? `事实画像：${JSON.stringify(facts, null, 2)}
 推断画像：${JSON.stringify(inferred, null, 2)}
@@ -388,107 +434,6 @@ Output final profile JSON:
           { json: true, temperature: 0.85, max_tokens: 1500, label: "round-4-synth", traceId, timeoutMs: 25_000 },
         );
         const synth = safeParseJSON<Record<string, unknown>>(synthRaw) ?? {};
-
-        // ============================================================
-        // ROUND 5 — Self-critique (the v4 anti-paraphrase mechanism)
-        //
-        // The LLM has now produced: facts, inferences, scene predictions,
-        // and a synthesis. The biggest remaining failure mode is that
-        // patterns / narrative / dimensions still feel like restating
-        // the user's input.
-        //
-        // Here we ask the LLM to step OUT of the role of "AI profiler"
-        // and INTO the role of "the user themselves reading this". For
-        // each field, we ask: "would the user feel 'this AI gets me'?"
-        // If not, we ask it to revise that specific field.
-        //
-        // The output is a JSON with the SAME shape as the synthesis +
-        // scene-fields, but with revised copy where needed. v3 didn't
-        // have this — v4 ships it.
-        // ============================================================
-        const critiqueSys = lang === "zh"
-          ? `你是一位严厉的内部审查员。
-
-任务：审阅上面的画像输出，找出**任何还像 paraphrase（用同义词复述用户输入）的部分**，并**改写到让用户觉得「这说的就是我」**。
-
-**关键判断标准**：
-- 如果某个 pattern 仍然是把用户的话换种说法说出来 → 必须改写
-- 如果某个 dimension 的 why/signals 是「高 X 的人都这样」的泛泛 → 必须改写
-- 如果 narrative 还是把用户输入重新组织一遍 → 必须改写
-- 如果 paradox 看着像刻意造的 → 必须改写
-
-**改写原则**：
-- 每条都加至少一个"用户没说但能看出来"的具体观察
-- 不要再写"对外部世界敏感"这种泛泛的标签 —— 写"在餐桌上被问到'最近怎么样'时，你会先停下来 0.5 秒判断对方是否真想知道"
-- 不要给建议，只描述
-
-输出 JSON（**只输出需要修改的字段**，保持其他字段引用原值）：
-{
-  "headline": "改写后的 headline（如不需要改可省略）",
-  "narrative": "改写后的 narrative（如不需要改可省略）",
-  "patterns": [ "改写后的 pattern insight 列表 ——**只输出 insight 字符串数组**，按原 patterns 顺序覆盖对应位置；不需要改的可以省略" ],
-  "dimensions": [
-    { "key": "原 key", "why": "改写后的 why", "signals": ["改写后的 signal", ...] }
-  ] (只输出需要改的)
-}`
-          : `You are a strict internal reviewer.
-
-Task: audit the profile output above, find any field that still feels like paraphrase (restating user input in different words), and revise it to make the user feel "this AI gets me".
-
-**Decision criteria**:
-- if a pattern is still restating user input in different words -> must rewrite
-- if a dimension's why/signals are generic ("high X people tend to Y") -> must rewrite
-- if narrative just reorganizes user input -> must rewrite
-- if paradox feels manufactured -> must rewrite
-
-**Revision principles**:
-- Each item must add at least one specific observation the user didn't say but a sharp reader would notice
-- Don't write generic labels. Write "when asked at the dinner table 'how are you', you pause 0.5s to judge if they really want to know"
-- Don't give advice, only describe
-
-Output JSON (only output fields that need changing):`;
-
-        const critiqueUserPrompt = lang === "zh"
-          ? `用户原始输入："""${input}"""
-已生成的画像：
-${JSON.stringify({ ...synth, ...sceneFields, ...inferred }, null, 2)}
-
-请审阅并改写（只输出需要改的字段）。注意：你必须确保改写后**每条都引用了用户没说但能推断出的具体观察**，不是复述用户原话。`
-          : `Original user input: """${input}"""
-Generated profile:
-${JSON.stringify({ ...synth, ...sceneFields, ...inferred }, null, 2)}
-
-Audit and revise (only output fields that need changing). Every revised line must add a specific observation the user didn't say but a sharp reader would notice.`;
-
-        // Round 5 (self_critique) + Round 6 (3 personas) ALL FIRE
-        // IN PARALLEL — they all read from the same blob. The final
-        // polish (Round 6.5) is the ONLY serial call (it needs the
-        // persona rewrites as input), but it overlaps with
-        // Promise.allSettled fallback handling so we don't waste
-        // wall time.
-        //
-        // Build a unified parallel call list: 1 critique + 3 personas.
-        const parallelCalls: Array<Promise<unknown>> = [
-          // critique (Round 5)
-          deepseekChat(
-            [
-              { role: "system", content: critiqueSys },
-              { role: "user", content: critiqueUserPrompt },
-            ],
-            { json: true, temperature: 0.7, max_tokens: 2000, label: "round-5-critique", traceId, timeoutMs: 25_000 },
-          ),
-          // 3 personas (Round 6) — pre-built above as `personaCalls`
-          ...personaCalls,
-        ];
-        const parallelSettled = await Promise.allSettled(parallelCalls);
-        const critiqueSettled = parallelSettled[0];
-        const personaSettled = parallelSettled.slice(1);
-
-        const critique = critiqueSettled.status === "fulfilled"
-          ? safeParseJSON<Record<string, unknown>>(critiqueSettled.value) ?? {}
-          : {};
-
-        // ============================================================
         // ROUND 6 — user_persona_simulation (the v4+ anti-paraphrase move)
         //
         // We've had the LLM critique its own output (Round 5). But the LLM
@@ -595,9 +540,116 @@ Audit and revise (only output fields that need changing). Every revised line mus
 
         // Wait for the persona parallel batch (started together with
         // critique above in `parallelSettled`).
+
+        // ============================================================
+        // ROUND 5 — Self-critique (the v4 anti-paraphrase mechanism)
+        //
+        // The LLM has now produced: facts, inferences, scene predictions,
+        // and a synthesis. The biggest remaining failure mode is that
+        // patterns / narrative / dimensions still feel like restating
+        // the user's input.
+        //
+        // Here we ask the LLM to step OUT of the role of "AI profiler"
+        // and INTO the role of "the user themselves reading this". For
+        // each field, we ask: "would the user feel 'this AI gets me'?"
+        // If not, we ask it to revise that specific field.
+        //
+        // The output is a JSON with the SAME shape as the synthesis +
+        // scene-fields, but with revised copy where needed. v3 didn't
+        // have this — v4 ships it.
+        // ============================================================
+        const critiqueSys = lang === "zh"
+          ? `你是一位严厉的内部审查员。
+
+任务：审阅上面的画像输出，找出**任何还像 paraphrase（用同义词复述用户输入）的部分**，并**改写到让用户觉得「这说的就是我」**。
+
+**关键判断标准**：
+- 如果某个 pattern 仍然是把用户的话换种说法说出来 → 必须改写
+- 如果某个 dimension 的 why/signals 是「高 X 的人都这样」的泛泛 → 必须改写
+- 如果 narrative 还是把用户输入重新组织一遍 → 必须改写
+- 如果 paradox 看着像刻意造的 → 必须改写
+
+**改写原则**：
+- 每条都加至少一个"用户没说但能看出来"的具体观察
+- 不要再写"对外部世界敏感"这种泛泛的标签 —— 写"在餐桌上被问到'最近怎么样'时，你会先停下来 0.5 秒判断对方是否真想知道"
+- 不要给建议，只描述
+
+输出 JSON（**只输出需要修改的字段**，保持其他字段引用原值）：
+{
+  "headline": "改写后的 headline（如不需要改可省略）",
+  "narrative": "改写后的 narrative（如不需要改可省略）",
+  "patterns": [ "改写后的 pattern insight 列表 ——**只输出 insight 字符串数组**，按原 patterns 顺序覆盖对应位置；不需要改的可以省略" ],
+  "dimensions": [
+    { "key": "原 key", "why": "改写后的 why", "signals": ["改写后的 signal", ...] }
+  ] (只输出需要改的)
+}`
+          : `You are a strict internal reviewer.
+
+Task: audit the profile output above, find any field that still feels like paraphrase (restating user input in different words), and revise it to make the user feel "this AI gets me".
+
+**Decision criteria**:
+- if a pattern is still restating user input in different words -> must rewrite
+- if a dimension's why/signals are generic ("high X people tend to Y") -> must rewrite
+- if narrative just reorganizes user input -> must rewrite
+- if paradox feels manufactured -> must rewrite
+
+**Revision principles**:
+- Each item must add at least one specific observation the user didn't say but a sharp reader would notice
+- Don't write generic labels. Write "when asked at the dinner table 'how are you', you pause 0.5s to judge if they really want to know"
+- Don't give advice, only describe
+
+Output JSON (only output fields that need changing):`;
+
+        const critiqueUserPrompt = lang === "zh"
+          ? `用户原始输入："""${input}"""
+已生成的画像：
+${JSON.stringify({ ...synth, ...sceneFields, ...inferred }, null, 2)}
+
+请审阅并改写（只输出需要改的字段）。注意：你必须确保改写后**每条都引用了用户没说但能推断出的具体观察**，不是复述用户原话。`
+          : `Original user input: """${input}"""
+Generated profile:
+${JSON.stringify({ ...synth, ...sceneFields, ...inferred }, null, 2)}
+
+Audit and revise (only output fields that need changing). Every revised line must add a specific observation the user didn't say but a sharp reader would notice.`;
+
+        // Round 5 (self_critique) + Round 6 (3 personas) ALL FIRE
+        // IN PARALLEL — they all read from the same blob. The final
+        // polish (Round 6.5) is the ONLY serial call (it needs the
+        // persona rewrites as input), but it overlaps with
+        // Promise.allSettled fallback handling so we don't waste
+        // wall time.
+        //
+        // Build a unified parallel call list: 1 critique + 3 personas.
+        const parallelCalls: Array<Promise<unknown>> = [
+          // critique (Round 5)
+          deepseekChat(
+            [
+              { role: "system", content: critiqueSys },
+              { role: "user", content: critiqueUserPrompt },
+            ],
+            { json: true, temperature: 0.7, max_tokens: 2000, label: "round-5-critique", traceId, timeoutMs: 25_000 },
+          ),
+          // 3 personas (Round 6) — pre-built above as `personaCalls`
+          ...personaCalls,
+        ];
+        const parallelSettled = await Promise.allSettled(parallelCalls);
+        const critiqueSettled = parallelSettled[0];
+        const personaSettled = parallelSettled.slice(1);
+
+        const critique = critiqueSettled.status === "fulfilled"
+          ? safeParseJSON<Record<string, unknown>>(critiqueSettled.value as string | null) ?? {}
+          : {};
+
+        // ============================================================
+        type PersonaResult = {
+          persona: string;
+          label: string;
+          most_moved: Array<{ field: string; why: string }>;
+          most_disappointed: Array<{ field: string; quote?: string; why: string; rewrite: string }>;
+        };
         const personaResults = personaSettled
-          .filter((s) => s.status === "fulfilled")
-          .map((s) => (s as PromiseFulfilledResult<typeof personaResults[number]>).value);
+          .filter((s): s is PromiseFulfilledResult<PersonaResult> => s.status === "fulfilled")
+          .map((s) => s.value);
         if (personaResults.length < personas.length) {
           console.warn(
             `generate-profile: ${personas.length - personaResults.length} persona(s) failed; continuing with ${personaResults.length} result(s)`,
@@ -930,49 +982,6 @@ Output JSON (only fields that need final change):`;
             };
 
         // ============================================================
-        // MEMORY LAYER — fetch user's past pattern_feedback (agree/disagree)
-        // and inject it into the prompt context for the next generation.
-        // The feedback is fetched BEFORE the LLM pipeline runs, but for
-        // minimal latency we re-fetch here as a quick read.
-        // ============================================================
-        let feedbackContext: { agrees: string[]; disagrees: string[] } = {
-          agrees: [],
-          disagrees: [],
-        };
-        try {
-          const { data: fbRows } = await supabase
-            .from("pattern_feedback")
-            .select("pattern_text, verdict")
-            .eq("user_id", userId)
-            .order("created_at", { ascending: false })
-            .limit(20);
-          if (Array.isArray(fbRows)) {
-            feedbackContext.agrees = fbRows
-              .filter((r) => r.verdict === "agree")
-              .map((r) => String(r.pattern_text ?? ""))
-              .filter(Boolean)
-              .slice(0, 10);
-            feedbackContext.disagrees = fbRows
-              .filter((r) => r.verdict === "disagree")
-              .map((r) => String(r.pattern_text ?? ""))
-              .filter(Boolean)
-              .slice(0, 10);
-          }
-        } catch {
-           /* feedback table may not exist yet; ignore */
-        }
-
-        // Inject the feedback signal into the inference prompt so future
-        // generations can lean into what the user agreed with and away
-        // from what they disagreed with. This is a no-op on the first
-        // generation (no history yet).
-        const feedbackContextBlock =
-          feedbackContext.agrees.length > 0 || feedbackContext.disagrees.length > 0
-            ? lang === "zh"
-              ? `\n\n【用户过去反馈 - 必须参考】\n用户过去同意过的洞察方向（这些方向应该强化）：\n${feedbackContext.agrees.map((s) => `  - ${s}`).join("\n")}\n用户过去否定过的洞察方向（这些方向应该避开或换角度）：\n${feedbackContext.disagrees.map((s) => `  - ${s}`).join("\n")}\n`
-              : `\n\n[User's past feedback — must consider]\nDirections the user agreed with (lean into these):\n${feedbackContext.agrees.map((s) => `  - ${s}`).join("\n")}\nDirections the user disagreed with (avoid or reframe these):\n${feedbackContext.disagrees.map((s) => `  - ${s}`).join("\n")}\n`
-            : "";
-
         const profile_data = {
           version: "v4+",
           scenario,

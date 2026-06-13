@@ -412,11 +412,13 @@ function VenuesSection({
   venues: VenueRow[];
   t: (en: string, zh: string) => string;
 }) {
-  // Sort: by valid_visits desc, then by booking taps
+  // Sort: by valid_visits desc, then by booking taps (call + navigate)
   const sorted = [...venues].sort((a, b) => {
     const v = b.total_valid_visits - a.total_valid_visits;
     if (v !== 0) return v;
-    return b.total_booking_taps - a.total_booking_taps;
+    const bookingA = a.total_call_taps + a.total_navigate_taps;
+    const bookingB = b.total_call_taps + b.total_navigate_taps;
+    return bookingB - bookingA;
   });
   const [showAll, setShowAll] = useState(false);
   const visible = showAll ? sorted : sorted.slice(0, 20);
@@ -467,7 +469,7 @@ function VenuesSection({
                     )}
                   </td>
                   <td className="px-3 py-2 text-right tabular-nums">{v.unique_users}</td>
-                  <td className="px-3 py-2 text-right tabular-nums">{v.total_booking_taps}</td>
+                  <td className="px-3 py-2 text-right tabular-nums">{v.total_call_taps + v.total_navigate_taps}</td>
                   <td className="px-3 py-2 text-right tabular-nums">{v.total_claims}</td>
                   <td className="px-3 py-2 text-right tabular-nums font-semibold text-primary">
                     {v.total_valid_visits}
@@ -620,6 +622,7 @@ function PendingSection({
   onClear: () => void;
   t: (en: string, zh: string) => string;
 }) {
+  const { lang } = useLang();
   const pastDue = rows.filter((r) => r.confirmation_status === "past_due");
   return (
     <section>

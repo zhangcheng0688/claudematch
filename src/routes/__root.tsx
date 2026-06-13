@@ -8,12 +8,11 @@ import {
   Scripts,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
-import { getRequest } from "@tanstack/react-start/server";
 const faviconUrl = "/favicon.png";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
-import { detectLangFromHeader, LanguageProvider } from "../lib/i18n";
+import { getInitialLang, LanguageProvider } from "../lib/i18n";
 import type { Lang } from "../lib/i18n";
 
 function NotFoundComponent() {
@@ -108,18 +107,11 @@ function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
 export const Route = createRootRouteWithContext<{ queryClient: QueryClient; initialLang: Lang }>()({
   // P2-deferred 3: detect the user's preferred language at SSR
   // time so the <html lang> attribute matches the first paint.
-  // Falls back to "en" on SSR-with-no-request (rare; mostly for
-  // static prerender), or in dev where there's no Accept-Language
-  // header.
-  loader: () => {
-    let acceptLanguage: string | null = null;
-    try {
-      const req = getRequest();
-      acceptLanguage = req?.headers.get("accept-language") ?? null;
-    } catch {
-      // not in an SSR request context (e.g. client-side nav); use en
-    }
-    return { initialLang: detectLangFromHeader(acceptLanguage) };
+  // Falls back to "en" on client-side navigation or when the
+  // server function cannot read a request header.
+  loader: async () => {
+    const initialLang = await getInitialLang();
+    return { initialLang };
   },
   head: () => ({
     meta: [

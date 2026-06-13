@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { json, preflight, requireUser, safeError } from "@/lib/api/_helpers.server";
 import { deepseekChat, safeParseJSON } from "@/lib/api/_deepseek.server";
+import { extractInterests, fallbackVenueName } from "@/lib/api/extract-interests";
 
 /**
  * POST /api/ai/meet-plan
@@ -113,7 +114,9 @@ export const Route = createFileRoute("/api/ai/meet-plan")({
           return json({ error: "Invalid JSON body" }, { status: 400 }, request);
         }
         const match_id = body.match_id;
-        const lang = body.lang === "zh" ? "zh" : "en";
+        const lang: "en" | "zh" | "yue" =
+          body.lang === "yue" ? "yue" : body.lang === "en" ? "en" : "zh";
+        const llmLang: "en" | "zh" = lang === "en" ? "en" : "zh";
         if (typeof match_id !== "string" || match_id.length < 8) {
           return json({ error: "match_id is required" }, { status: 400 }, request);
         }
@@ -160,7 +163,7 @@ export const Route = createFileRoute("/api/ai/meet-plan")({
         // LLM system prompt — same as v2, but explicitly notes that
         // venue options are *real* restaurants and the model must
         // pick from them (not invent).
-        const sys = lang === "zh"
+        const sys = llmLang === "zh"
           ? `你是 linQ 的 AI 见面策划师 —— 一个比朋友更懂这两人的角色。
 
 任务：为这对匹配设计 **3 套备选见面方案**（plan A / B / C），让用户能选。
@@ -206,7 +209,7 @@ Strict JSON output.`;
 
         // User prompt: scenario + match details + candidate venue list.
         const candidatesBlock = hasVenues
-          ? (lang === "zh"
+          ? (llmLang === "zh"
             ? `\n\n候选餐厅清单（必须从下面选，**不要**自己编）：\n${candidates
                 .map((v, i) => `[${i}] venue_id=${v.id}\n    name=${v.name}\n    district=${v.district ?? "?"}\n    cuisine=${v.cuisine_tags.join("/")}\n    vibe=${v.vibe_tags.join("/")}\n    price_per_person=${v.price_per_person ?? "?"} 元\n    rating=${v.rating ?? "?"}`)
                 .join("\n\n")}`
@@ -255,7 +258,7 @@ Return JSON of shape:
     }
   ] (exactly 3 plans: A, B, C)
 }
-${lang === "zh" ? "全部用中文表达" : "Express in English"}.`;
+${llmLang === "zh" ? "全部用中文表达" : "Express in English"}.`;
 
         const raw = await deepseekChat(
           [
@@ -307,8 +310,12 @@ ${lang === "zh" ? "全部用中文表达" : "Express in English"}.`;
         // roundtrip from the SPA).
         const venueById = Object.fromEntries(candidates.map((v) => [v.id, v]));
 
-        // Fallback when DeepSeek is down — same as before, but now also
-        // carries the venue lookup so the client can render.
+        // Fallback when DeepSeek is down — try to reflect the user's
+        // actual input + city instead of the generic coffee shop string.
+        const userInput = (myProfile?.profile_data as { input?: string } | null)?.input ?? "";
+        const interests = extractInterests(userInput);
+        const fallbackVenue = fallbackVenueName(myCity, interests, llmLang);
+
         const next = new Date();
         next.setUTCDate(next.getUTCDate() + 3);
         next.setUTCHours(19, 0, 0, 0);
@@ -316,30 +323,30 @@ ${lang === "zh" ? "全部用中文表达" : "Express in English"}.`;
           multi_plan: [
             {
               id: "A",
-              label: lang === "zh" ? "安静型" : "Quiet",
-              description: lang === "zh" ? "适合你们慢热的节奏" : "For your slow-burn rhythm",
+              label: lang === "en" ? "Quiet" : "安静型",
+              description: lang === "en" ? "For your slow-burn rhythm" : "适合你们慢热的节奏",
               venue_options: candidates.slice(0, 1).map((v) => ({
                 venue_id: v.id,
-                why: lang === "zh" ? "环境安静，便于深度交谈" : "Quiet, conducive to depth conversation",
+                why: fallbackVenue ?? (lang === "en" ? "Quiet, conducive to depth conversation" : "环境安静，便于深度交谈"),
                 distance_walking_minutes: 10,
               })),
               activity_design: {
-                why_this_activity: lang === "zh" ? "两人都是慢热型" : "Both introverted",
+                why_this_activity: lang === "en" ? "Both introverted" : "两人都是慢热型",
                 flow: {
-                  "0_30_min": lang === "zh" ? "点单，找位子，从菜单聊起" : "Order, find a seat, start from the menu",
-                  "30_60_min": lang === "zh" ? "聊近期最让你兴奋的事" : "Talk about what excites you lately",
-                  "60_90_min": lang === "zh" ? "自然地收，约定下次" : "Wrap up, plan next time",
+                  "0_30_min": lang === "en" ? "Order, find a seat, start from the menu" : "点单，找位子，从菜单聊起",
+                  "30_60_min": lang === "en" ? "Talk about what excites you lately" : "聊近期最让你兴奋的事",
+                  "60_90_min": lang === "en" ? "Wrap up, plan next time" : "自然地收，约定下次",
                 },
-                backup_if_bored: lang === "zh" ? "换话题：童年食物" : "Switch topic: childhood food",
+                backup_if_bored: lang === "en" ? "Switch topic: childhood food" : "换话题：童年食物",
               },
               time_considerations: {
-                best_window: lang === "zh" ? "周三到周五 19:00-20:30" : "Wed-Fri 7-8:30pm",
-                avoid_window: lang === "zh" ? "周一早上" : "Monday morning",
-                weather_check: lang === "zh" ? "室内" : "Indoor",
+                best_window: lang === "en" ? "Wed-Fri 7-8:30pm" : "周三到周五 19:00-20:30",
+                avoid_window: lang === "en" ? "Monday morning" : "周一早上",
+                weather_check: lang === "en" ? "Indoor" : "室内",
               },
               exit_strategy: {
-                natural_close: lang === "zh" ? "感觉不对就以'还有事'为由" : "If it feels off, mention another commitment",
-                followup_anchor: lang === "zh" ? "约 ta 周末再喝一杯" : "Plan another coffee this weekend",
+                natural_close: lang === "en" ? "If it feels off, mention another commitment" : "感觉不对就以'还有事'为由",
+                followup_anchor: lang === "en" ? "Plan another coffee this weekend" : "约 ta 周末再喝一杯",
               },
             },
           ],

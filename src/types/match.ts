@@ -323,6 +323,12 @@ export type AiMultiPlan = {
   description: string;
   /** 这个 plan 的首选 venue */
   venue_options: AiVenueOption[];
+  /** v3: 活动设计 */
+  activity_design?: AiActivityDesign;
+  /** v3: 时间窗口建议 */
+  time_considerations?: AiTimeConsiderations;
+  /** v3: 结束策略 */
+  exit_strategy?: AiExitStrategy;
 };
 
 /** AI-generated meet-up plan. */

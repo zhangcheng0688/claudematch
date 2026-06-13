@@ -106,7 +106,7 @@ function Nav() {
 }
 
 function Hero() {
-  const { t } = useLang();
+  const { t, lang } = useLang();
   return (
     <section className="relative border-b border-border/60 overflow-hidden">
       <div className="mx-auto max-w-6xl px-5 py-20 sm:px-6 sm:py-28 md:py-40">

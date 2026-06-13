@@ -122,10 +122,10 @@ export const Route = createFileRoute("/api/email/visit-confirm")({
         }
 
         const nowIso = new Date().toISOString();
-        const updateField = verdict === "confirm" ? "confirmed_at" : "denied_at";
+        const updateObj = verdict === "confirm" ? { confirmed_at: nowIso } : { denied_at: nowIso };
         const { error: updErr } = await supabase
           .from("visit_confirmations")
-          .update({ [updateField]: nowIso })
+          .update(updateObj)
           .eq("id", row.id);
 
         if (updErr) {

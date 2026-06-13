@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
+import { createServerFn } from "@tanstack/react-start";
 
 export type Lang = "en" | "zh" | "yue";
 
@@ -367,6 +368,19 @@ export function detectLangFromHeader(acceptLanguage: string | null | undefined):
   if (first.startsWith("zh")) return "zh";
   return "en";
 }
+
+/**
+ * SSR-only language detection. The handler body runs on the server and reads
+ * the incoming request's Accept-Language header. Because the server-only
+ * import is awaited inside the handler, it is tree-shaken from the client
+ * bundle and avoids TanStack Start's import-protection error.
+ */
+export const getInitialLang = createServerFn({ method: "GET" }).handler(async () => {
+  const { getRequest } = await import("@tanstack/react-start/server");
+  const req = getRequest();
+  const acceptLanguage = req?.headers.get("accept-language") ?? null;
+  return detectLangFromHeader(acceptLanguage);
+});
 
 export function LanguageProvider({
   children,

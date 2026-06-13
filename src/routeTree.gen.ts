@@ -13,11 +13,14 @@ import { Route as TrustRouteImport } from './routes/trust'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as FounderRouteImport } from './routes/founder'
 import { Route as DpaRouteImport } from './routes/dpa'
 import { Route as CookiesRouteImport } from './routes/cookies'
+import { Route as BlogRouteImport } from './routes/blog'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthWxCallbackRouteImport } from './routes/auth/wx-callback'
 import { Route as ApiWaitlistRouteImport } from './routes/api/waitlist'
 import { Route as ApiStatsRouteImport } from './routes/api/stats'
 import { Route as ApiMatchRouteImport } from './routes/api/match'
@@ -27,15 +30,27 @@ import { Route as AuthenticatedStartRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedMatchRouteImport } from './routes/_authenticated/match'
+import { Route as ApiVenuesTrackRouteImport } from './routes/api/venues/track'
+import { Route as ApiVenuesLookupRouteImport } from './routes/api/venues/lookup'
+import { Route as ApiUserSetCityRouteImport } from './routes/api/user/set-city'
 import { Route as ApiUserMeRouteImport } from './routes/api/user/me'
 import { Route as ApiMatchIdRouteImport } from './routes/api/match/$id'
+import { Route as ApiFeedbackPatternRouteImport } from './routes/api/feedback/pattern'
+import { Route as ApiFeedbackNpsRouteImport } from './routes/api/feedback/nps'
+import { Route as ApiEmailVisitConfirmRouteImport } from './routes/api/email/visit-confirm'
+import { Route as ApiCronForceWeeklyDigestRouteImport } from './routes/api/cron/force-weekly-digest'
+import { Route as ApiCronDrainRouteImport } from './routes/api/cron/drain'
 import { Route as ApiAiMeetPlanRouteImport } from './routes/api/ai/meet-plan'
 import { Route as ApiAiMatchRouteImport } from './routes/api/ai/match'
 import { Route as ApiAiGenerateProfileRouteImport } from './routes/api/ai/generate-profile'
+import { Route as ApiAdminReconciliationRouteImport } from './routes/api/admin/reconciliation'
 import { Route as AuthenticatedMatchIdRouteImport } from './routes/_authenticated/match.$id'
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
+import { Route as ApiAuthWechatUnbindRouteImport } from './routes/api/auth/wechat/unbind'
+import { Route as ApiAuthWechatStartRouteImport } from './routes/api/auth/wechat/start'
+import { Route as ApiAuthWechatCallbackRouteImport } from './routes/api/auth/wechat/callback'
 
 const TrustRoute = TrustRouteImport.update({
   id: '/trust',
@@ -57,6 +72,11 @@ const PrivacyRoute = PrivacyRouteImport.update({
   path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
+const FounderRoute = FounderRouteImport.update({
+  id: '/founder',
+  path: '/founder',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DpaRoute = DpaRouteImport.update({
   id: '/dpa',
   path: '/dpa',
@@ -65,6 +85,11 @@ const DpaRoute = DpaRouteImport.update({
 const CookiesRoute = CookiesRouteImport.update({
   id: '/cookies',
   path: '/cookies',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const BlogRoute = BlogRouteImport.update({
+  id: '/blog',
+  path: '/blog',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthRoute = AuthRouteImport.update({
@@ -80,6 +105,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const AuthWxCallbackRoute = AuthWxCallbackRouteImport.update({
+  id: '/wx-callback',
+  path: '/wx-callback',
+  getParentRoute: () => AuthRoute,
 } as any)
 const ApiWaitlistRoute = ApiWaitlistRouteImport.update({
   id: '/api/waitlist',
@@ -126,6 +156,21 @@ const AuthenticatedMatchRoute = AuthenticatedMatchRouteImport.update({
   path: '/match',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const ApiVenuesTrackRoute = ApiVenuesTrackRouteImport.update({
+  id: '/api/venues/track',
+  path: '/api/venues/track',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiVenuesLookupRoute = ApiVenuesLookupRouteImport.update({
+  id: '/api/venues/lookup',
+  path: '/api/venues/lookup',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiUserSetCityRoute = ApiUserSetCityRouteImport.update({
+  id: '/api/user/set-city',
+  path: '/api/user/set-city',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiUserMeRoute = ApiUserMeRouteImport.update({
   id: '/api/user/me',
   path: '/api/user/me',
@@ -135,6 +180,32 @@ const ApiMatchIdRoute = ApiMatchIdRouteImport.update({
   id: '/$id',
   path: '/$id',
   getParentRoute: () => ApiMatchRoute,
+} as any)
+const ApiFeedbackPatternRoute = ApiFeedbackPatternRouteImport.update({
+  id: '/api/feedback/pattern',
+  path: '/api/feedback/pattern',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiFeedbackNpsRoute = ApiFeedbackNpsRouteImport.update({
+  id: '/api/feedback/nps',
+  path: '/api/feedback/nps',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiEmailVisitConfirmRoute = ApiEmailVisitConfirmRouteImport.update({
+  id: '/api/email/visit-confirm',
+  path: '/api/email/visit-confirm',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiCronForceWeeklyDigestRoute =
+  ApiCronForceWeeklyDigestRouteImport.update({
+    id: '/api/cron/force-weekly-digest',
+    path: '/api/cron/force-weekly-digest',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiCronDrainRoute = ApiCronDrainRouteImport.update({
+  id: '/api/cron/drain',
+  path: '/api/cron/drain',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiAiMeetPlanRoute = ApiAiMeetPlanRouteImport.update({
   id: '/api/ai/meet-plan',
@@ -149,6 +220,11 @@ const ApiAiMatchRoute = ApiAiMatchRouteImport.update({
 const ApiAiGenerateProfileRoute = ApiAiGenerateProfileRouteImport.update({
   id: '/api/ai/generate-profile',
   path: '/api/ai/generate-profile',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAdminReconciliationRoute = ApiAdminReconciliationRouteImport.update({
+  id: '/api/admin/reconciliation',
+  path: '/api/admin/reconciliation',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AuthenticatedMatchIdRoute = AuthenticatedMatchIdRouteImport.update({
@@ -172,12 +248,29 @@ const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
   path: '/lovable/email/auth/preview',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiAuthWechatUnbindRoute = ApiAuthWechatUnbindRouteImport.update({
+  id: '/api/auth/wechat/unbind',
+  path: '/api/auth/wechat/unbind',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAuthWechatStartRoute = ApiAuthWechatStartRouteImport.update({
+  id: '/api/auth/wechat/start',
+  path: '/api/auth/wechat/start',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAuthWechatCallbackRoute = ApiAuthWechatCallbackRouteImport.update({
+  id: '/api/auth/wechat/callback',
+  path: '/api/auth/wechat/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
-  '/auth': typeof AuthRoute
+  '/auth': typeof AuthRouteWithChildren
+  '/blog': typeof BlogRoute
   '/cookies': typeof CookiesRoute
   '/dpa': typeof DpaRoute
+  '/founder': typeof FounderRoute
   '/privacy': typeof PrivacyRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
@@ -191,21 +284,36 @@ export interface FileRoutesByFullPath {
   '/api/match': typeof ApiMatchRouteWithChildren
   '/api/stats': typeof ApiStatsRoute
   '/api/waitlist': typeof ApiWaitlistRoute
+  '/auth/wx-callback': typeof AuthWxCallbackRoute
   '/match/$id': typeof AuthenticatedMatchIdRoute
+  '/api/admin/reconciliation': typeof ApiAdminReconciliationRoute
   '/api/ai/generate-profile': typeof ApiAiGenerateProfileRoute
   '/api/ai/match': typeof ApiAiMatchRoute
   '/api/ai/meet-plan': typeof ApiAiMeetPlanRoute
+  '/api/cron/drain': typeof ApiCronDrainRoute
+  '/api/cron/force-weekly-digest': typeof ApiCronForceWeeklyDigestRoute
+  '/api/email/visit-confirm': typeof ApiEmailVisitConfirmRoute
+  '/api/feedback/nps': typeof ApiFeedbackNpsRoute
+  '/api/feedback/pattern': typeof ApiFeedbackPatternRoute
   '/api/match/$id': typeof ApiMatchIdRoute
   '/api/user/me': typeof ApiUserMeRoute
+  '/api/user/set-city': typeof ApiUserSetCityRoute
+  '/api/venues/lookup': typeof ApiVenuesLookupRoute
+  '/api/venues/track': typeof ApiVenuesTrackRoute
+  '/api/auth/wechat/callback': typeof ApiAuthWechatCallbackRoute
+  '/api/auth/wechat/start': typeof ApiAuthWechatStartRoute
+  '/api/auth/wechat/unbind': typeof ApiAuthWechatUnbindRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
-  '/auth': typeof AuthRoute
+  '/auth': typeof AuthRouteWithChildren
+  '/blog': typeof BlogRoute
   '/cookies': typeof CookiesRoute
   '/dpa': typeof DpaRoute
+  '/founder': typeof FounderRoute
   '/privacy': typeof PrivacyRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
@@ -219,12 +327,25 @@ export interface FileRoutesByTo {
   '/api/match': typeof ApiMatchRouteWithChildren
   '/api/stats': typeof ApiStatsRoute
   '/api/waitlist': typeof ApiWaitlistRoute
+  '/auth/wx-callback': typeof AuthWxCallbackRoute
   '/match/$id': typeof AuthenticatedMatchIdRoute
+  '/api/admin/reconciliation': typeof ApiAdminReconciliationRoute
   '/api/ai/generate-profile': typeof ApiAiGenerateProfileRoute
   '/api/ai/match': typeof ApiAiMatchRoute
   '/api/ai/meet-plan': typeof ApiAiMeetPlanRoute
+  '/api/cron/drain': typeof ApiCronDrainRoute
+  '/api/cron/force-weekly-digest': typeof ApiCronForceWeeklyDigestRoute
+  '/api/email/visit-confirm': typeof ApiEmailVisitConfirmRoute
+  '/api/feedback/nps': typeof ApiFeedbackNpsRoute
+  '/api/feedback/pattern': typeof ApiFeedbackPatternRoute
   '/api/match/$id': typeof ApiMatchIdRoute
   '/api/user/me': typeof ApiUserMeRoute
+  '/api/user/set-city': typeof ApiUserSetCityRoute
+  '/api/venues/lookup': typeof ApiVenuesLookupRoute
+  '/api/venues/track': typeof ApiVenuesTrackRoute
+  '/api/auth/wechat/callback': typeof ApiAuthWechatCallbackRoute
+  '/api/auth/wechat/start': typeof ApiAuthWechatStartRoute
+  '/api/auth/wechat/unbind': typeof ApiAuthWechatUnbindRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -233,9 +354,11 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
-  '/auth': typeof AuthRoute
+  '/auth': typeof AuthRouteWithChildren
+  '/blog': typeof BlogRoute
   '/cookies': typeof CookiesRoute
   '/dpa': typeof DpaRoute
+  '/founder': typeof FounderRoute
   '/privacy': typeof PrivacyRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
@@ -249,12 +372,25 @@ export interface FileRoutesById {
   '/api/match': typeof ApiMatchRouteWithChildren
   '/api/stats': typeof ApiStatsRoute
   '/api/waitlist': typeof ApiWaitlistRoute
+  '/auth/wx-callback': typeof AuthWxCallbackRoute
   '/_authenticated/match/$id': typeof AuthenticatedMatchIdRoute
+  '/api/admin/reconciliation': typeof ApiAdminReconciliationRoute
   '/api/ai/generate-profile': typeof ApiAiGenerateProfileRoute
   '/api/ai/match': typeof ApiAiMatchRoute
   '/api/ai/meet-plan': typeof ApiAiMeetPlanRoute
+  '/api/cron/drain': typeof ApiCronDrainRoute
+  '/api/cron/force-weekly-digest': typeof ApiCronForceWeeklyDigestRoute
+  '/api/email/visit-confirm': typeof ApiEmailVisitConfirmRoute
+  '/api/feedback/nps': typeof ApiFeedbackNpsRoute
+  '/api/feedback/pattern': typeof ApiFeedbackPatternRoute
   '/api/match/$id': typeof ApiMatchIdRoute
   '/api/user/me': typeof ApiUserMeRoute
+  '/api/user/set-city': typeof ApiUserSetCityRoute
+  '/api/venues/lookup': typeof ApiVenuesLookupRoute
+  '/api/venues/track': typeof ApiVenuesTrackRoute
+  '/api/auth/wechat/callback': typeof ApiAuthWechatCallbackRoute
+  '/api/auth/wechat/start': typeof ApiAuthWechatStartRoute
+  '/api/auth/wechat/unbind': typeof ApiAuthWechatUnbindRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -264,8 +400,10 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/auth'
+    | '/blog'
     | '/cookies'
     | '/dpa'
+    | '/founder'
     | '/privacy'
     | '/sitemap.xml'
     | '/terms'
@@ -279,12 +417,25 @@ export interface FileRouteTypes {
     | '/api/match'
     | '/api/stats'
     | '/api/waitlist'
+    | '/auth/wx-callback'
     | '/match/$id'
+    | '/api/admin/reconciliation'
     | '/api/ai/generate-profile'
     | '/api/ai/match'
     | '/api/ai/meet-plan'
+    | '/api/cron/drain'
+    | '/api/cron/force-weekly-digest'
+    | '/api/email/visit-confirm'
+    | '/api/feedback/nps'
+    | '/api/feedback/pattern'
     | '/api/match/$id'
     | '/api/user/me'
+    | '/api/user/set-city'
+    | '/api/venues/lookup'
+    | '/api/venues/track'
+    | '/api/auth/wechat/callback'
+    | '/api/auth/wechat/start'
+    | '/api/auth/wechat/unbind'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
@@ -292,8 +443,10 @@ export interface FileRouteTypes {
   to:
     | '/'
     | '/auth'
+    | '/blog'
     | '/cookies'
     | '/dpa'
+    | '/founder'
     | '/privacy'
     | '/sitemap.xml'
     | '/terms'
@@ -307,12 +460,25 @@ export interface FileRouteTypes {
     | '/api/match'
     | '/api/stats'
     | '/api/waitlist'
+    | '/auth/wx-callback'
     | '/match/$id'
+    | '/api/admin/reconciliation'
     | '/api/ai/generate-profile'
     | '/api/ai/match'
     | '/api/ai/meet-plan'
+    | '/api/cron/drain'
+    | '/api/cron/force-weekly-digest'
+    | '/api/email/visit-confirm'
+    | '/api/feedback/nps'
+    | '/api/feedback/pattern'
     | '/api/match/$id'
     | '/api/user/me'
+    | '/api/user/set-city'
+    | '/api/venues/lookup'
+    | '/api/venues/track'
+    | '/api/auth/wechat/callback'
+    | '/api/auth/wechat/start'
+    | '/api/auth/wechat/unbind'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
@@ -321,8 +487,10 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/auth'
+    | '/blog'
     | '/cookies'
     | '/dpa'
+    | '/founder'
     | '/privacy'
     | '/sitemap.xml'
     | '/terms'
@@ -336,12 +504,25 @@ export interface FileRouteTypes {
     | '/api/match'
     | '/api/stats'
     | '/api/waitlist'
+    | '/auth/wx-callback'
     | '/_authenticated/match/$id'
+    | '/api/admin/reconciliation'
     | '/api/ai/generate-profile'
     | '/api/ai/match'
     | '/api/ai/meet-plan'
+    | '/api/cron/drain'
+    | '/api/cron/force-weekly-digest'
+    | '/api/email/visit-confirm'
+    | '/api/feedback/nps'
+    | '/api/feedback/pattern'
     | '/api/match/$id'
     | '/api/user/me'
+    | '/api/user/set-city'
+    | '/api/venues/lookup'
+    | '/api/venues/track'
+    | '/api/auth/wechat/callback'
+    | '/api/auth/wechat/start'
+    | '/api/auth/wechat/unbind'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
@@ -350,9 +531,11 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
-  AuthRoute: typeof AuthRoute
+  AuthRoute: typeof AuthRouteWithChildren
+  BlogRoute: typeof BlogRoute
   CookiesRoute: typeof CookiesRoute
   DpaRoute: typeof DpaRoute
+  FounderRoute: typeof FounderRoute
   PrivacyRoute: typeof PrivacyRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsRoute: typeof TermsRoute
@@ -362,10 +545,22 @@ export interface RootRouteChildren {
   ApiMatchRoute: typeof ApiMatchRouteWithChildren
   ApiStatsRoute: typeof ApiStatsRoute
   ApiWaitlistRoute: typeof ApiWaitlistRoute
+  ApiAdminReconciliationRoute: typeof ApiAdminReconciliationRoute
   ApiAiGenerateProfileRoute: typeof ApiAiGenerateProfileRoute
   ApiAiMatchRoute: typeof ApiAiMatchRoute
   ApiAiMeetPlanRoute: typeof ApiAiMeetPlanRoute
+  ApiCronDrainRoute: typeof ApiCronDrainRoute
+  ApiCronForceWeeklyDigestRoute: typeof ApiCronForceWeeklyDigestRoute
+  ApiEmailVisitConfirmRoute: typeof ApiEmailVisitConfirmRoute
+  ApiFeedbackNpsRoute: typeof ApiFeedbackNpsRoute
+  ApiFeedbackPatternRoute: typeof ApiFeedbackPatternRoute
   ApiUserMeRoute: typeof ApiUserMeRoute
+  ApiUserSetCityRoute: typeof ApiUserSetCityRoute
+  ApiVenuesLookupRoute: typeof ApiVenuesLookupRoute
+  ApiVenuesTrackRoute: typeof ApiVenuesTrackRoute
+  ApiAuthWechatCallbackRoute: typeof ApiAuthWechatCallbackRoute
+  ApiAuthWechatStartRoute: typeof ApiAuthWechatStartRoute
+  ApiAuthWechatUnbindRoute: typeof ApiAuthWechatUnbindRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
@@ -401,6 +596,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/founder': {
+      id: '/founder'
+      path: '/founder'
+      fullPath: '/founder'
+      preLoaderRoute: typeof FounderRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/dpa': {
       id: '/dpa'
       path: '/dpa'
@@ -413,6 +615,13 @@ declare module '@tanstack/react-router' {
       path: '/cookies'
       fullPath: '/cookies'
       preLoaderRoute: typeof CookiesRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/blog': {
+      id: '/blog'
+      path: '/blog'
+      fullPath: '/blog'
+      preLoaderRoute: typeof BlogRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/auth': {
@@ -435,6 +644,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/auth/wx-callback': {
+      id: '/auth/wx-callback'
+      path: '/wx-callback'
+      fullPath: '/auth/wx-callback'
+      preLoaderRoute: typeof AuthWxCallbackRouteImport
+      parentRoute: typeof AuthRoute
     }
     '/api/waitlist': {
       id: '/api/waitlist'
@@ -499,6 +715,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMatchRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/api/venues/track': {
+      id: '/api/venues/track'
+      path: '/api/venues/track'
+      fullPath: '/api/venues/track'
+      preLoaderRoute: typeof ApiVenuesTrackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/venues/lookup': {
+      id: '/api/venues/lookup'
+      path: '/api/venues/lookup'
+      fullPath: '/api/venues/lookup'
+      preLoaderRoute: typeof ApiVenuesLookupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/user/set-city': {
+      id: '/api/user/set-city'
+      path: '/api/user/set-city'
+      fullPath: '/api/user/set-city'
+      preLoaderRoute: typeof ApiUserSetCityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/user/me': {
       id: '/api/user/me'
       path: '/api/user/me'
@@ -512,6 +749,41 @@ declare module '@tanstack/react-router' {
       fullPath: '/api/match/$id'
       preLoaderRoute: typeof ApiMatchIdRouteImport
       parentRoute: typeof ApiMatchRoute
+    }
+    '/api/feedback/pattern': {
+      id: '/api/feedback/pattern'
+      path: '/api/feedback/pattern'
+      fullPath: '/api/feedback/pattern'
+      preLoaderRoute: typeof ApiFeedbackPatternRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/feedback/nps': {
+      id: '/api/feedback/nps'
+      path: '/api/feedback/nps'
+      fullPath: '/api/feedback/nps'
+      preLoaderRoute: typeof ApiFeedbackNpsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/email/visit-confirm': {
+      id: '/api/email/visit-confirm'
+      path: '/api/email/visit-confirm'
+      fullPath: '/api/email/visit-confirm'
+      preLoaderRoute: typeof ApiEmailVisitConfirmRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/cron/force-weekly-digest': {
+      id: '/api/cron/force-weekly-digest'
+      path: '/api/cron/force-weekly-digest'
+      fullPath: '/api/cron/force-weekly-digest'
+      preLoaderRoute: typeof ApiCronForceWeeklyDigestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/cron/drain': {
+      id: '/api/cron/drain'
+      path: '/api/cron/drain'
+      fullPath: '/api/cron/drain'
+      preLoaderRoute: typeof ApiCronDrainRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/ai/meet-plan': {
       id: '/api/ai/meet-plan'
@@ -532,6 +804,13 @@ declare module '@tanstack/react-router' {
       path: '/api/ai/generate-profile'
       fullPath: '/api/ai/generate-profile'
       preLoaderRoute: typeof ApiAiGenerateProfileRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/admin/reconciliation': {
+      id: '/api/admin/reconciliation'
+      path: '/api/admin/reconciliation'
+      fullPath: '/api/admin/reconciliation'
+      preLoaderRoute: typeof ApiAdminReconciliationRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/match/$id': {
@@ -560,6 +839,27 @@ declare module '@tanstack/react-router' {
       path: '/lovable/email/auth/preview'
       fullPath: '/lovable/email/auth/preview'
       preLoaderRoute: typeof LovableEmailAuthPreviewRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/auth/wechat/unbind': {
+      id: '/api/auth/wechat/unbind'
+      path: '/api/auth/wechat/unbind'
+      fullPath: '/api/auth/wechat/unbind'
+      preLoaderRoute: typeof ApiAuthWechatUnbindRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/auth/wechat/start': {
+      id: '/api/auth/wechat/start'
+      path: '/api/auth/wechat/start'
+      fullPath: '/api/auth/wechat/start'
+      preLoaderRoute: typeof ApiAuthWechatStartRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/auth/wechat/callback': {
+      id: '/api/auth/wechat/callback'
+      path: '/api/auth/wechat/callback'
+      fullPath: '/api/auth/wechat/callback'
+      preLoaderRoute: typeof ApiAuthWechatCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -593,6 +893,16 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
 const AuthenticatedRouteRouteWithChildren =
   AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
 
+interface AuthRouteChildren {
+  AuthWxCallbackRoute: typeof AuthWxCallbackRoute
+}
+
+const AuthRouteChildren: AuthRouteChildren = {
+  AuthWxCallbackRoute: AuthWxCallbackRoute,
+}
+
+const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
+
 interface ApiMatchRouteChildren {
   ApiMatchIdRoute: typeof ApiMatchIdRoute
 }
@@ -608,9 +918,11 @@ const ApiMatchRouteWithChildren = ApiMatchRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
-  AuthRoute: AuthRoute,
+  AuthRoute: AuthRouteWithChildren,
+  BlogRoute: BlogRoute,
   CookiesRoute: CookiesRoute,
   DpaRoute: DpaRoute,
+  FounderRoute: FounderRoute,
   PrivacyRoute: PrivacyRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsRoute: TermsRoute,
@@ -620,10 +932,22 @@ const rootRouteChildren: RootRouteChildren = {
   ApiMatchRoute: ApiMatchRouteWithChildren,
   ApiStatsRoute: ApiStatsRoute,
   ApiWaitlistRoute: ApiWaitlistRoute,
+  ApiAdminReconciliationRoute: ApiAdminReconciliationRoute,
   ApiAiGenerateProfileRoute: ApiAiGenerateProfileRoute,
   ApiAiMatchRoute: ApiAiMatchRoute,
   ApiAiMeetPlanRoute: ApiAiMeetPlanRoute,
+  ApiCronDrainRoute: ApiCronDrainRoute,
+  ApiCronForceWeeklyDigestRoute: ApiCronForceWeeklyDigestRoute,
+  ApiEmailVisitConfirmRoute: ApiEmailVisitConfirmRoute,
+  ApiFeedbackNpsRoute: ApiFeedbackNpsRoute,
+  ApiFeedbackPatternRoute: ApiFeedbackPatternRoute,
   ApiUserMeRoute: ApiUserMeRoute,
+  ApiUserSetCityRoute: ApiUserSetCityRoute,
+  ApiVenuesLookupRoute: ApiVenuesLookupRoute,
+  ApiVenuesTrackRoute: ApiVenuesTrackRoute,
+  ApiAuthWechatCallbackRoute: ApiAuthWechatCallbackRoute,
+  ApiAuthWechatStartRoute: ApiAuthWechatStartRoute,
+  ApiAuthWechatUnbindRoute: ApiAuthWechatUnbindRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,

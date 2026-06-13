@@ -38,6 +38,7 @@ export const Route = createFileRoute("/api/ai/match")({
           typeof body.scenario === "string" && VALID_SCENARIOS.has(body.scenario)
             ? (body.scenario as "business" | "dating" | "partner")
             : "dating";
+        const lang: "zh" | "en" = body.lang === "en" ? "en" : "zh";
 
         // 1) Load my latest AI profile and registered email.
         const { data: latestProfile } = await supabase

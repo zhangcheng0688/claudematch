@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { LanguageProvider, useLang } from "@/lib/i18n";
 import { AppShell } from "@/components/AppShell";
 import { authedFetch } from "@/lib/api/authed-fetch";
@@ -14,6 +14,8 @@ import {
   Sparkles,
   Loader2,
   CheckCircle2,
+  ThumbsUp,
+  ThumbsDown,
 } from "lucide-react";
 
 export const Route = createFileRoute("/_authenticated/start")({
