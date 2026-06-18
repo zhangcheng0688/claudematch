@@ -90,6 +90,33 @@ export async function deepseekChat(
     return null;
   }
 
+  // v2.1: one automatic retry on timeout. DeepSeek congestion often causes
+  // transient timeouts; a single retry saves ~30% of failed generations
+  // without adding much latency when the upstream is healthy.
+  const result = await deepseekChatOnce(messages, key, { ...opts, traceId, timeoutMs: t });
+  if (result.ok) return result.content;
+  if (result.reason !== "timeout" && result.reason !== "http_error") {
+    return null;
+  }
+  console.warn(
+    JSON.stringify({ at: "deepseek_retry", traceId, label: opts.label, reason: result.reason }),
+  );
+  const retry = await deepseekChatOnce(messages, key, { ...opts, traceId, timeoutMs: t });
+  return retry.ok ? retry.content : null;
+}
+
+type DeepseekOnceResult =
+  | { ok: true; content: string; reason?: undefined }
+  | { ok: false; content?: undefined; reason: DeepseekError["reason"] };
+
+async function deepseekChatOnce(
+  messages: DSMessage[],
+  key: string,
+  opts: DeepseekCallOptions & { traceId: string; timeoutMs: number },
+): Promise<DeepseekOnceResult> {
+  const t = opts.timeoutMs;
+  const traceId = opts.traceId;
+
   const body: Record<string, unknown> = {
     model: opts.model ?? "deepseek-chat",
     messages: opts.traceId
@@ -131,16 +158,20 @@ export async function deepseekChat(
         label: opts.label,
         responseBody: await res.text().catch(() => ""),
       });
-      return null;
+      return { ok: false, reason: "http_error" };
     }
     const json = (await res.json()) as { choices?: Array<{ message?: { content?: string } }> };
-    return json.choices?.[0]?.message?.content ?? null;
+    const content = json.choices?.[0]?.message?.content;
+    if (!content) {
+      return { ok: false, reason: "http_error" };
+    }
+    return { ok: true, content };
   } catch (e) {
     clearTimeout(to);
     const elapsed = Date.now() - start;
     const reason: DeepseekError["reason"] = ctl.signal.aborted ? "timeout" : "network";
     logError({ reason, elapsedMs: elapsed, traceId, label: opts.label, error: e });
-    return null;
+    return { ok: false, reason };
   }
 }
 

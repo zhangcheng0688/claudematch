@@ -42,6 +42,7 @@ function StartPage() {
   const [loading, setLoading] = useState<null | "profile" | "match" | "plan">(null);
   const [err, setErr] = useState<string | null>(null);
   const [waitlistMsg, setWaitlistMsg] = useState<string | null>(null);
+  const [matchedType, setMatchedType] = useState<"real" | "persona" | null>(null);
   // 漏洞 C: city is a required field — feeding it to the meet-plan LLM
   // gives us real restaurants in the right city (no more 深圳 fallback
   // for 上海 users). Stored on the user_profiles row so it survives
@@ -132,18 +133,21 @@ function StartPage() {
     setPlan(null);
     setActiveMatch(null);
     setMatches([]);
+    setMatchedType(null);
     setLoading("match");
     try {
       const res = await authedFetch<{
         data: MatchRow[];
         plan?: MeetPlan;
         waitlisted?: boolean;
+        matched_type?: "real" | "persona";
         message?: string;
       }>("/api/ai/match", {
         method: "POST",
         body: JSON.stringify({ scenario, lang }),
       });
       setMatches(res.data ?? []);
+      setMatchedType(res.matched_type ?? null);
       if (res.waitlisted) {
         setWaitlistMsg(res.message ?? t("暂无匹配，已加入等待池。", "暂无匹配，已加入等待池。", "暫無配對，已加入等候池。"));
       } else if (res.data?.[0]) {
@@ -335,11 +339,17 @@ function StartPage() {
             ) : (
               <>
                 <p className="text-sm text-muted-foreground">
-                  {t(
-                    "linQ matched you 1:1. The meet-up plan is sent to both inboxes.",
-                    "linQ 已为你完成 1 对 1 匹配，见面方案已同步发送至双方邮箱。",
-                    "linQ 已經幫你完成 1 對 1 配對，見面方案已經 send 咗俾雙方。",
-                  )}
+                  {matchedType === "persona"
+                    ? t(
+                        "linQ matched you with an AI character so you can experience the full flow. Real users are prioritized once they join.",
+                        "linQ 为你匹配了一位 AI 角色，可先体验完整流程。真实用户加入后会优先匹配真人。",
+                        "linQ 幫你配咗一位 AI 角色，可以先體驗成個流程。真實用戶加入後會優先配對真人。",
+                      )
+                    : t(
+                        "linQ matched you 1:1. The meet-up plan is sent to both inboxes.",
+                        "linQ 已为你完成 1 对 1 匹配，见面方案已同步发送至双方邮箱。",
+                        "linQ 已經幫你完成 1 對 1 配對，見面方案已經 send 咗俾雙方。",
+                      )}
                 </p>
                 <div className="space-y-4">
                   {matches.map((m) => (
@@ -364,6 +374,7 @@ function StartPage() {
                   setPlan(null);
                   setActiveMatch(null);
                   setWaitlistMsg(null);
+                  setMatchedType(null);
                 }}
                 className="text-xs text-muted-foreground hover:text-foreground"
               >

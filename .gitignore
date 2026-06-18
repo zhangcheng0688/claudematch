@@ -35,3 +35,17 @@ dist-ssr
 .env
 .env.local
 .env.*.local
+
+# Project-specific scratch / non-source directories
+.trae/
+ai-market-analysis-2022-2025/
+claudematch-concept/
+claudematch-创意产物.html
+nasdaq-investment-guide/
+nasdaq-investment-guide.pptx
+《财富捷径》读书分享.pptx
+共同基金常识与指数基金投资指南.pptx
+财务分析报告/
+
+# Temporary transpile artifacts in scripts/output
+scripts/output/*.mjs

@@ -1,0 +1,4 @@
+# Ignore everything in this directory except committed SQL dumps and this file.
+*
+!.gitignore
+!*.sql
