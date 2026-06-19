@@ -15,6 +15,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { json, preflight, requireUser, safeError } from "@/lib/api/_helpers.server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import { geocodeCity } from "@/lib/api/_geo.server";
 
 const VALID_CITIES = new Set(["shenzhen", "shanghai"]);
 
@@ -52,13 +53,18 @@ export const Route = createFileRoute("/api/user/set-city")({
           .limit(1)
           .maybeSingle();
 
+        // Resolve city coordinates via AMap (or fallback centroid).
+        const coords = await geocodeCity(city);
+
         if (latest?.id) {
           const existing = (latest.profile_data as Record<string, unknown> | null) ?? {};
           const { error } = await supabaseAdmin
             .from("user_profiles")
             .update({
               profile_data: { ...existing, city } as never,
-            })
+              lat: coords.lat,
+              lng: coords.lng,
+            } as never)
             .eq("id", latest.id);
           if (error) return json({ error: safeError(error) }, { status: 500 }, request);
         } else {
@@ -73,11 +79,17 @@ export const Route = createFileRoute("/api/user/set-city")({
           const { error } = await supabaseAdmin.from("user_profiles").insert({
             user_id: userId,
             profile_data: { city } as never,
-          });
+            lat: coords.lat,
+            lng: coords.lng,
+          } as never);
           if (error) return json({ error: safeError(error) }, { status: 500 }, request);
         }
 
-        return json({ data: { city } }, undefined, request);
+        return json(
+          { data: { city, lat: coords.lat, lng: coords.lng, geo_source: coords.source } },
+          undefined,
+          request,
+        );
       },
     },
   },

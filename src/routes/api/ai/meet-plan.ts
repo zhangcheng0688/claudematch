@@ -1,7 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { json, preflight, requireUser, safeError } from "@/lib/api/_helpers.server";
+import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { deepseekChat, safeParseJSON } from "@/lib/api/_deepseek.server";
 import { extractInterests, fallbackVenueName } from "@/lib/api/extract-interests";
+import { geocodeCity, getCityCentroid, haversineKm, isVenueOpenAt, kmToWalkingMinutes, midpoint } from "@/lib/api/_geo.server";
 
 /**
  * POST /api/ai/meet-plan
@@ -38,64 +40,62 @@ type VenueCandidate = {
   name: string;
   district: string | null;
   address: string | null;
+  lat: number;
+  lng: number;
   cuisine_tags: string[];
   vibe_tags: string[];
   price_per_person: number | null;
   rating: number | null;
+  opening_hours: string | null;
+  distance_km: number;
 };
 
-async function loadVenuesForCity(
-  supabase: ReturnType<typeof Object>,
+async function loadVenuesNearMidpoint(
   city: string,
+  center: { lat: number; lng: number },
   preferredVibes: string[],
+  planTime: Date,
 ): Promise<VenueCandidate[]> {
-  // Step 1: venues that match the vibe (if any)
-  // Step 2: top up with random sample to VENUE_SAMPLE_SIZE
-  // We use a service-role client bypass to read venues — RLS blocks
-  // the user JWT from reading this table (no public policies).
-  // requireUser() above gives us the per-user `supabase`; we need
-  // the admin client for the venues table read.
-  // We import it lazily to keep the import surface small.
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-  const ordered: VenueCandidate[] = [];
-  const seenIds = new Set<string>();
+  const { data: nearby } = await (supabaseAdmin.rpc as any)("nearby_venues", {
+    p_city: city,
+    p_lat: center.lat,
+    p_lng: center.lng,
+    p_max_km: 10,
+    p_limit: 60,
+  });
 
-  if (preferredVibes.length > 0) {
-    const { data: vibeMatches } = await supabaseAdmin
-      .from("venues")
-      .select("id, name, district, address, cuisine_tags, vibe_tags, price_per_person, rating")
-      .eq("city", city)
-      .eq("is_active", true)
-      .overlaps("vibe_tags", preferredVibes) // any vibe match
-      .limit(20);
-    for (const v of vibeMatches ?? []) {
-      if (seenIds.has(v.id)) continue;
-      seenIds.add(v.id);
-      ordered.push(v as VenueCandidate);
-    }
-  }
+  const rows = ((nearby ?? []) as Array<Record<string, unknown>>).map((v) => ({
+    id: String(v.id),
+    name: String(v.name),
+    district: v.district ? String(v.district) : null,
+    address: v.address ? String(v.address) : null,
+    lat: Number(v.lat),
+    lng: Number(v.lng),
+    cuisine_tags: Array.isArray(v.cuisine_tags) ? (v.cuisine_tags as string[]) : [],
+    vibe_tags: Array.isArray(v.vibe_tags) ? (v.vibe_tags as string[]) : [],
+    price_per_person: v.price_per_person ? Number(v.price_per_person) : null,
+    rating: v.rating ? Number(v.rating) : null,
+    opening_hours: v.opening_hours ? String(v.opening_hours) : null,
+    distance_km: Number(v.distance_km),
+  }));
 
-  // Top up with random sample (use a stable but per-call-different order
-  // — we sample by created_at desc and take the top N; pseudo-random
-  // enough for LLM context window).
-  if (ordered.length < VENUE_SAMPLE_SIZE) {
-    const { data: topUp } = await supabaseAdmin
-      .from("venues")
-      .select("id, name, district, address, cuisine_tags, vibe_tags, price_per_person, rating")
-      .eq("city", city)
-      .eq("is_active", true)
-      .order("rating", { ascending: false, nullsFirst: false })
-      .limit(VENUE_SAMPLE_SIZE * 2); // 2x so we can drop duplicates
-    for (const v of topUp ?? []) {
-      if (seenIds.has(v.id)) continue;
-      seenIds.add(v.id);
-      ordered.push(v as VenueCandidate);
-      if (ordered.length >= VENUE_SAMPLE_SIZE) break;
-    }
-  }
+  const scored = rows.map((v) => {
+    const vibeScore = preferredVibes.some((tag) => v.vibe_tags.includes(tag)) ? 1 : 0;
+    const openScore = isVenueOpenAt(v.opening_hours, planTime) ? 1 : 0;
+    return {
+      ...v,
+      score: vibeScore + openScore,
+    };
+  });
 
-  return ordered.slice(0, VENUE_SAMPLE_SIZE);
+  scored.sort((a, b) => {
+    if (b.score !== a.score) return b.score - a.score;
+    return a.distance_km - b.distance_km;
+  });
+
+  return scored.slice(0, VENUE_SAMPLE_SIZE);
 }
 
 export const Route = createFileRoute("/api/ai/meet-plan")({
@@ -156,8 +156,44 @@ export const Route = createFileRoute("/api/ai/meet-plan")({
         };
         const preferredVibes = scenarioVibes[match.scenario] ?? [];
 
-        // Load the candidate venue set.
-        const candidates = await loadVenuesForCity(supabase, myCity, preferredVibes);
+        // Resolve coordinates for the requester and the matched user so
+        // we can ground the plan in venues near their midpoint.
+        const myLat = (myProfile as { lat?: number }).lat ??
+          ((myProfile?.profile_data as { lat?: number } | null)?.lat) ??
+          getCityCentroid(myCity).lat;
+        const myLng = (myProfile as { lng?: number }).lng ??
+          ((myProfile?.profile_data as { lng?: number } | null)?.lng) ??
+          getCityCentroid(myCity).lng;
+
+        const isAIPersonaMatch = Boolean((match.details as { is_real_user?: boolean } | null)?.is_real_user === false);
+        let theirLat = myLat;
+        let theirLng = myLng;
+        if (!isAIPersonaMatch) {
+          const { data: theirProfile } = await (supabaseAdmin.from as any)("user_profiles")
+            .select("lat, lng, profile_data")
+            .eq("user_id", match.matched_user_id)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          const theirProfileTyped = theirProfile as { lat?: number; lng?: number; profile_data?: { lat?: number; lng?: number } } | null;
+          theirLat = theirProfileTyped?.lat ??
+            theirProfileTyped?.profile_data?.lat ??
+            getCityCentroid(myCity).lat;
+          theirLng = theirProfileTyped?.lng ??
+            theirProfileTyped?.profile_data?.lng ??
+            getCityCentroid(myCity).lng;
+        } else {
+          theirLat = getCityCentroid(myCity).lat;
+          theirLng = getCityCentroid(myCity).lng;
+        }
+
+        const center = midpoint(myLat, myLng, theirLat, theirLng);
+        const planTime = new Date();
+        planTime.setDate(planTime.getDate() + ((6 - planTime.getDay() + 7) % 7 || 7));
+        planTime.setHours(19, 0, 0, 0);
+
+        // Load the candidate venue set near the midpoint.
+        const candidates = await loadVenuesNearMidpoint(myCity, center, preferredVibes, planTime);
         const hasVenues = candidates.length > 0;
 
         // LLM system prompt — same as v2, but explicitly notes that
@@ -299,16 +335,39 @@ ${llmLang === "zh" ? "全部用中文表达" : "Express in English"}.`;
         // venue_id is in our candidate set. This defends against
         // the LLM hallucinating UUIDs.
         const candidateIds = new Set(candidates.map((v) => v.id));
+        const venueById = Object.fromEntries(candidates.map((v) => [v.id, v]));
+
         const validatedPlans = (parsed.multi_plan ?? []).map((plan) => ({
           ...plan,
-          venue_options: (plan.venue_options ?? []).filter(
-            (vo) => typeof vo.venue_id === "string" && candidateIds.has(vo.venue_id),
-          ),
+          venue_options: (plan.venue_options ?? [])
+            .filter((vo) => typeof vo.venue_id === "string" && candidateIds.has(vo.venue_id))
+            .map((vo) => {
+              const venueId = vo.venue_id as string;
+              const v = venueById[venueId];
+              if (!v) return vo;
+              const distanceKm = haversineKm(center.lat, center.lng, v.lat, v.lng);
+              return {
+                ...vo,
+                distance_walking_minutes: kmToWalkingMinutes(distanceKm),
+                _distance_km: Number(distanceKm.toFixed(2)),
+              };
+            }),
         }));
 
         // Build a venue-by-id lookup for the client (avoids a second
-        // roundtrip from the SPA).
-        const venueById = Object.fromEntries(candidates.map((v) => [v.id, v]));
+        // roundtrip from the SPA). Include the computed distance from
+        // the midpoint so the UI can show it.
+        const venueByIdForClient = Object.fromEntries(
+          candidates.map((v) => [
+            v.id,
+            {
+              ...v,
+              distance_walking_minutes: kmToWalkingMinutes(
+                haversineKm(center.lat, center.lng, v.lat, v.lng),
+              ),
+            },
+          ]),
+        );
 
         // Fallback when DeepSeek is down — try to reflect the user's
         // actual input + city instead of the generic coffee shop string.
@@ -328,7 +387,9 @@ ${llmLang === "zh" ? "全部用中文表达" : "Express in English"}.`;
               venue_options: candidates.slice(0, 1).map((v) => ({
                 venue_id: v.id,
                 why: fallbackVenue ?? (lang === "en" ? "Quiet, conducive to depth conversation" : "环境安静，便于深度交谈"),
-                distance_walking_minutes: 10,
+                distance_walking_minutes: kmToWalkingMinutes(
+                  haversineKm(center.lat, center.lng, v.lat, v.lng),
+                ),
               })),
               activity_design: {
                 why_this_activity: lang === "en" ? "Both introverted" : "两人都是慢热型",
@@ -358,7 +419,7 @@ ${llmLang === "zh" ? "全部用中文表达" : "Express in English"}.`;
           city: myCity,
           ai: validatedPlans.length > 0 ? { multi_plan: validatedPlans } : fallback,
           ai_provider: validatedPlans.length > 0 ? "deepseek" : "fallback",
-          venue_lookup: venueById, // client uses this to render
+          venue_lookup: venueByIdForClient, // client uses this to render
           generated_at: new Date().toISOString(),
         };
 
