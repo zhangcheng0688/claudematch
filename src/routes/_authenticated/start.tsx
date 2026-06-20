@@ -32,7 +32,7 @@ function StartPage() {
   const t = (en: string, zh: string, yue: string) =>
     lang === "yue" ? yue : lang === "zh" ? zh : en;
 
-  const [step, setStep] = useState<0 | 1 | 2 | 3>(0);
+  const [step, setStep] = useState<0 | 1 | "interview" | 2 | 3>(0);
   const [scenario, setScenario] = useState<Scenario>("dating");
   const [input, setInput] = useState("");
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -43,6 +43,14 @@ function StartPage() {
   const [err, setErr] = useState<string | null>(null);
   const [waitlistMsg, setWaitlistMsg] = useState<string | null>(null);
   const [matchedType, setMatchedType] = useState<"real" | "persona" | null>(null);
+  // v5: follow-up interview state
+  const [profilePromptVersion, setProfilePromptVersion] = useState<string | null>(null);
+  const [profileRating, setProfileRating] = useState<number | null>(null);
+  const [profileFeedbackComment, setProfileFeedbackComment] = useState("");
+  const [profileFeedbackSubmitting, setProfileFeedbackSubmitting] = useState(false);
+  const [interviewQuestions, setInterviewQuestions] = useState<Array<{ id: string; question: string; why_ask?: string }>>([]);
+  const [interviewAnswers, setInterviewAnswers] = useState<Record<string, string>>({});
+  const [interviewLoading, setInterviewLoading] = useState(false);
   // 漏洞 C: city is a required field — feeding it to the meet-plan LLM
   // gives us real restaurants in the right city (no more 深圳 fallback
   // for 上海 users). Stored on the user_profiles row so it survives
@@ -100,7 +108,7 @@ function StartPage() {
     }
   };
 
-  const generateProfile = async () => {
+  const generateInterviewQuestions = async () => {
     setErr(null);
     if (input.trim().length < 12) {
       setErr(
@@ -112,13 +120,41 @@ function StartPage() {
       );
       return;
     }
+    setInterviewLoading(true);
+    try {
+      const res = await authedFetch<{ data: Array<{ id: string; question: string; why_ask?: string }> }>(
+        "/api/ai/interview-questions",
+        {
+          method: "POST",
+          body: JSON.stringify({ input, scenario, lang }),
+        },
+      );
+      setInterviewQuestions(res.data ?? []);
+      setInterviewAnswers({});
+      setStep("interview");
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : "Failed to generate questions");
+    } finally {
+      setInterviewLoading(false);
+    }
+  };
+
+  const generateProfile = async (followUpAnswers?: Array<{ question: string; answer: string }>) => {
+    setErr(null);
     setLoading("profile");
     try {
-      const res = await authedFetch<{ data: Profile }>("/api/ai/generate-profile", {
+      const body: Record<string, unknown> = { input, scenario, lang, city };
+      if (followUpAnswers && followUpAnswers.length > 0) {
+        body.follow_up_answers = followUpAnswers;
+      }
+      const res = await authedFetch<{ data: Profile; prompt_version?: string }>("/api/ai/generate-profile", {
         method: "POST",
-        body: JSON.stringify({ input, scenario, lang, city }),
+        body: JSON.stringify(body),
       });
       setProfile(res.data);
+      setProfilePromptVersion(res.prompt_version ?? null);
+      setProfileRating(null);
+      setProfileFeedbackComment("");
       setStep(2);
     } catch (e) {
       setErr(e instanceof Error ? e.message : "Failed");
@@ -285,14 +321,86 @@ function StartPage() {
             <div className="flex items-center justify-between">
               <span className="text-xs text-muted-foreground">{input.length}/2000</span>
               <button
-                onClick={generateProfile}
-                disabled={loading === "profile"}
+                onClick={generateInterviewQuestions}
+                disabled={interviewLoading}
                 className="group inline-flex h-12 items-center gap-2 rounded-sm bg-primary px-6 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-60"
               >
-                {loading === "profile" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-                {t("Generate AI profile", "生成 AI 画像", "整 AI 檔案")}
+                {interviewLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                {t("Continue", "继续", "繼續")}
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </button>
+            </div>
+          </div>
+        )}
+
+        {step === "interview" && (
+          <div className="mt-10 space-y-6">
+            <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
+              <span className="text-gold-glow">{t("A few follow-ups", "再回答 2-3 个问题", "再答 2-3 條問題")}</span>
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              {t(
+                "These questions are generated just for you, based on what you wrote. They help the AI see the gaps and tensions.",
+                "这些问题是根据你的描述专门生成的，帮助 AI 看到你描述里的空白和矛盾。",
+                "呢啲問題係根據你嘅描述專門生成，幫 AI 睇到你描述裏面嘅空白同矛盾。",
+              )}
+            </p>
+            <div className="space-y-5">
+              {interviewQuestions.map((q, idx) => (
+                <div key={q.id} className="space-y-2">
+                  <div className="flex items-start gap-2">
+                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[10px] text-primary">
+                      {idx + 1}
+                    </span>
+                    <p className="text-sm font-medium text-foreground/95">{q.question}</p>
+                  </div>
+                  {q.why_ask && (
+                    <p className="ml-7 text-xs italic text-muted-foreground">{q.why_ask}</p>
+                  )}
+                  <textarea
+                    value={interviewAnswers[q.id] ?? ""}
+                    onChange={(e) =>
+                      setInterviewAnswers((prev) => ({ ...prev, [q.id]: e.target.value }))
+                    }
+                    rows={3}
+                    maxLength={800}
+                    placeholder={t("Your answer…", "你的回答…", "你嘅回答…")}
+                    className="ml-7 w-full rounded-sm border border-border bg-background/60 p-3 text-sm leading-relaxed outline-none focus:border-primary"
+                  />
+                </div>
+              ))}
+            </div>
+            <div className="flex items-center justify-between">
+              <button
+                onClick={() => setStep(1)}
+                className="text-xs text-muted-foreground hover:text-foreground"
+              >
+                ← {t("Back to description", "返回描述", "返去描述")}
+              </button>
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={() => generateProfile()}
+                  disabled={loading === "profile"}
+                  className="text-xs text-muted-foreground hover:text-foreground"
+                >
+                  {t("Skip", "跳过", "跳過")}
+                </button>
+                <button
+                  onClick={() =>
+                    generateProfile(
+                      interviewQuestions
+                        .filter((q) => (interviewAnswers[q.id] ?? "").trim().length > 0)
+                        .map((q) => ({ question: q.question, answer: interviewAnswers[q.id].trim() })),
+                    )
+                  }
+                  disabled={loading === "profile"}
+                  className="group inline-flex h-12 items-center gap-2 rounded-sm bg-primary px-6 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-60"
+                >
+                  {loading === "profile" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                  {t("Generate AI profile", "生成 AI 画像", "整 AI 檔案")}
+                  <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                </button>
+              </div>
             </div>
           </div>
         )}
@@ -311,6 +419,69 @@ function StartPage() {
               onRegenerate={generateProfile}
               regenerating={loading === "profile"}
             />
+
+            <div className="rounded-sm border border-border bg-background/40 p-5">
+              <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
+                {t("Does this profile fit you?", "这个画像像不像你？", "呢個畫像似唔似你？")}
+              </p>
+              <div className="mt-3 flex items-center gap-1">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    type="button"
+                    onClick={() => setProfileRating(star)}
+                    disabled={profileFeedbackSubmitting}
+                    className={`text-xl transition-colors ${
+                      (profileRating ?? 0) >= star ? "text-gold-glow" : "text-muted-foreground/30 hover:text-gold-glow/70"
+                    }`}
+                    aria-label={t(`${star} star`, `${star} 星`, `${star} 星`)}
+                  >
+                    ★
+                  </button>
+                ))}
+              </div>
+              {profileRating !== null && (
+                <div className="mt-3 space-y-3">
+                  <textarea
+                    value={profileFeedbackComment}
+                    onChange={(e) => setProfileFeedbackComment(e.target.value)}
+                    rows={2}
+                    maxLength={400}
+                    placeholder={t("What feels right or wrong? (optional)", "哪里对、哪里不对？（可选）", "邊度啱、邊度唔啱？（可選）")}
+                    className="w-full rounded-sm border border-border bg-background/60 p-3 text-xs leading-relaxed outline-none focus:border-primary"
+                  />
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      if (profileRating === null || !profile) return;
+                      setProfileFeedbackSubmitting(true);
+                      try {
+                        await authedFetch("/api/feedback/quality", {
+                          method: "POST",
+                          body: JSON.stringify({
+                            kind: "profile",
+                            target_id: profile.id,
+                            scenario,
+                            rating: profileRating,
+                            comment: profileFeedbackComment,
+                            prompt_version: profilePromptVersion ?? profile.profile_data?.prompt_version,
+                          }),
+                        });
+                      } catch {
+                        /* best-effort */
+                      } finally {
+                        setProfileFeedbackSubmitting(false);
+                      }
+                    }}
+                    disabled={profileFeedbackSubmitting}
+                    className="inline-flex h-8 items-center rounded-sm bg-primary px-4 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-60"
+                  >
+                    {profileFeedbackSubmitting ? t("Submitting…", "提交中…", "提交緊…") : t("Submit feedback", "提交反馈", "提交反饋")}
+                  </button>
+                </div>
+              )}
+            </div>
+
             <div className="flex items-center justify-between">
               <button onClick={() => setStep(1)} className="text-xs text-muted-foreground hover:text-foreground">
                 ← {t("Edit description", "重新描述", "再講過")}
@@ -371,6 +542,11 @@ function StartPage() {
               <button
                 onClick={() => {
                   setStep(1);
+                  setInterviewQuestions([]);
+                  setInterviewAnswers({});
+                  setProfilePromptVersion(null);
+                  setProfileRating(null);
+                  setProfileFeedbackComment("");
                   setMatches([]);
                   setPlan(null);
                   setActiveMatch(null);
@@ -399,27 +575,37 @@ function StartPage() {
   );
 }
 
-function Stepper({ step, t }: { step: number; t: (en: string, zh: string, yue: string) => string }) {
+function Stepper({ step, t }: { step: number | "interview"; t: (en: string, zh: string, yue: string) => string }) {
   const items = [
-    { n: 1, label: t("Describe", "描述", "講下你") },
-    { n: 2, label: t("AI profile", "AI 画像", "AI 檔案") },
-    { n: 3, label: t("Match & meet", "匹配 & 见面", "配對 & 見面") },
+    { n: 1, label: t("Describe", "描述", "講下你"), isInterview: false },
+    { n: "interview", label: t("Follow-up", "追问", "追問"), isInterview: true },
+    { n: 2, label: t("AI profile", "AI 画像", "AI 檔案"), isInterview: false },
+    { n: 3, label: t("Match & meet", "匹配 & 见面", "配對 & 見面"), isInterview: false },
   ];
   return (
     <ol className="flex items-center gap-3 text-xs">
-      {items.map((it, i) => (
-        <li key={it.n} className="flex items-center gap-3">
-          <span
-            className={`flex h-7 w-7 items-center justify-center rounded-full border ${
-              step >= it.n ? "border-primary bg-primary text-primary-foreground" : "border-border text-muted-foreground"
-            }`}
-          >
-            {step > it.n ? <CheckCircle2 className="h-4 w-4" /> : it.n}
-          </span>
-          <span className={step >= it.n ? "text-foreground" : "text-muted-foreground"}>{it.label}</span>
-          {i < items.length - 1 && <span className="h-px w-8 bg-border" />}
-        </li>
-      ))}
+      {items.map((it, i) => {
+        const nNum = typeof it.n === "number" ? it.n : null;
+        const isActive = it.isInterview
+          ? step === "interview"
+          : step === it.n || (typeof step === "number" && nNum !== null && step > nNum);
+        const isCompleted = it.isInterview
+          ? typeof step === "number" && step >= 2
+          : typeof step === "number" && nNum !== null && step > nNum;
+        return (
+          <li key={String(it.n)} className="flex items-center gap-3">
+            <span
+              className={`flex h-7 w-7 items-center justify-center rounded-full border ${
+                isActive || isCompleted ? "border-primary bg-primary text-primary-foreground" : "border-border text-muted-foreground"
+              }`}
+            >
+              {isCompleted ? <CheckCircle2 className="h-4 w-4" /> : it.isInterview ? "?" : it.n}
+            </span>
+            <span className={isActive || isCompleted ? "text-foreground" : "text-muted-foreground"}>{it.label}</span>
+            {i < items.length - 1 && <span className="h-px w-8 bg-border" />}
+          </li>
+        );
+      })}
     </ol>
   );
 }

@@ -36,6 +36,7 @@ import { Route as ApiVenuesLookupRouteImport } from './routes/api/venues/lookup'
 import { Route as ApiUserSetCityRouteImport } from './routes/api/user/set-city'
 import { Route as ApiUserMeRouteImport } from './routes/api/user/me'
 import { Route as ApiMatchIdRouteImport } from './routes/api/match/$id'
+import { Route as ApiFeedbackQualityRouteImport } from './routes/api/feedback/quality'
 import { Route as ApiFeedbackPatternRouteImport } from './routes/api/feedback/pattern'
 import { Route as ApiFeedbackNpsRouteImport } from './routes/api/feedback/nps'
 import { Route as ApiEmailVisitConfirmRouteImport } from './routes/api/email/visit-confirm'
@@ -43,6 +44,7 @@ import { Route as ApiCronForceWeeklyDigestRouteImport } from './routes/api/cron/
 import { Route as ApiCronDrainRouteImport } from './routes/api/cron/drain'
 import { Route as ApiAiMeetPlanRouteImport } from './routes/api/ai/meet-plan'
 import { Route as ApiAiMatchRouteImport } from './routes/api/ai/match'
+import { Route as ApiAiInterviewQuestionsRouteImport } from './routes/api/ai/interview-questions'
 import { Route as ApiAiGenerateProfileRouteImport } from './routes/api/ai/generate-profile'
 import { Route as ApiAdminReconciliationRouteImport } from './routes/api/admin/reconciliation'
 import { Route as AuthenticatedMatchIdRouteImport } from './routes/_authenticated/match.$id'
@@ -188,6 +190,11 @@ const ApiMatchIdRoute = ApiMatchIdRouteImport.update({
   path: '/$id',
   getParentRoute: () => ApiMatchRoute,
 } as any)
+const ApiFeedbackQualityRoute = ApiFeedbackQualityRouteImport.update({
+  id: '/api/feedback/quality',
+  path: '/api/feedback/quality',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiFeedbackPatternRoute = ApiFeedbackPatternRouteImport.update({
   id: '/api/feedback/pattern',
   path: '/api/feedback/pattern',
@@ -222,6 +229,11 @@ const ApiAiMeetPlanRoute = ApiAiMeetPlanRouteImport.update({
 const ApiAiMatchRoute = ApiAiMatchRouteImport.update({
   id: '/api/ai/match',
   path: '/api/ai/match',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiAiInterviewQuestionsRoute = ApiAiInterviewQuestionsRouteImport.update({
+  id: '/api/ai/interview-questions',
+  path: '/api/ai/interview-questions',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiAiGenerateProfileRoute = ApiAiGenerateProfileRouteImport.update({
@@ -301,6 +313,7 @@ export interface FileRoutesByFullPath {
   '/match/$id': typeof AuthenticatedMatchIdRoute
   '/api/admin/reconciliation': typeof ApiAdminReconciliationRoute
   '/api/ai/generate-profile': typeof ApiAiGenerateProfileRoute
+  '/api/ai/interview-questions': typeof ApiAiInterviewQuestionsRoute
   '/api/ai/match': typeof ApiAiMatchRoute
   '/api/ai/meet-plan': typeof ApiAiMeetPlanRoute
   '/api/cron/drain': typeof ApiCronDrainRoute
@@ -308,6 +321,7 @@ export interface FileRoutesByFullPath {
   '/api/email/visit-confirm': typeof ApiEmailVisitConfirmRoute
   '/api/feedback/nps': typeof ApiFeedbackNpsRoute
   '/api/feedback/pattern': typeof ApiFeedbackPatternRoute
+  '/api/feedback/quality': typeof ApiFeedbackQualityRoute
   '/api/match/$id': typeof ApiMatchIdRoute
   '/api/user/me': typeof ApiUserMeRoute
   '/api/user/set-city': typeof ApiUserSetCityRoute
@@ -346,6 +360,7 @@ export interface FileRoutesByTo {
   '/match/$id': typeof AuthenticatedMatchIdRoute
   '/api/admin/reconciliation': typeof ApiAdminReconciliationRoute
   '/api/ai/generate-profile': typeof ApiAiGenerateProfileRoute
+  '/api/ai/interview-questions': typeof ApiAiInterviewQuestionsRoute
   '/api/ai/match': typeof ApiAiMatchRoute
   '/api/ai/meet-plan': typeof ApiAiMeetPlanRoute
   '/api/cron/drain': typeof ApiCronDrainRoute
@@ -353,6 +368,7 @@ export interface FileRoutesByTo {
   '/api/email/visit-confirm': typeof ApiEmailVisitConfirmRoute
   '/api/feedback/nps': typeof ApiFeedbackNpsRoute
   '/api/feedback/pattern': typeof ApiFeedbackPatternRoute
+  '/api/feedback/quality': typeof ApiFeedbackQualityRoute
   '/api/match/$id': typeof ApiMatchIdRoute
   '/api/user/me': typeof ApiUserMeRoute
   '/api/user/set-city': typeof ApiUserSetCityRoute
@@ -393,6 +409,7 @@ export interface FileRoutesById {
   '/_authenticated/match/$id': typeof AuthenticatedMatchIdRoute
   '/api/admin/reconciliation': typeof ApiAdminReconciliationRoute
   '/api/ai/generate-profile': typeof ApiAiGenerateProfileRoute
+  '/api/ai/interview-questions': typeof ApiAiInterviewQuestionsRoute
   '/api/ai/match': typeof ApiAiMatchRoute
   '/api/ai/meet-plan': typeof ApiAiMeetPlanRoute
   '/api/cron/drain': typeof ApiCronDrainRoute
@@ -400,6 +417,7 @@ export interface FileRoutesById {
   '/api/email/visit-confirm': typeof ApiEmailVisitConfirmRoute
   '/api/feedback/nps': typeof ApiFeedbackNpsRoute
   '/api/feedback/pattern': typeof ApiFeedbackPatternRoute
+  '/api/feedback/quality': typeof ApiFeedbackQualityRoute
   '/api/match/$id': typeof ApiMatchIdRoute
   '/api/user/me': typeof ApiUserMeRoute
   '/api/user/set-city': typeof ApiUserSetCityRoute
@@ -440,6 +458,7 @@ export interface FileRouteTypes {
     | '/match/$id'
     | '/api/admin/reconciliation'
     | '/api/ai/generate-profile'
+    | '/api/ai/interview-questions'
     | '/api/ai/match'
     | '/api/ai/meet-plan'
     | '/api/cron/drain'
@@ -447,6 +466,7 @@ export interface FileRouteTypes {
     | '/api/email/visit-confirm'
     | '/api/feedback/nps'
     | '/api/feedback/pattern'
+    | '/api/feedback/quality'
     | '/api/match/$id'
     | '/api/user/me'
     | '/api/user/set-city'
@@ -485,6 +505,7 @@ export interface FileRouteTypes {
     | '/match/$id'
     | '/api/admin/reconciliation'
     | '/api/ai/generate-profile'
+    | '/api/ai/interview-questions'
     | '/api/ai/match'
     | '/api/ai/meet-plan'
     | '/api/cron/drain'
@@ -492,6 +513,7 @@ export interface FileRouteTypes {
     | '/api/email/visit-confirm'
     | '/api/feedback/nps'
     | '/api/feedback/pattern'
+    | '/api/feedback/quality'
     | '/api/match/$id'
     | '/api/user/me'
     | '/api/user/set-city'
@@ -531,6 +553,7 @@ export interface FileRouteTypes {
     | '/_authenticated/match/$id'
     | '/api/admin/reconciliation'
     | '/api/ai/generate-profile'
+    | '/api/ai/interview-questions'
     | '/api/ai/match'
     | '/api/ai/meet-plan'
     | '/api/cron/drain'
@@ -538,6 +561,7 @@ export interface FileRouteTypes {
     | '/api/email/visit-confirm'
     | '/api/feedback/nps'
     | '/api/feedback/pattern'
+    | '/api/feedback/quality'
     | '/api/match/$id'
     | '/api/user/me'
     | '/api/user/set-city'
@@ -572,6 +596,7 @@ export interface RootRouteChildren {
   ApiWaitlistRoute: typeof ApiWaitlistRoute
   ApiAdminReconciliationRoute: typeof ApiAdminReconciliationRoute
   ApiAiGenerateProfileRoute: typeof ApiAiGenerateProfileRoute
+  ApiAiInterviewQuestionsRoute: typeof ApiAiInterviewQuestionsRoute
   ApiAiMatchRoute: typeof ApiAiMatchRoute
   ApiAiMeetPlanRoute: typeof ApiAiMeetPlanRoute
   ApiCronDrainRoute: typeof ApiCronDrainRoute
@@ -579,6 +604,7 @@ export interface RootRouteChildren {
   ApiEmailVisitConfirmRoute: typeof ApiEmailVisitConfirmRoute
   ApiFeedbackNpsRoute: typeof ApiFeedbackNpsRoute
   ApiFeedbackPatternRoute: typeof ApiFeedbackPatternRoute
+  ApiFeedbackQualityRoute: typeof ApiFeedbackQualityRoute
   ApiUserMeRoute: typeof ApiUserMeRoute
   ApiUserSetCityRoute: typeof ApiUserSetCityRoute
   ApiVenuesLookupRoute: typeof ApiVenuesLookupRoute
@@ -784,6 +810,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiMatchIdRouteImport
       parentRoute: typeof ApiMatchRoute
     }
+    '/api/feedback/quality': {
+      id: '/api/feedback/quality'
+      path: '/api/feedback/quality'
+      fullPath: '/api/feedback/quality'
+      preLoaderRoute: typeof ApiFeedbackQualityRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/feedback/pattern': {
       id: '/api/feedback/pattern'
       path: '/api/feedback/pattern'
@@ -831,6 +864,13 @@ declare module '@tanstack/react-router' {
       path: '/api/ai/match'
       fullPath: '/api/ai/match'
       preLoaderRoute: typeof ApiAiMatchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/ai/interview-questions': {
+      id: '/api/ai/interview-questions'
+      path: '/api/ai/interview-questions'
+      fullPath: '/api/ai/interview-questions'
+      preLoaderRoute: typeof ApiAiInterviewQuestionsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/ai/generate-profile': {
@@ -975,6 +1015,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiWaitlistRoute: ApiWaitlistRoute,
   ApiAdminReconciliationRoute: ApiAdminReconciliationRoute,
   ApiAiGenerateProfileRoute: ApiAiGenerateProfileRoute,
+  ApiAiInterviewQuestionsRoute: ApiAiInterviewQuestionsRoute,
   ApiAiMatchRoute: ApiAiMatchRoute,
   ApiAiMeetPlanRoute: ApiAiMeetPlanRoute,
   ApiCronDrainRoute: ApiCronDrainRoute,
@@ -982,6 +1023,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiEmailVisitConfirmRoute: ApiEmailVisitConfirmRoute,
   ApiFeedbackNpsRoute: ApiFeedbackNpsRoute,
   ApiFeedbackPatternRoute: ApiFeedbackPatternRoute,
+  ApiFeedbackQualityRoute: ApiFeedbackQualityRoute,
   ApiUserMeRoute: ApiUserMeRoute,
   ApiUserSetCityRoute: ApiUserSetCityRoute,
   ApiVenuesLookupRoute: ApiVenuesLookupRoute,

@@ -172,6 +172,7 @@ export type Profile = {
   profile_data: {
     ai?: AiProfile;
     version?: string;
+    prompt_version?: string;
     scenario?: string;
     lang?: string;
     input?: string;
@@ -231,6 +232,31 @@ export type AiCompatibilityBreakdown = {
   growth_potential: number;
 };
 
+/** v5: one-sentence "why these two". */
+export type AiCompatibilityEquation = string;
+
+/** v5: how A's paradox is loosened by B. */
+export type AiParadoxIntersection = {
+  a_paradox?: string;
+  how_b_loosens?: string;
+  risk?: string;
+};
+
+/** v5: attachment style dance between A and B. */
+export type AiAttachmentDance = {
+  a_style?: string;
+  b_style?: string;
+  why_it_works?: string;
+  landmine?: string;
+};
+
+/** v5: long-term health adjustments for both sides. */
+export type AiLongTermHealth = {
+  a_must_adjust?: string;
+  b_must_adjust?: string;
+  shared_practice?: string;
+};
+
 /** One match row. `details` carries the user-facing fields the AI returned. */
 export type MatchDetails = {
   name?: string;
@@ -260,8 +286,14 @@ export type MatchDetails = {
   conversation_arc?: AiConversationArc;
   follow_up_strategy?: AiFollowUpStrategy;
   compatibility_breakdown?: AiCompatibilityBreakdown;
+  /** v5 relationship-engine outputs */
+  compatibility_equation?: AiCompatibilityEquation;
+  paradox_intersection?: AiParadoxIntersection;
+  attachment_dance?: AiAttachmentDance;
+  long_term_health?: AiLongTermHealth;
   is_real_user?: boolean;
   ai_provider?: "deepseek" | "fallback";
+  prompt_version?: string;
 };
 
 export type MatchRow = {
