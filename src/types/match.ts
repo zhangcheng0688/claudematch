@@ -298,8 +298,12 @@ export type MatchDetails = {
 
 export type MatchRow = {
   id: string;
+  user_id?: string;
+  matched_user_id?: string;
+  matched_target_id?: string;
   match_score: number;
   scenario: string;
+  is_ai_persona?: boolean;
   details: MatchDetails;
 };
 
@@ -386,6 +390,7 @@ export type MeetPlanAi = {
 
 export type MeetPlan = {
   id: string;
+  created_at?: string;
   plan_content: {
     ai?: MeetPlanAi;
     version?: string;

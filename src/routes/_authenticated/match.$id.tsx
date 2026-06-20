@@ -36,6 +36,12 @@ function MatchDetailPage() {
   const [copied, setCopied] = useState<"text" | "ics" | null>(null);
   const [showFullSummary, setShowFullSummary] = useState(false);
   const [matchRating, setMatchRating] = useState<number | null>(null);
+  const [meetRating, setMeetRating] = useState<number | null>(null);
+  const [meetDidMeet, setMeetDidMeet] = useState<boolean | null>(null);
+  const [meetComment, setMeetComment] = useState("");
+  const [meetFeedbackSubmitting, setMeetFeedbackSubmitting] = useState(false);
+  const [meetFeedbackSubmitted, setMeetFeedbackSubmitted] = useState(false);
+  const [reported, setReported] = useState(false);
   const [matchFeedbackComment, setMatchFeedbackComment] = useState("");
   const [matchFeedbackSubmitting, setMatchFeedbackSubmitting] = useState(false);
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
@@ -256,7 +262,85 @@ function MatchDetailPage() {
           toggle={(key) => setExpandedSections((prev) => ({ ...prev, [key]: !prev[key] }))}
         />
 
-                <div className="mt-10 rounded-sm border border-border bg-background/40 p-5">
+                        {plan && !meetFeedbackSubmitted && isMeetFeedbackDue(plan) && (
+          <div className="mt-10 rounded-sm border border-primary/30 bg-primary/5 p-5">
+            <p className="text-xs font-medium uppercase tracking-[0.18em] text-primary">
+              {t("How did the meet-up go?", "见面进行得怎么样？", "見面進行得點樣？")}
+            </p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              {t("Your real feedback makes linQ's matching better.", "你的真实反馈会让 linQ 的匹配越来越准。", "你真實嘅反饋會令 linQ 嘅配對越嚟越準。")}
+            </p>
+            <div className="mt-3 flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setMeetDidMeet(true)}
+                className={`rounded-sm border px-3 py-1.5 text-xs ${meetDidMeet === true ? "border-primary bg-primary/20 text-primary" : "border-border text-muted-foreground"}`}
+              >
+                {t("We met", "见面了", "見咗面")}
+              </button>
+              <button
+                type="button"
+                onClick={() => setMeetDidMeet(false)}
+                className={`rounded-sm border px-3 py-1.5 text-xs ${meetDidMeet === false ? "border-primary bg-primary/20 text-primary" : "border-border text-muted-foreground"}`}
+              >
+                {t("Didn't meet", "没见面", "無見面")}
+              </button>
+            </div>
+            <div className="mt-3 flex items-center gap-1">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  type="button"
+                  onClick={() => setMeetRating(star)}
+                  disabled={meetFeedbackSubmitting}
+                  className={`text-xl transition-colors ${
+                    (meetRating ?? 0) >= star ? "text-gold-glow" : "text-muted-foreground/30 hover:text-gold-glow/70"
+                  }`}
+                >
+                  ★
+                </button>
+              ))}
+            </div>
+            <textarea
+              value={meetComment}
+              onChange={(e) => setMeetComment(e.target.value)}
+              rows={2}
+              maxLength={400}
+              placeholder={t("What worked or didn't? (optional)", "哪里好、哪里不好？（可选）", "邊度好、邊度唔好？（可選）")}
+              className="mt-3 w-full rounded-sm border border-border bg-background/60 p-3 text-xs leading-relaxed outline-none focus:border-primary"
+            />
+            <button
+              type="button"
+              onClick={async () => {
+                if (meetRating === null || meetDidMeet === null || !match || !plan) return;
+                setMeetFeedbackSubmitting(true);
+                try {
+                  await authedFetch("/api/feedback/meet", {
+                    method: "POST",
+                    body: JSON.stringify({
+                      match_id: match.id,
+                      meet_plan_id: plan.id,
+                      rating: meetRating,
+                      did_meet: meetDidMeet,
+                      comment: meetComment,
+                    }),
+                  });
+                  setMeetFeedbackSubmitted(true);
+                } catch {
+                  /* best-effort */
+                } finally {
+                  setMeetFeedbackSubmitting(false);
+                }
+              }}
+              disabled={meetFeedbackSubmitting || meetRating === null || meetDidMeet === null}
+              className="mt-3 inline-flex h-8 items-center rounded-sm bg-primary px-4 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-60"
+            >
+              {meetFeedbackSubmitting ? t("Submitting…", "提交中…", "提交緊…") : t("Submit feedback", "提交反馈", "提交反饋")}
+            </button>
+          </div>
+        )}
+
+        <div className="mt-10 rounded-sm border border-border bg-background/40 p-5">
           <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
             {t("How accurate is this match?", "这次匹配准不准？", "呢次配對準唔準？")}
           </p>
@@ -317,6 +401,38 @@ function MatchDetailPage() {
             </div>
           )}
         </div>
+
+                {match.matched_user_id && !reported && (
+          <div className="mt-6 flex justify-end">
+            <button
+              type="button"
+              onClick={async () => {
+                if (!match.matched_user_id) return;
+                try {
+                  await authedFetch("/api/feedback/report", {
+                    method: "POST",
+                    body: JSON.stringify({
+                      reported_id: match.matched_user_id,
+                      match_id: match.id,
+                      reason: "User reported from match detail",
+                    }),
+                  });
+                  setReported(true);
+                } catch {
+                  /* best-effort */
+                }
+              }}
+              className="text-xs text-muted-foreground underline hover:text-destructive"
+            >
+              {t("Report / Block", "举报 / 屏蔽", "舉報 / 封鎖")}
+            </button>
+          </div>
+        )}
+        {reported && (
+          <p className="mt-4 text-right text-xs text-muted-foreground">
+            {t("Reported. We will review it.", "已举报，我们会处理。", "已舉報，我哋會處理。")}
+          </p>
+        )}
 
         {err && (
           <div className="mt-6 rounded-sm border border-destructive/40 bg-destructive/10 p-4 text-sm text-destructive">
@@ -551,6 +667,13 @@ function MatchAnalysis({
       )}
     </div>
   );
+}
+
+function isMeetFeedbackDue(plan: MeetPlan): boolean {
+  const generatedAt = plan.plan_content?.generated_at ?? plan.created_at;
+  if (!generatedAt) return false;
+  const hours = (Date.now() - new Date(generatedAt).getTime()) / (1000 * 60 * 60);
+  return hours >= 24;
 }
 
 function renderPlanText(plan: MeetPlan, lang: "en" | "zh" | "yue"): string {

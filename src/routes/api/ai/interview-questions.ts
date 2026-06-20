@@ -15,6 +15,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { json, preflight, requireUser, safeError } from "@/lib/api/_helpers.server";
 import { llmChatEx, safeParseJSON } from "@/lib/api/_llm.server";
+import { moderateText } from "@/lib/api/_moderation.server";
 
 const VALID_SCENARIOS = new Set(["business", "dating", "partner"]);
 
@@ -43,6 +44,11 @@ export const Route = createFileRoute("/api/ai/interview-questions")({
             : "dating";
         const lang: "en" | "zh" | "yue" = body.lang === "en" ? "en" : body.lang === "yue" ? "yue" : "zh";
         const llmLang: "en" | "zh" = lang === "en" ? "en" : "zh";
+
+        const moderation = await moderateText(input, llmLang, "interview-questions");
+        if (!moderation.safe) {
+          return json({ error: "Input violates content policy", moderation }, { status: 400 }, request);
+        }
 
         const sys = llmLang === "zh"
           ? `你是 linQ 的 AI 訪談設計師。用戶剛寫了一段自我描述，你的任務是設計 2-3 個最應該追問的問題。

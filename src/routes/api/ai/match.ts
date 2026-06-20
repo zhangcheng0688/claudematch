@@ -10,6 +10,11 @@ import {
   buildMatchUser,
 } from "@/lib/api/_match-prompts.server";
 import { selectPromptVersion } from "@/lib/api/_prompt-versions.server";
+import {
+  scheduleFollowUpEmails,
+  scheduleMeetFeedbackEmail,
+  scheduleRematchEmail,
+} from "@/lib/api/_scheduled-emails.server";
 import { embedText, profileToEmbeddingText } from "@/lib/api/_embeddings.server";
 import { geocodeCity, getCityCentroid, haversineKm, isVenueOpenAt, kmToWalkingMinutes, midpoint } from "@/lib/api/_geo.server";
 
@@ -152,6 +157,7 @@ export const Route = createFileRoute("/api/ai/match")({
           .from("user_authorizations")
           .select("user_id")
           .eq(scenario, true)
+          .eq("discoverable" as never, true)
           .neq("user_id", userId);
         const candidateIds = (authed ?? []).map((c) => c.user_id);
 
@@ -290,6 +296,11 @@ export const Route = createFileRoute("/api/ai/match")({
                 status: `waiting:${scenario}`,
               });
             }
+            // Schedule a re-match prompt in 7 days. If new personas/users join,
+            // the cron will email them to try again.
+            await scheduleRematchEmail(supabase, userId, scenario).catch((e: unknown) => {
+              console.warn(JSON.stringify({ at: "match:schedule_rematch_failed", userId, error: String(e) }));
+            });
             return json({
               data: [],
               waitlisted: true,
@@ -607,6 +618,21 @@ export const Route = createFileRoute("/api/ai/match")({
           .single();
         if (insErr) return json({ error: safeError(insErr) }, { status: 500 }, request);
 
+        // Schedule post-match follow-up emails based on the AI-generated
+        // follow_up_strategy (day_1 / week_1 / month_1).
+        if (!isAIPersona) {
+          await scheduleFollowUpEmails(
+            supabase,
+            userId,
+            myMatch.id,
+            deep.follow_up_strategy ?? {},
+            parsed.name ?? "匹配对象",
+            scenario,
+          ).catch((e: unknown) => {
+            console.warn(JSON.stringify({ at: "match:schedule_follow_up_failed", userId, error: String(e) }));
+          });
+        }
+
         // Only create a reverse row + email flow for REAL matches.
         // AI persona matches skip both — no other party to email.
         if (!isAIPersona) {
@@ -650,6 +676,19 @@ export const Route = createFileRoute("/api/ai/match")({
           .insert({ match_id: myMatch.id, plan_content: plan_content as never })
           .select("*")
           .single();
+
+        // Schedule a 24h meet-feedback prompt for the requester.
+        if (!isAIPersona && planRow) {
+          await scheduleMeetFeedbackEmail(
+            supabase,
+            userId,
+            myMatch.id,
+            planRow.id,
+            parsed.name ?? "匹配对象",
+          ).catch((e: unknown) => {
+            console.warn(JSON.stringify({ at: "match:schedule_feedback_failed", userId, error: String(e) }));
+          });
+        }
 
         // 7) Email both users via the transactional queue — only for
         //    real matches. AI persona matches have no other party to

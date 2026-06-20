@@ -23,6 +23,7 @@ import { Route as IndexRouteImport } from './routes/index'
 import { Route as AuthWxCallbackRouteImport } from './routes/auth/wx-callback'
 import { Route as ApiWaitlistRouteImport } from './routes/api/waitlist'
 import { Route as ApiStatsRouteImport } from './routes/api/stats'
+import { Route as ApiReferralsRouteImport } from './routes/api/referrals'
 import { Route as ApiMatchRouteImport } from './routes/api/match'
 import { Route as ApiLoginRouteImport } from './routes/api/login'
 import { Route as ApiAuthorizeRouteImport } from './routes/api/authorize'
@@ -35,11 +36,15 @@ import { Route as ApiVenuesOnboardRouteImport } from './routes/api/venues/onboar
 import { Route as ApiVenuesLookupRouteImport } from './routes/api/venues/lookup'
 import { Route as ApiUserSetCityRouteImport } from './routes/api/user/set-city'
 import { Route as ApiUserMeRouteImport } from './routes/api/user/me'
+import { Route as ApiReferralsClaimRouteImport } from './routes/api/referrals/claim'
 import { Route as ApiMatchIdRouteImport } from './routes/api/match/$id'
+import { Route as ApiFeedbackReportRouteImport } from './routes/api/feedback/report'
 import { Route as ApiFeedbackQualityRouteImport } from './routes/api/feedback/quality'
 import { Route as ApiFeedbackPatternRouteImport } from './routes/api/feedback/pattern'
 import { Route as ApiFeedbackNpsRouteImport } from './routes/api/feedback/nps'
+import { Route as ApiFeedbackMeetRouteImport } from './routes/api/feedback/meet'
 import { Route as ApiEmailVisitConfirmRouteImport } from './routes/api/email/visit-confirm'
+import { Route as ApiCronSendScheduledEmailsRouteImport } from './routes/api/cron/send-scheduled-emails'
 import { Route as ApiCronForceWeeklyDigestRouteImport } from './routes/api/cron/force-weekly-digest'
 import { Route as ApiCronDrainRouteImport } from './routes/api/cron/drain'
 import { Route as ApiAiMeetPlanRouteImport } from './routes/api/ai/meet-plan'
@@ -125,6 +130,11 @@ const ApiStatsRoute = ApiStatsRouteImport.update({
   path: '/api/stats',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiReferralsRoute = ApiReferralsRouteImport.update({
+  id: '/api/referrals',
+  path: '/api/referrals',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiMatchRoute = ApiMatchRouteImport.update({
   id: '/api/match',
   path: '/api/match',
@@ -185,10 +195,20 @@ const ApiUserMeRoute = ApiUserMeRouteImport.update({
   path: '/api/user/me',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiReferralsClaimRoute = ApiReferralsClaimRouteImport.update({
+  id: '/claim',
+  path: '/claim',
+  getParentRoute: () => ApiReferralsRoute,
+} as any)
 const ApiMatchIdRoute = ApiMatchIdRouteImport.update({
   id: '/$id',
   path: '/$id',
   getParentRoute: () => ApiMatchRoute,
+} as any)
+const ApiFeedbackReportRoute = ApiFeedbackReportRouteImport.update({
+  id: '/api/feedback/report',
+  path: '/api/feedback/report',
+  getParentRoute: () => rootRouteImport,
 } as any)
 const ApiFeedbackQualityRoute = ApiFeedbackQualityRouteImport.update({
   id: '/api/feedback/quality',
@@ -205,11 +225,22 @@ const ApiFeedbackNpsRoute = ApiFeedbackNpsRouteImport.update({
   path: '/api/feedback/nps',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiFeedbackMeetRoute = ApiFeedbackMeetRouteImport.update({
+  id: '/api/feedback/meet',
+  path: '/api/feedback/meet',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiEmailVisitConfirmRoute = ApiEmailVisitConfirmRouteImport.update({
   id: '/api/email/visit-confirm',
   path: '/api/email/visit-confirm',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiCronSendScheduledEmailsRoute =
+  ApiCronSendScheduledEmailsRouteImport.update({
+    id: '/api/cron/send-scheduled-emails',
+    path: '/api/cron/send-scheduled-emails',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiCronForceWeeklyDigestRoute =
   ApiCronForceWeeklyDigestRouteImport.update({
     id: '/api/cron/force-weekly-digest',
@@ -307,6 +338,7 @@ export interface FileRoutesByFullPath {
   '/api/authorize': typeof ApiAuthorizeRoute
   '/api/login': typeof ApiLoginRoute
   '/api/match': typeof ApiMatchRouteWithChildren
+  '/api/referrals': typeof ApiReferralsRouteWithChildren
   '/api/stats': typeof ApiStatsRoute
   '/api/waitlist': typeof ApiWaitlistRoute
   '/auth/wx-callback': typeof AuthWxCallbackRoute
@@ -318,11 +350,15 @@ export interface FileRoutesByFullPath {
   '/api/ai/meet-plan': typeof ApiAiMeetPlanRoute
   '/api/cron/drain': typeof ApiCronDrainRoute
   '/api/cron/force-weekly-digest': typeof ApiCronForceWeeklyDigestRoute
+  '/api/cron/send-scheduled-emails': typeof ApiCronSendScheduledEmailsRoute
   '/api/email/visit-confirm': typeof ApiEmailVisitConfirmRoute
+  '/api/feedback/meet': typeof ApiFeedbackMeetRoute
   '/api/feedback/nps': typeof ApiFeedbackNpsRoute
   '/api/feedback/pattern': typeof ApiFeedbackPatternRoute
   '/api/feedback/quality': typeof ApiFeedbackQualityRoute
+  '/api/feedback/report': typeof ApiFeedbackReportRoute
   '/api/match/$id': typeof ApiMatchIdRoute
+  '/api/referrals/claim': typeof ApiReferralsClaimRoute
   '/api/user/me': typeof ApiUserMeRoute
   '/api/user/set-city': typeof ApiUserSetCityRoute
   '/api/venues/lookup': typeof ApiVenuesLookupRoute
@@ -354,6 +390,7 @@ export interface FileRoutesByTo {
   '/api/authorize': typeof ApiAuthorizeRoute
   '/api/login': typeof ApiLoginRoute
   '/api/match': typeof ApiMatchRouteWithChildren
+  '/api/referrals': typeof ApiReferralsRouteWithChildren
   '/api/stats': typeof ApiStatsRoute
   '/api/waitlist': typeof ApiWaitlistRoute
   '/auth/wx-callback': typeof AuthWxCallbackRoute
@@ -365,11 +402,15 @@ export interface FileRoutesByTo {
   '/api/ai/meet-plan': typeof ApiAiMeetPlanRoute
   '/api/cron/drain': typeof ApiCronDrainRoute
   '/api/cron/force-weekly-digest': typeof ApiCronForceWeeklyDigestRoute
+  '/api/cron/send-scheduled-emails': typeof ApiCronSendScheduledEmailsRoute
   '/api/email/visit-confirm': typeof ApiEmailVisitConfirmRoute
+  '/api/feedback/meet': typeof ApiFeedbackMeetRoute
   '/api/feedback/nps': typeof ApiFeedbackNpsRoute
   '/api/feedback/pattern': typeof ApiFeedbackPatternRoute
   '/api/feedback/quality': typeof ApiFeedbackQualityRoute
+  '/api/feedback/report': typeof ApiFeedbackReportRoute
   '/api/match/$id': typeof ApiMatchIdRoute
+  '/api/referrals/claim': typeof ApiReferralsClaimRoute
   '/api/user/me': typeof ApiUserMeRoute
   '/api/user/set-city': typeof ApiUserSetCityRoute
   '/api/venues/lookup': typeof ApiVenuesLookupRoute
@@ -403,6 +444,7 @@ export interface FileRoutesById {
   '/api/authorize': typeof ApiAuthorizeRoute
   '/api/login': typeof ApiLoginRoute
   '/api/match': typeof ApiMatchRouteWithChildren
+  '/api/referrals': typeof ApiReferralsRouteWithChildren
   '/api/stats': typeof ApiStatsRoute
   '/api/waitlist': typeof ApiWaitlistRoute
   '/auth/wx-callback': typeof AuthWxCallbackRoute
@@ -414,11 +456,15 @@ export interface FileRoutesById {
   '/api/ai/meet-plan': typeof ApiAiMeetPlanRoute
   '/api/cron/drain': typeof ApiCronDrainRoute
   '/api/cron/force-weekly-digest': typeof ApiCronForceWeeklyDigestRoute
+  '/api/cron/send-scheduled-emails': typeof ApiCronSendScheduledEmailsRoute
   '/api/email/visit-confirm': typeof ApiEmailVisitConfirmRoute
+  '/api/feedback/meet': typeof ApiFeedbackMeetRoute
   '/api/feedback/nps': typeof ApiFeedbackNpsRoute
   '/api/feedback/pattern': typeof ApiFeedbackPatternRoute
   '/api/feedback/quality': typeof ApiFeedbackQualityRoute
+  '/api/feedback/report': typeof ApiFeedbackReportRoute
   '/api/match/$id': typeof ApiMatchIdRoute
+  '/api/referrals/claim': typeof ApiReferralsClaimRoute
   '/api/user/me': typeof ApiUserMeRoute
   '/api/user/set-city': typeof ApiUserSetCityRoute
   '/api/venues/lookup': typeof ApiVenuesLookupRoute
@@ -452,6 +498,7 @@ export interface FileRouteTypes {
     | '/api/authorize'
     | '/api/login'
     | '/api/match'
+    | '/api/referrals'
     | '/api/stats'
     | '/api/waitlist'
     | '/auth/wx-callback'
@@ -463,11 +510,15 @@ export interface FileRouteTypes {
     | '/api/ai/meet-plan'
     | '/api/cron/drain'
     | '/api/cron/force-weekly-digest'
+    | '/api/cron/send-scheduled-emails'
     | '/api/email/visit-confirm'
+    | '/api/feedback/meet'
     | '/api/feedback/nps'
     | '/api/feedback/pattern'
     | '/api/feedback/quality'
+    | '/api/feedback/report'
     | '/api/match/$id'
+    | '/api/referrals/claim'
     | '/api/user/me'
     | '/api/user/set-city'
     | '/api/venues/lookup'
@@ -499,6 +550,7 @@ export interface FileRouteTypes {
     | '/api/authorize'
     | '/api/login'
     | '/api/match'
+    | '/api/referrals'
     | '/api/stats'
     | '/api/waitlist'
     | '/auth/wx-callback'
@@ -510,11 +562,15 @@ export interface FileRouteTypes {
     | '/api/ai/meet-plan'
     | '/api/cron/drain'
     | '/api/cron/force-weekly-digest'
+    | '/api/cron/send-scheduled-emails'
     | '/api/email/visit-confirm'
+    | '/api/feedback/meet'
     | '/api/feedback/nps'
     | '/api/feedback/pattern'
     | '/api/feedback/quality'
+    | '/api/feedback/report'
     | '/api/match/$id'
+    | '/api/referrals/claim'
     | '/api/user/me'
     | '/api/user/set-city'
     | '/api/venues/lookup'
@@ -547,6 +603,7 @@ export interface FileRouteTypes {
     | '/api/authorize'
     | '/api/login'
     | '/api/match'
+    | '/api/referrals'
     | '/api/stats'
     | '/api/waitlist'
     | '/auth/wx-callback'
@@ -558,11 +615,15 @@ export interface FileRouteTypes {
     | '/api/ai/meet-plan'
     | '/api/cron/drain'
     | '/api/cron/force-weekly-digest'
+    | '/api/cron/send-scheduled-emails'
     | '/api/email/visit-confirm'
+    | '/api/feedback/meet'
     | '/api/feedback/nps'
     | '/api/feedback/pattern'
     | '/api/feedback/quality'
+    | '/api/feedback/report'
     | '/api/match/$id'
+    | '/api/referrals/claim'
     | '/api/user/me'
     | '/api/user/set-city'
     | '/api/venues/lookup'
@@ -592,6 +653,7 @@ export interface RootRouteChildren {
   ApiAuthorizeRoute: typeof ApiAuthorizeRoute
   ApiLoginRoute: typeof ApiLoginRoute
   ApiMatchRoute: typeof ApiMatchRouteWithChildren
+  ApiReferralsRoute: typeof ApiReferralsRouteWithChildren
   ApiStatsRoute: typeof ApiStatsRoute
   ApiWaitlistRoute: typeof ApiWaitlistRoute
   ApiAdminReconciliationRoute: typeof ApiAdminReconciliationRoute
@@ -601,10 +663,13 @@ export interface RootRouteChildren {
   ApiAiMeetPlanRoute: typeof ApiAiMeetPlanRoute
   ApiCronDrainRoute: typeof ApiCronDrainRoute
   ApiCronForceWeeklyDigestRoute: typeof ApiCronForceWeeklyDigestRoute
+  ApiCronSendScheduledEmailsRoute: typeof ApiCronSendScheduledEmailsRoute
   ApiEmailVisitConfirmRoute: typeof ApiEmailVisitConfirmRoute
+  ApiFeedbackMeetRoute: typeof ApiFeedbackMeetRoute
   ApiFeedbackNpsRoute: typeof ApiFeedbackNpsRoute
   ApiFeedbackPatternRoute: typeof ApiFeedbackPatternRoute
   ApiFeedbackQualityRoute: typeof ApiFeedbackQualityRoute
+  ApiFeedbackReportRoute: typeof ApiFeedbackReportRoute
   ApiUserMeRoute: typeof ApiUserMeRoute
   ApiUserSetCityRoute: typeof ApiUserSetCityRoute
   ApiVenuesLookupRoute: typeof ApiVenuesLookupRoute
@@ -719,6 +784,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiStatsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/referrals': {
+      id: '/api/referrals'
+      path: '/api/referrals'
+      fullPath: '/api/referrals'
+      preLoaderRoute: typeof ApiReferralsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/match': {
       id: '/api/match'
       path: '/api/match'
@@ -803,12 +875,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiUserMeRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/referrals/claim': {
+      id: '/api/referrals/claim'
+      path: '/claim'
+      fullPath: '/api/referrals/claim'
+      preLoaderRoute: typeof ApiReferralsClaimRouteImport
+      parentRoute: typeof ApiReferralsRoute
+    }
     '/api/match/$id': {
       id: '/api/match/$id'
       path: '/$id'
       fullPath: '/api/match/$id'
       preLoaderRoute: typeof ApiMatchIdRouteImport
       parentRoute: typeof ApiMatchRoute
+    }
+    '/api/feedback/report': {
+      id: '/api/feedback/report'
+      path: '/api/feedback/report'
+      fullPath: '/api/feedback/report'
+      preLoaderRoute: typeof ApiFeedbackReportRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/api/feedback/quality': {
       id: '/api/feedback/quality'
@@ -831,11 +917,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiFeedbackNpsRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/feedback/meet': {
+      id: '/api/feedback/meet'
+      path: '/api/feedback/meet'
+      fullPath: '/api/feedback/meet'
+      preLoaderRoute: typeof ApiFeedbackMeetRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/email/visit-confirm': {
       id: '/api/email/visit-confirm'
       path: '/api/email/visit-confirm'
       fullPath: '/api/email/visit-confirm'
       preLoaderRoute: typeof ApiEmailVisitConfirmRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/cron/send-scheduled-emails': {
+      id: '/api/cron/send-scheduled-emails'
+      path: '/api/cron/send-scheduled-emails'
+      fullPath: '/api/cron/send-scheduled-emails'
+      preLoaderRoute: typeof ApiCronSendScheduledEmailsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/cron/force-weekly-digest': {
@@ -996,6 +1096,18 @@ const ApiMatchRouteWithChildren = ApiMatchRoute._addFileChildren(
   ApiMatchRouteChildren,
 )
 
+interface ApiReferralsRouteChildren {
+  ApiReferralsClaimRoute: typeof ApiReferralsClaimRoute
+}
+
+const ApiReferralsRouteChildren: ApiReferralsRouteChildren = {
+  ApiReferralsClaimRoute: ApiReferralsClaimRoute,
+}
+
+const ApiReferralsRouteWithChildren = ApiReferralsRoute._addFileChildren(
+  ApiReferralsRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
@@ -1011,6 +1123,7 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAuthorizeRoute: ApiAuthorizeRoute,
   ApiLoginRoute: ApiLoginRoute,
   ApiMatchRoute: ApiMatchRouteWithChildren,
+  ApiReferralsRoute: ApiReferralsRouteWithChildren,
   ApiStatsRoute: ApiStatsRoute,
   ApiWaitlistRoute: ApiWaitlistRoute,
   ApiAdminReconciliationRoute: ApiAdminReconciliationRoute,
@@ -1020,10 +1133,13 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAiMeetPlanRoute: ApiAiMeetPlanRoute,
   ApiCronDrainRoute: ApiCronDrainRoute,
   ApiCronForceWeeklyDigestRoute: ApiCronForceWeeklyDigestRoute,
+  ApiCronSendScheduledEmailsRoute: ApiCronSendScheduledEmailsRoute,
   ApiEmailVisitConfirmRoute: ApiEmailVisitConfirmRoute,
+  ApiFeedbackMeetRoute: ApiFeedbackMeetRoute,
   ApiFeedbackNpsRoute: ApiFeedbackNpsRoute,
   ApiFeedbackPatternRoute: ApiFeedbackPatternRoute,
   ApiFeedbackQualityRoute: ApiFeedbackQualityRoute,
+  ApiFeedbackReportRoute: ApiFeedbackReportRoute,
   ApiUserMeRoute: ApiUserMeRoute,
   ApiUserSetCityRoute: ApiUserSetCityRoute,
   ApiVenuesLookupRoute: ApiVenuesLookupRoute,

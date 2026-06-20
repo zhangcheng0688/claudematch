@@ -72,7 +72,7 @@ export const Route = createFileRoute("/api/user/me")({
           data: {
             user: { id: userId, email, wechat_bound: wechatBound },
             profile: profile ?? null,
-            authorizations: authz ?? { business: false, dating: false, partner: false },
+            authorizations: authz ?? { business: false, dating: false, partner: false, discoverable: true },
             ai_profile: aiProfile,
           },
         }, undefined, request);

@@ -11,6 +11,7 @@ import {
   buildSynthUser,
 } from "@/lib/api/_profile-prompts.server";
 import { selectPromptVersion } from "@/lib/api/_prompt-versions.server";
+import { moderateText } from "@/lib/api/_moderation.server";
 import { embedText, profileToEmbeddingText } from "@/lib/api/_embeddings.server";
 
 async function saveProfile(
@@ -162,6 +163,16 @@ export const Route = createFileRoute("/api/ai/generate-profile")({
               .filter((a) => typeof a.answer === "string" && a.answer.trim().length > 0)
               .map((a) => ({ question: String(a.question ?? ""), answer: a.answer!.trim() }))
           : [];
+
+        const fullInput = [input, ...followUpAnswers.map((a) => `${a.question} ${a.answer}`)].join("\n");
+        const moderation = await moderateText(fullInput, llmLang, "generate-profile");
+        if (!moderation.safe) {
+          return json(
+            { error: "Input violates content policy", moderation },
+            { status: 400 },
+            request,
+          );
+        }
 
         const interviewBlock = followUpAnswers.length > 0
           ? (llmLang === "zh"

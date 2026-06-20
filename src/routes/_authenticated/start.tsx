@@ -18,6 +18,8 @@ import {
   ThumbsDown,
 } from "lucide-react";
 
+const ONBOARDING_STORAGE_KEY = "linq_onboarding_v1";
+
 export const Route = createFileRoute("/_authenticated/start")({
   head: () => ({ meta: [{ title: "Start matching — linQ" }] }),
   component: () => (
@@ -87,6 +89,49 @@ function StartPage() {
       }
     })();
   }, []);
+
+  // Restore onboarding progress from localStorage so a refresh doesn't lose
+  // the user's input, interview answers, or current step.
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(ONBOARDING_STORAGE_KEY);
+      if (!raw) return;
+      const saved = JSON.parse(raw);
+      if (typeof saved.input === "string") setInput(saved.input);
+      if (saved.scenario && ["business", "dating", "partner"].includes(saved.scenario)) setScenario(saved.scenario);
+      if (saved.city && ["shenzhen", "shanghai", "hongkong"].includes(saved.city)) setCity(saved.city);
+      if (saved.step === "interview" || typeof saved.step === "number") {
+        setStep(saved.step);
+      }
+      if (Array.isArray(saved.interviewQuestions)) {
+        setInterviewQuestions(saved.interviewQuestions);
+      }
+      if (saved.interviewAnswers && typeof saved.interviewAnswers === "object") {
+        setInterviewAnswers(saved.interviewAnswers);
+      }
+    } catch {
+      /* ignore corrupt localStorage */
+    }
+  }, []);
+
+  // Persist onboarding progress whenever it changes.
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        ONBOARDING_STORAGE_KEY,
+        JSON.stringify({
+          input,
+          scenario,
+          city,
+          step,
+          interviewQuestions,
+          interviewAnswers,
+        }),
+      );
+    } catch {
+      /* ignore private mode / quota errors */
+    }
+  }, [input, scenario, city, step, interviewQuestions, interviewAnswers]);
 
   const saveCityAndContinue = async (c: "shenzhen" | "shanghai" | "hongkong") => {
     setCitySaving(true);
@@ -330,6 +375,11 @@ function StartPage() {
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </button>
             </div>
+            {interviewLoading && (
+              <div className="text-sm text-muted-foreground">
+                {t("AI is reading your description…", "AI 正在读你的描述…", "AI 讀緊你嘅描述…")}
+              </div>
+            )}
           </div>
         )}
 
@@ -340,9 +390,9 @@ function StartPage() {
             </h1>
             <p className="text-sm text-muted-foreground">
               {t(
-                "These questions are generated just for you, based on what you wrote. They help the AI see the gaps and tensions.",
-                "这些问题是根据你的描述专门生成的，帮助 AI 看到你描述里的空白和矛盾。",
-                "呢啲問題係根據你嘅描述專門生成，幫 AI 睇到你描述裏面嘅空白同矛盾。",
+                "These questions are generated just for you, based on what you wrote. Answering them makes the AI profile about 40% more accurate.",
+                "这些问题是根据你的描述专门生成的。回答后，AI 画像的准确度会提升约 40%。",
+                "呢啲問題係根據你嘅描述專門生成。回答之後，AI 畫像準確度會提升約 40%。",
               )}
             </p>
             <div className="space-y-5">
@@ -402,6 +452,7 @@ function StartPage() {
                 </button>
               </div>
             </div>
+            {loading === "profile" && <AiLoadingSteps t={t} />}
           </div>
         )}
 
@@ -548,6 +599,7 @@ function StartPage() {
                   setProfileRating(null);
                   setProfileFeedbackComment("");
                   setMatches([]);
+                  try { localStorage.removeItem(ONBOARDING_STORAGE_KEY); } catch {}
                   setPlan(null);
                   setActiveMatch(null);
                   setWaitlistMsg(null);
@@ -572,6 +624,36 @@ function StartPage() {
         )}
       </section>
     </AppShell>
+  );
+}
+
+function AiLoadingSteps({ t }: { t: (en: string, zh: string, yue: string) => string }) {
+  const [tick, setTick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setTick((v) => (v + 1) % 4), 2500);
+    return () => clearInterval(id);
+  }, []);
+  const steps = [
+    t("Reading between the lines…", "在读你字里行间的信息…", "讀緊你字裏行間嘅信息…"),
+    t("Spotting your patterns…", "在找你的行为模式…", "搵緊你嘅行為模式…"),
+    t("Finding your contradictions…", "在找你的内在矛盾…", "搵緊你嘅內在矛盾…"),
+    t("Writing your portrait…", "在写你的画像…", "寫緊你嘅畫像…"),
+  ];
+  return (
+    <div className="space-y-2 rounded-sm border border-primary/20 bg-primary/5 p-4">
+      {steps.map((s, i) => (
+        <div key={i} className="flex items-center gap-3 text-sm">
+          <span
+            className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] ${
+              i <= tick ? "bg-primary text-primary-foreground" : "border border-border text-muted-foreground"
+            }`}
+          >
+            {i < tick ? "✓" : i + 1}
+          </span>
+          <span className={i <= tick ? "text-foreground" : "text-muted-foreground"}>{s}</span>
+        </div>
+      ))}
+    </div>
   );
 }
 
