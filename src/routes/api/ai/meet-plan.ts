@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { json, preflight, requireUser, safeError } from "@/lib/api/_helpers.server";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { deepseekChat, safeParseJSON } from "@/lib/api/_deepseek.server";
+import { llmChatEx, safeParseJSON } from "@/lib/api/_llm.server";
+import { getCachedResponse, hashInputs, setCachedResponse } from "@/lib/api/_ai-cache.server";
 import { extractInterests, fallbackVenueName } from "@/lib/api/extract-interests";
 import { geocodeCity, getCityCentroid, haversineKm, isVenueOpenAt, kmToWalkingMinutes, midpoint } from "@/lib/api/_geo.server";
 
@@ -196,6 +197,41 @@ export const Route = createFileRoute("/api/ai/meet-plan")({
         const candidates = await loadVenuesNearMidpoint(myCity, center, preferredVibes, planTime);
         const hasVenues = candidates.length > 0;
 
+        // P1-3: result cache. meet-plan for a given match_id + lang is
+        // deterministic and expensive; cache it for 7 days.
+        const cachePayload = { match_id, lang, myCity, scenario: match.scenario, candidateIds: candidates.map((v) => v.id) };
+        const cacheKey = await hashInputs("meet-plan", cachePayload);
+        type MeetPlanParsed = {
+          multi_plan?: Array<{
+            id?: string;
+            label?: string;
+            description?: string;
+            venue_options?: Array<{
+              venue_id?: string;
+              why?: string;
+              distance_walking_minutes?: number;
+            }>;
+            activity_design?: {
+              why_this_activity?: string;
+              flow?: { "0_30_min"?: string; "30_60_min"?: string; "60_90_min"?: string };
+              backup_if_bored?: string;
+            };
+            time_considerations?: {
+              best_window?: string;
+              avoid_window?: string;
+              weather_check?: string;
+            };
+            exit_strategy?: {
+              natural_close?: string;
+              followup_anchor?: string;
+            };
+          }>;
+        };
+        const cached = await getCachedResponse<MeetPlanParsed>(supabase, cacheKey);
+        let parsed: MeetPlanParsed | undefined = cached?.response;
+        let planProvider = cached?.provider;
+
+        if (!parsed || !Array.isArray(parsed.multi_plan)) {
         // LLM system prompt — same as v2, but explicitly notes that
         // venue options are *real* restaurants and the model must
         // pick from them (not invent).
@@ -296,15 +332,17 @@ Return JSON of shape:
 }
 ${llmLang === "zh" ? "全部用中文表达" : "Express in English"}.`;
 
-        const raw = await deepseekChat(
+        const llmRes = await llmChatEx(
           [
             { role: "system", content: sys },
             { role: "user", content: prompt },
           ],
-          { json: true, temperature: 0.9, max_tokens: 2800 },
+          { json: true, temperature: 0.9, max_tokens: 2800, label: "meet-plan", traceId: `${userId}:${match_id}`, deadlineMs: 50_000 },
         );
+        const raw = llmRes?.content ?? null;
+        planProvider = llmRes?.provider ?? planProvider;
 
-        const parsed = safeParseJSON<{
+        const llmParsed = safeParseJSON<{
           multi_plan?: Array<{
             id?: string;
             label?: string;
@@ -330,6 +368,14 @@ ${llmLang === "zh" ? "全部用中文表达" : "Express in English"}.`;
             };
           }>;
         }>(raw) ?? {};
+        parsed = llmParsed;
+
+        // Persist the expensive LLM result so future identical requests
+        // (e.g. user refreshing the plan page) don't re-call the model.
+        await setCachedResponse(supabase, cacheKey, "meet-plan", cacheKey, llmRes?.provider, llmParsed, 24 * 7);
+        } // end cache miss
+
+        const finalParsed = parsed ?? {};
 
         // Server-side validation: keep only venue_options whose
         // venue_id is in our candidate set. This defends against
@@ -337,7 +383,7 @@ ${llmLang === "zh" ? "全部用中文表达" : "Express in English"}.`;
         const candidateIds = new Set(candidates.map((v) => v.id));
         const venueById = Object.fromEntries(candidates.map((v) => [v.id, v]));
 
-        const validatedPlans = (parsed.multi_plan ?? []).map((plan) => ({
+        const validatedPlans = (finalParsed.multi_plan ?? []).map((plan) => ({
           ...plan,
           venue_options: (plan.venue_options ?? [])
             .filter((vo) => typeof vo.venue_id === "string" && candidateIds.has(vo.venue_id))
@@ -418,7 +464,7 @@ ${llmLang === "zh" ? "全部用中文表达" : "Express in English"}.`;
           scenario: match.scenario,
           city: myCity,
           ai: validatedPlans.length > 0 ? { multi_plan: validatedPlans } : fallback,
-          ai_provider: validatedPlans.length > 0 ? "deepseek" : "fallback",
+          ai_provider: validatedPlans.length > 0 ? (planProvider ?? "llm") : "fallback",
           venue_lookup: venueByIdForClient, // client uses this to render
           generated_at: new Date().toISOString(),
         };

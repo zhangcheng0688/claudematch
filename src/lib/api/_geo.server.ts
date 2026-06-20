@@ -8,6 +8,8 @@ const AMAP_GEOCODE_URL = "https://restapi.amap.com/v3/geocode/geo";
 const CITY_CENTROIDS: Record<string, { lat: number; lng: number }> = {
   shenzhen: { lat: 22.5431, lng: 114.0579 },
   shanghai: { lat: 31.2304, lng: 121.4737 },
+  hongkong: { lat: 22.3193, lng: 114.1694 },
+  "hong kong": { lat: 22.3193, lng: 114.1694 },
 };
 
 export function getCityCentroid(city: string): { lat: number; lng: number } {

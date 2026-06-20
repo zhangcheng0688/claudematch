@@ -31,6 +31,7 @@ import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedMatchRouteImport } from './routes/_authenticated/match'
 import { Route as ApiVenuesTrackRouteImport } from './routes/api/venues/track'
+import { Route as ApiVenuesOnboardRouteImport } from './routes/api/venues/onboard'
 import { Route as ApiVenuesLookupRouteImport } from './routes/api/venues/lookup'
 import { Route as ApiUserSetCityRouteImport } from './routes/api/user/set-city'
 import { Route as ApiUserMeRouteImport } from './routes/api/user/me'
@@ -48,6 +49,7 @@ import { Route as AuthenticatedMatchIdRouteImport } from './routes/_authenticate
 import { Route as LovableEmailQueueProcessRouteImport } from './routes/lovable/email/queue/process'
 import { Route as LovableEmailAuthWebhookRouteImport } from './routes/lovable/email/auth/webhook'
 import { Route as LovableEmailAuthPreviewRouteImport } from './routes/lovable/email/auth/preview'
+import { Route as ApiVenuesMerchantDashboardRouteImport } from './routes/api/venues/merchant/dashboard'
 import { Route as ApiAuthWechatUnbindRouteImport } from './routes/api/auth/wechat/unbind'
 import { Route as ApiAuthWechatStartRouteImport } from './routes/api/auth/wechat/start'
 import { Route as ApiAuthWechatCallbackRouteImport } from './routes/api/auth/wechat/callback'
@@ -161,6 +163,11 @@ const ApiVenuesTrackRoute = ApiVenuesTrackRouteImport.update({
   path: '/api/venues/track',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiVenuesOnboardRoute = ApiVenuesOnboardRouteImport.update({
+  id: '/api/venues/onboard',
+  path: '/api/venues/onboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiVenuesLookupRoute = ApiVenuesLookupRouteImport.update({
   id: '/api/venues/lookup',
   path: '/api/venues/lookup',
@@ -248,6 +255,12 @@ const LovableEmailAuthPreviewRoute = LovableEmailAuthPreviewRouteImport.update({
   path: '/lovable/email/auth/preview',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiVenuesMerchantDashboardRoute =
+  ApiVenuesMerchantDashboardRouteImport.update({
+    id: '/api/venues/merchant/dashboard',
+    path: '/api/venues/merchant/dashboard',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const ApiAuthWechatUnbindRoute = ApiAuthWechatUnbindRouteImport.update({
   id: '/api/auth/wechat/unbind',
   path: '/api/auth/wechat/unbind',
@@ -299,10 +312,12 @@ export interface FileRoutesByFullPath {
   '/api/user/me': typeof ApiUserMeRoute
   '/api/user/set-city': typeof ApiUserSetCityRoute
   '/api/venues/lookup': typeof ApiVenuesLookupRoute
+  '/api/venues/onboard': typeof ApiVenuesOnboardRoute
   '/api/venues/track': typeof ApiVenuesTrackRoute
   '/api/auth/wechat/callback': typeof ApiAuthWechatCallbackRoute
   '/api/auth/wechat/start': typeof ApiAuthWechatStartRoute
   '/api/auth/wechat/unbind': typeof ApiAuthWechatUnbindRoute
+  '/api/venues/merchant/dashboard': typeof ApiVenuesMerchantDashboardRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -342,10 +357,12 @@ export interface FileRoutesByTo {
   '/api/user/me': typeof ApiUserMeRoute
   '/api/user/set-city': typeof ApiUserSetCityRoute
   '/api/venues/lookup': typeof ApiVenuesLookupRoute
+  '/api/venues/onboard': typeof ApiVenuesOnboardRoute
   '/api/venues/track': typeof ApiVenuesTrackRoute
   '/api/auth/wechat/callback': typeof ApiAuthWechatCallbackRoute
   '/api/auth/wechat/start': typeof ApiAuthWechatStartRoute
   '/api/auth/wechat/unbind': typeof ApiAuthWechatUnbindRoute
+  '/api/venues/merchant/dashboard': typeof ApiVenuesMerchantDashboardRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -387,10 +404,12 @@ export interface FileRoutesById {
   '/api/user/me': typeof ApiUserMeRoute
   '/api/user/set-city': typeof ApiUserSetCityRoute
   '/api/venues/lookup': typeof ApiVenuesLookupRoute
+  '/api/venues/onboard': typeof ApiVenuesOnboardRoute
   '/api/venues/track': typeof ApiVenuesTrackRoute
   '/api/auth/wechat/callback': typeof ApiAuthWechatCallbackRoute
   '/api/auth/wechat/start': typeof ApiAuthWechatStartRoute
   '/api/auth/wechat/unbind': typeof ApiAuthWechatUnbindRoute
+  '/api/venues/merchant/dashboard': typeof ApiVenuesMerchantDashboardRoute
   '/lovable/email/auth/preview': typeof LovableEmailAuthPreviewRoute
   '/lovable/email/auth/webhook': typeof LovableEmailAuthWebhookRoute
   '/lovable/email/queue/process': typeof LovableEmailQueueProcessRoute
@@ -432,10 +451,12 @@ export interface FileRouteTypes {
     | '/api/user/me'
     | '/api/user/set-city'
     | '/api/venues/lookup'
+    | '/api/venues/onboard'
     | '/api/venues/track'
     | '/api/auth/wechat/callback'
     | '/api/auth/wechat/start'
     | '/api/auth/wechat/unbind'
+    | '/api/venues/merchant/dashboard'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
@@ -475,10 +496,12 @@ export interface FileRouteTypes {
     | '/api/user/me'
     | '/api/user/set-city'
     | '/api/venues/lookup'
+    | '/api/venues/onboard'
     | '/api/venues/track'
     | '/api/auth/wechat/callback'
     | '/api/auth/wechat/start'
     | '/api/auth/wechat/unbind'
+    | '/api/venues/merchant/dashboard'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
@@ -519,10 +542,12 @@ export interface FileRouteTypes {
     | '/api/user/me'
     | '/api/user/set-city'
     | '/api/venues/lookup'
+    | '/api/venues/onboard'
     | '/api/venues/track'
     | '/api/auth/wechat/callback'
     | '/api/auth/wechat/start'
     | '/api/auth/wechat/unbind'
+    | '/api/venues/merchant/dashboard'
     | '/lovable/email/auth/preview'
     | '/lovable/email/auth/webhook'
     | '/lovable/email/queue/process'
@@ -557,10 +582,12 @@ export interface RootRouteChildren {
   ApiUserMeRoute: typeof ApiUserMeRoute
   ApiUserSetCityRoute: typeof ApiUserSetCityRoute
   ApiVenuesLookupRoute: typeof ApiVenuesLookupRoute
+  ApiVenuesOnboardRoute: typeof ApiVenuesOnboardRoute
   ApiVenuesTrackRoute: typeof ApiVenuesTrackRoute
   ApiAuthWechatCallbackRoute: typeof ApiAuthWechatCallbackRoute
   ApiAuthWechatStartRoute: typeof ApiAuthWechatStartRoute
   ApiAuthWechatUnbindRoute: typeof ApiAuthWechatUnbindRoute
+  ApiVenuesMerchantDashboardRoute: typeof ApiVenuesMerchantDashboardRoute
   LovableEmailAuthPreviewRoute: typeof LovableEmailAuthPreviewRoute
   LovableEmailAuthWebhookRoute: typeof LovableEmailAuthWebhookRoute
   LovableEmailQueueProcessRoute: typeof LovableEmailQueueProcessRoute
@@ -722,6 +749,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiVenuesTrackRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/venues/onboard': {
+      id: '/api/venues/onboard'
+      path: '/api/venues/onboard'
+      fullPath: '/api/venues/onboard'
+      preLoaderRoute: typeof ApiVenuesOnboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/venues/lookup': {
       id: '/api/venues/lookup'
       path: '/api/venues/lookup'
@@ -841,6 +875,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LovableEmailAuthPreviewRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/venues/merchant/dashboard': {
+      id: '/api/venues/merchant/dashboard'
+      path: '/api/venues/merchant/dashboard'
+      fullPath: '/api/venues/merchant/dashboard'
+      preLoaderRoute: typeof ApiVenuesMerchantDashboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/auth/wechat/unbind': {
       id: '/api/auth/wechat/unbind'
       path: '/api/auth/wechat/unbind'
@@ -944,10 +985,12 @@ const rootRouteChildren: RootRouteChildren = {
   ApiUserMeRoute: ApiUserMeRoute,
   ApiUserSetCityRoute: ApiUserSetCityRoute,
   ApiVenuesLookupRoute: ApiVenuesLookupRoute,
+  ApiVenuesOnboardRoute: ApiVenuesOnboardRoute,
   ApiVenuesTrackRoute: ApiVenuesTrackRoute,
   ApiAuthWechatCallbackRoute: ApiAuthWechatCallbackRoute,
   ApiAuthWechatStartRoute: ApiAuthWechatStartRoute,
   ApiAuthWechatUnbindRoute: ApiAuthWechatUnbindRoute,
+  ApiVenuesMerchantDashboardRoute: ApiVenuesMerchantDashboardRoute,
   LovableEmailAuthPreviewRoute: LovableEmailAuthPreviewRoute,
   LovableEmailAuthWebhookRoute: LovableEmailAuthWebhookRoute,
   LovableEmailQueueProcessRoute: LovableEmailQueueProcessRoute,

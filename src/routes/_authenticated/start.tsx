@@ -47,7 +47,7 @@ function StartPage() {
   // gives us real restaurants in the right city (no more 深圳 fallback
   // for 上海 users). Stored on the user_profiles row so it survives
   // refreshes and shows up in meet-plan queries.
-  const [city, setCity] = useState<"shenzhen" | "shanghai" | null>(null);
+  const [city, setCity] = useState<"shenzhen" | "shanghai" | "hongkong" | null>(null);
   const [citySaving, setCitySaving] = useState(false);
 
   const scenarios = useMemo(
@@ -70,7 +70,7 @@ function StartPage() {
         );
         const me = (res as { data?: { ai_profile?: { profile_data?: { city?: string } } } }).data?.ai_profile;
         const c = me?.profile_data?.city;
-        if (c === "shenzhen" || c === "shanghai") {
+        if (c === "shenzhen" || c === "shanghai" || c === "hongkong") {
           setCity(c);
           setStep(1); // already chose — skip step 0
         }
@@ -80,7 +80,7 @@ function StartPage() {
     })();
   }, []);
 
-  const saveCityAndContinue = async (c: "shenzhen" | "shanghai") => {
+  const saveCityAndContinue = async (c: "shenzhen" | "shanghai" | "hongkong") => {
     setCitySaving(true);
     try {
       // Persist via a lightweight endpoint — we re-use the me endpoint
@@ -205,6 +205,7 @@ function StartPage() {
               {([
                 { id: "shenzhen" as const, name: "深圳 / Shenzhen", emoji: "🌃" },
                 { id: "shanghai" as const, name: "上海 / Shanghai", emoji: "🌆" },
+                { id: "hongkong" as const, name: "香港 / Hong Kong", emoji: "🌊" },
               ]).map((opt) => (
                 <button
                   key={opt.id}

@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { json, preflight, requireUser, safeError } from "@/lib/api/_helpers.server";
-import { deepseekChat, safeParseJSON } from "@/lib/api/_deepseek.server";
+import { llmChatEx, safeParseJSON } from "@/lib/api/_llm.server";
+import { getCachedResponse, hashInputs, setCachedResponse } from "@/lib/api/_ai-cache.server";
 import { embedText, profileToEmbeddingText } from "@/lib/api/_embeddings.server";
 import { geocodeCity, getCityCentroid, haversineKm, isVenueOpenAt, kmToWalkingMinutes, midpoint } from "@/lib/api/_geo.server";
 
@@ -40,7 +41,67 @@ export const Route = createFileRoute("/api/ai/match")({
           typeof body.scenario === "string" && VALID_SCENARIOS.has(body.scenario)
             ? (body.scenario as "business" | "dating" | "partner")
             : "dating";
-        const lang: "zh" | "en" = body.lang === "en" ? "en" : "zh";
+        const lang: "zh" | "en" | "yue" = body.lang === "en" ? "en" : body.lang === "yue" ? "yue" : "zh";
+        const llmLang: "zh" | "en" = lang === "en" ? "en" : "zh";
+
+        type ParsedT = {
+          best_index?: number;
+          match_score?: number;
+          name?: string;
+          headline?: string;
+          bio?: string;
+          summary?: string;
+          shared_interests?: string[];
+          resonance?: string[];
+          complementarity?: string[];
+          friction?: string[];
+          chemistry?: {
+            first_10_minutes?: string;
+            the_unspoken?: string;
+          };
+          growth?: {
+            in_6_months?: string;
+            the_third_thing?: string;
+          };
+          compatibility_breakdown?: {
+            resonance: number;
+            complementarity: number;
+            friction_risk: number;
+            chemistry: number;
+            growth_potential: number;
+          };
+          reason?: string;
+          meet_plan?: {
+            when?: string;
+            where?: string;
+            location_intro?: string;
+            dress_code?: string;
+            icebreakers?: string[];
+            duration?: string;
+            budget?: string;
+            pitfalls?: string[];
+            highlights?: string[];
+          };
+        };
+        type DeepT = {
+          paradox_resolution?: {
+            a_paradox?: string;
+            how_b_resolves?: string;
+            why?: string;
+          };
+          timeline?: Array<{ phase: string; what_happens?: string; signals_to_watch?: string }>;
+          conversation_arc?: {
+            opening?: string;
+            warming?: string;
+            depth?: string;
+            closing?: string;
+          };
+          follow_up_strategy?: {
+            day_1?: string;
+            week_1?: string;
+            month_1?: string;
+          };
+        };
 
         // 1) Load my latest AI profile and registered email.
         const { data: latestProfile } = await supabase
@@ -292,14 +353,30 @@ ${candidates.map((c, i) => `[${i}] ${JSON.stringify(c.profile_data)}`).join("\n"
 }
 全部用中文表达。`;
 
-        const raw = await deepseekChat(
-          [
-            { role: "system", content: sys },
-            { role: "user", content: prompt },
-          ],
-          { json: true, temperature: 0.9, max_tokens: 2400 },
-        );
-        const parsed = safeParseJSON<ParsedT>(raw) ?? {};
+        // P1-3: result cache. Match analysis for the same user + scenario +
+        // candidate set is expensive and often repeated when users retry.
+        const candidateSignature = candidates.map((c) => c.user_id).sort();
+        const matchCacheKey = await hashInputs("match", userId, scenario, lang, candidateSignature);
+        type CachedMatch = { parsed: ParsedT; deep: DeepT; provider?: string };
+        const cachedMatch = await getCachedResponse<CachedMatch>(supabase, matchCacheKey);
+        let parsed: ParsedT = cachedMatch?.response?.parsed ?? {};
+        let deep: DeepT = cachedMatch?.response?.deep ?? {};
+        let matchProvider = cachedMatch?.response?.provider;
+
+        const hasCache = typeof cachedMatch?.response?.parsed?.best_index === "number";
+
+        if (!hasCache) {
+          const round1Res = await llmChatEx(
+            [
+              { role: "system", content: sys },
+              { role: "user", content: prompt },
+            ],
+            { json: true, temperature: 0.9, max_tokens: 2400, label: "match:round-1", traceId: `${userId}:${scenario}:r1`, deadlineMs: 50_000 },
+          );
+          const raw = round1Res?.content ?? null;
+          parsed = safeParseJSON<ParsedT>(raw) ?? {};
+          matchProvider = round1Res?.provider ?? matchProvider;
+        }
 
         // ============================================================
         // Phase 3: ground the meet-plan in a real venue.
@@ -405,7 +482,7 @@ ${candidates.map((c, i) => `[${i}] ${JSON.stringify(c.profile_data)}`).join("\n"
         //   - conversation_arc: the 30-minute first-meeting flow
         //   - follow_up_strategy: day_1 / week_1 / month_1
         // ============================================================
-        const deepSys = lang === "zh"
+        const deepSys = llmLang === "zh"
           ? `你是 linQ 的关系动力学引擎。
 
 任务：基于 A 的画像（包括 ta 的矛盾）和被选中的候选人 B 的画像，分析：
@@ -432,7 +509,7 @@ Task: based on A's profile (including ta's paradoxes) and selected candidate B's
 Critical: all output must be specific to these two people.
 Strict JSON output.`;
 
-        const deepUserPrompt = lang === "zh"
+        const deepUserPrompt = llmLang === "zh"
           ? `A 的画像：${JSON.stringify(latestProfile.profile_data, null, 2)}
 被选中的 B (候选 ${parsed.best_index ?? 0})：${JSON.stringify(candidates[Math.max(0, Math.min(candidates.length - 1, Number(parsed.best_index ?? 0)))]?.profile_data, null, 2)}
 
@@ -479,72 +556,21 @@ Output v4 fields JSON:
   "follow_up_strategy": { "day_1": "...", "week_1": "...", "month_1": "..." }
 }`;
 
-        const deepRaw = await deepseekChat(
-          [
-            { role: "system", content: deepSys },
-            { role: "user", content: deepUserPrompt },
-          ],
-          { json: true, temperature: 0.9, max_tokens: 2000 },
-        );
-        const deep = safeParseJSON<{
-          paradox_resolution?: {
-            a_paradox?: string;
-            how_b_resolves?: string;
-            why?: string;
-          };
-          timeline?: Array<{ phase: string; what_happens?: string; signals_to_watch?: string }>;
-          conversation_arc?: {
-            opening?: string;
-            warming?: string;
-            depth?: string;
-            closing?: string;
-          };
-          follow_up_strategy?: {
-            day_1?: string;
-            week_1?: string;
-            month_1?: string;
-          };
-        }>(deepRaw) ?? {};
-        type ParsedT = {
-          best_index?: number;
-          match_score?: number;
-          name?: string;
-          headline?: string;
-          bio?: string;
-          summary?: string;
-          shared_interests?: string[];
-          resonance?: string[];
-          complementarity?: string[];
-          friction?: string[];
-          chemistry?: {
-            first_10_minutes?: string;
-            the_unspoken?: string;
-          };
-          growth?: {
-            in_6_months?: string;
-            the_third_thing?: string;
-          };
-          compatibility_breakdown?: {
-            resonance: number;
-            complementarity: number;
-            friction_risk: number;
-            chemistry: number;
-            growth_potential: number;
-          };
-          reason?: string;
-          meet_plan?: {
-            when?: string;
-            where?: string;
-            location_intro?: string;
-            dress_code?: string;
-            icebreakers?: string[];
-            duration?: string;
-            budget?: string;
-            pitfalls?: string[];
-            highlights?: string[];
-          };
-        };
-        const _typedParsed: ParsedT = parsed;
+        if (!hasCache) {
+          const round2Res = await llmChatEx(
+            [
+              { role: "system", content: deepSys },
+              { role: "user", content: deepUserPrompt },
+            ],
+            { json: true, temperature: 0.9, max_tokens: 2000, label: "match:round-2", traceId: `${userId}:${scenario}:r2`, deadlineMs: 50_000 },
+          );
+          const deepRaw = round2Res?.content ?? null;
+          deep = safeParseJSON<DeepT>(deepRaw) ?? {};
+
+          // Persist the expensive two-round analysis so retries with the
+          // same candidate set don't re-call the model.
+          await setCachedResponse(supabase, matchCacheKey, "match", matchCacheKey, matchProvider, { parsed, deep, provider: matchProvider }, 24);
+        }
         const score =
           typeof parsed.match_score === "number" ? parsed.match_score : 82.5;
 
@@ -619,7 +645,7 @@ Output v4 fields JSON:
           // we set on the candidate's profile_data above.
           is_real_user: true,
           matched_type: "real" as const,
-          ai_provider: raw ? "deepseek-2round" : "fallback",
+          ai_provider: matchProvider ? `${matchProvider}-2round` : "fallback",
         };
 
         const isAIPersona = Boolean(
@@ -685,7 +711,7 @@ Output v4 fields JSON:
           version: "v1",
           scenario,
           ai: plan,
-          ai_provider: raw ? "deepseek" : "fallback",
+          ai_provider: matchProvider ? matchProvider : "fallback",
           generated_at: new Date().toISOString(),
         };
         const { data: planRow } = await supabaseAdmin

@@ -17,7 +17,7 @@ import { json, preflight, requireUser, safeError } from "@/lib/api/_helpers.serv
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { geocodeCity } from "@/lib/api/_geo.server";
 
-const VALID_CITIES = new Set(["shenzhen", "shanghai"]);
+const VALID_CITIES = new Set(["shenzhen", "shanghai", "hongkong"]);
 
 export const Route = createFileRoute("/api/user/set-city")({
   server: {
@@ -37,7 +37,7 @@ export const Route = createFileRoute("/api/user/set-city")({
 
         const city = typeof body.city === "string" ? body.city : "";
         if (!VALID_CITIES.has(city)) {
-          return json({ error: "city must be 'shenzhen' or 'shanghai'" }, { status: 400 }, request);
+          return json({ error: "city must be 'shenzhen', 'shanghai' or 'hongkong'" }, { status: 400 }, request);
         }
 
         // We update the latest user_profiles row (the AI profile) to

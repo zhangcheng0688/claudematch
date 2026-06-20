@@ -47,6 +47,42 @@ export type Database = {
         }
         Relationships: []
       }
+      ai_cache: {
+        Row: {
+          id: number
+          cache_key: string
+          call_type: string
+          payload_hash: string
+          provider: string | null
+          response_json: Json | null
+          expires_at: string
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          cache_key: string
+          call_type: string
+          payload_hash: string
+          provider?: string | null
+          response_json?: Json | null
+          expires_at: string
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          cache_key?: string
+          call_type?: string
+          payload_hash?: string
+          provider?: string | null
+          response_json?: Json | null
+          expires_at?: string
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       email_send_state: {
         Row: {
           auth_email_ttl_minutes: number
@@ -374,6 +410,9 @@ export type Database = {
           last_verified_at: string | null
           created_at: string
           updated_at: string
+          merchant_email: string | null
+          merchant_token: string | null
+          onboarding_status: string
         }
         Insert: {
           id?: string
@@ -401,6 +440,9 @@ export type Database = {
           last_verified_at?: string | null
           created_at?: string
           updated_at?: string
+          merchant_email?: string | null
+          merchant_token?: string | null
+          onboarding_status?: string
         }
         Update: {
           id?: string
@@ -428,6 +470,9 @@ export type Database = {
           last_verified_at?: string | null
           created_at?: string
           updated_at?: string
+          merchant_email?: string | null
+          merchant_token?: string | null
+          onboarding_status?: string
         }
         Relationships: []
       }

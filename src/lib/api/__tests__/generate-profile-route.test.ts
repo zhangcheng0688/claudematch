@@ -15,8 +15,8 @@ vi.mock("@/lib/api/_helpers.server", () => ({
   safeError: (e: unknown) => (e instanceof Error ? e.message : "error"),
 }));
 
-vi.mock("@/lib/api/_deepseek.server", () => ({
-  deepseekChat: vi.fn(),
+vi.mock("@/lib/api/_llm.server", () => ({
+  llmChatEx: vi.fn(),
   safeParseJSON: (raw: string | null) => {
     if (!raw) return null;
     try {
