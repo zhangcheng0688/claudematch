@@ -48,8 +48,8 @@ export const Checkin7DayEmail = ({
       <Container style={container}>
         <Heading style={h1}>用 linQ 一周了 👋</Heading>
         <Text style={text}>
-          {recipientName ? `${recipientName}，` : ""}你加入 linQ 已经 7 天了。
-          想问你几个问题 —— 不会超过 1 分钟。
+          {recipientName ? `${recipientName}，` : ""}你加入 linQ 已经 7 天了。 想问你几个问题 ——
+          不会超过 1 分钟。
         </Text>
 
         <Heading style={h2}>1. 你有多大概率会向朋友推荐 linQ？</Heading>
@@ -63,12 +63,7 @@ export const Checkin7DayEmail = ({
         </Section>
 
         <Heading style={h2}>2. 那次 AI 见面方案你用了吗？</Heading>
-        <Text style={text}>
-          如果去了 ——
-          对方感觉如何？
-          如果没去 ——
-          缺什么？
-        </Text>
+        <Text style={text}>如果去了 —— 对方感觉如何？ 如果没去 —— 缺什么？</Text>
 
         <Section style={ctaRow}>
           <Button href={surveyUrl} style={primaryBtn}>
@@ -76,9 +71,7 @@ export const Checkin7DayEmail = ({
           </Button>
         </Section>
 
-        <Text style={muted}>
-          你的回答会直接影响我们做什么、不做什么。1 分钟顶 100 个 PR。
-        </Text>
+        <Text style={muted}>你的回答会直接影响我们做什么、不做什么。1 分钟顶 100 个 PR。</Text>
 
         <Text style={subtle}>
           <Link href={unsubscribeUrl}>不想再收到这类邮件</Link>
@@ -89,7 +82,11 @@ export const Checkin7DayEmail = ({
 );
 
 // ── styles ──
-const main = { backgroundColor: "#0a0a0a", color: "#fafafa", fontFamily: "system-ui, -apple-system, sans-serif" };
+const main = {
+  backgroundColor: "#0a0a0a",
+  color: "#fafafa",
+  fontFamily: "system-ui, -apple-system, sans-serif",
+};
 const container = { padding: "32px 24px", maxWidth: 560 };
 const h1 = { fontSize: 22, fontWeight: 600, marginBottom: 16 };
 const h2 = { fontSize: 16, fontWeight: 600, marginTop: 24, marginBottom: 8 };

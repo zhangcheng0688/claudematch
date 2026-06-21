@@ -45,6 +45,7 @@ export const Route = createFileRoute("/api/feedback/meet")({
           return json({ error: "Match not found" }, { status: 404 }, request);
         }
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { data, error } = await (supabase.from as any)("meet_feedback")
           .insert({
             user_id: userId,

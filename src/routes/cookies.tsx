@@ -19,19 +19,31 @@ function CookiesPage() {
   return (
     <LegalLayout title="Cookie Policy" updated="June 2, 2026">
       <p>
-        This Cookie Policy explains how linQ uses cookies and similar technologies when you
-        visit our website.
+        This Cookie Policy explains how linQ uses cookies and similar technologies when you visit
+        our website.
       </p>
       <h2>What are cookies?</h2>
-      <p>Cookies are small text files stored on your device that help websites remember you and your preferences.</p>
+      <p>
+        Cookies are small text files stored on your device that help websites remember you and your
+        preferences.
+      </p>
       <h2>How we use cookies</h2>
       <ul>
-        <li><b>Strictly necessary:</b> authentication and session management.</li>
-        <li><b>Preferences:</b> remembering language and UI choices.</li>
-        <li><b>Analytics:</b> understanding how the Service is used so we can improve it.</li>
+        <li>
+          <b>Strictly necessary:</b> authentication and session management.
+        </li>
+        <li>
+          <b>Preferences:</b> remembering language and UI choices.
+        </li>
+        <li>
+          <b>Analytics:</b> understanding how the Service is used so we can improve it.
+        </li>
       </ul>
       <h2>Your choices</h2>
-      <p>Most browsers let you manage cookies through settings. Disabling cookies may affect parts of the Service. You can also withdraw consent via the cookie banner at any time.</p>
+      <p>
+        Most browsers let you manage cookies through settings. Disabling cookies may affect parts of
+        the Service. You can also withdraw consent via the cookie banner at any time.
+      </p>
       <h2>Contact</h2>
       <p>Questions? Email cheng@cttcable.com.</p>
     </LegalLayout>

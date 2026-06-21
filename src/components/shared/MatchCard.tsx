@@ -100,9 +100,7 @@ export function MatchCard({ match, active, loading, onPlan }: MatchCardProps) {
               </span>
             )}
           </div>
-          {d.headline && (
-            <p className="mt-1 text-sm text-muted-foreground">{d.headline}</p>
-          )}
+          {d.headline && <p className="mt-1 text-sm text-muted-foreground">{d.headline}</p>}
         </div>
         <div className="text-right shrink-0">
           <div className="text-2xl font-semibold text-gold-glow tabular-nums">
@@ -136,7 +134,11 @@ export function MatchCard({ match, active, loading, onPlan }: MatchCardProps) {
             [
               { key: "resonance", label: t("Res", "共鸣", "共鳴"), color: "bg-primary" },
               { key: "complementarity", label: t("Comp", "互补", "互補"), color: "bg-emerald-500" },
-              { key: "friction_risk", label: t("Risk", "摩擦", "摩擦嘅地方"), color: "bg-rose-500" },
+              {
+                key: "friction_risk",
+                label: t("Risk", "摩擦", "摩擦嘅地方"),
+                color: "bg-rose-500",
+              },
               { key: "chemistry", label: t("Chem", "反应", "反應"), color: "bg-violet-500" },
               { key: "growth_potential", label: t("Grow", "成长", "成長"), color: "bg-amber-500" },
             ] as const
@@ -148,14 +150,9 @@ export function MatchCard({ match, active, loading, onPlan }: MatchCardProps) {
                   {label}
                 </div>
                 <div className="mx-auto mt-1 h-1 w-full overflow-hidden rounded-full bg-border">
-                  <div
-                    className={`h-full ${color}`}
-                    style={{ width: `${v}%` }}
-                  />
+                  <div className={`h-full ${color}`} style={{ width: `${v}%` }} />
                 </div>
-                <div className="mt-0.5 text-[10px] tabular-nums text-muted-foreground">
-                  {v}
-                </div>
+                <div className="mt-0.5 text-[10px] tabular-nums text-muted-foreground">{v}</div>
               </div>
             );
           })}
@@ -192,15 +189,11 @@ export function MatchCard({ match, active, loading, onPlan }: MatchCardProps) {
             <p className="text-[10px] uppercase tracking-wider text-muted-foreground">
               {t("Your paradox", "你的矛盾", "你嘅矛盾")}
             </p>
-            <p className="text-sm text-foreground/95">
-              {paradoxResolution.a_paradox}
-            </p>
+            <p className="text-sm text-foreground/95">{paradoxResolution.a_paradox}</p>
             <p className="mt-2 text-[10px] uppercase tracking-wider text-emerald-400">
               {t("How they resolve it", "ta 怎么松动", "佢點鬆動")}
             </p>
-            <p className="text-sm text-foreground/95">
-              {paradoxResolution.how_b_resolves}
-            </p>
+            <p className="text-sm text-foreground/95">{paradoxResolution.how_b_resolves}</p>
             {paradoxResolution.why && (
               <p className="mt-1 text-[11px] italic text-muted-foreground">
                 — {paradoxResolution.why}
@@ -216,9 +209,7 @@ export function MatchCard({ match, active, loading, onPlan }: MatchCardProps) {
         onClick={() => setExpanded((v) => !v)}
         className="mt-4 flex w-full items-center justify-center gap-1.5 rounded-sm border border-border bg-background/40 py-1.5 text-xs text-muted-foreground transition-colors hover:border-primary/40 hover:text-foreground"
       >
-        <ChevronDown
-          className={`h-3 w-3 transition-transform ${expanded ? "rotate-180" : ""}`}
-        />
+        <ChevronDown className={`h-3 w-3 transition-transform ${expanded ? "rotate-180" : ""}`} />
         {expanded
           ? t("Hide deep analysis", "收起深度分析", "收埋深度分析")
           : t("Show deep analysis", "展开深度分析", "展開深度分析")}
@@ -302,19 +293,36 @@ export function MatchCard({ match, active, loading, onPlan }: MatchCardProps) {
               <div className="space-y-1.5">
                 {(
                   [
-                    { phase: "0-5", key: "opening" as const, label: t("Opening", "前 5 分钟", "前 5 分鐘"), color: "border-cyan-500/40 bg-cyan-500/5" },
-                    { phase: "5-15", key: "warming" as const, label: t("Warming", "5-15 分钟", "5-15 分鐘"), color: "border-cyan-500/40 bg-cyan-500/5" },
-                    { phase: "15-25", key: "depth" as const, label: t("Depth", "15-25 分钟", "15-25 分鐘"), color: "border-cyan-500/40 bg-cyan-500/5" },
-                    { phase: "25-30", key: "closing" as const, label: t("Closing", "25-30 分钟", "25-30 分鐘"), color: "border-cyan-500/40 bg-cyan-500/5" },
+                    {
+                      phase: "0-5",
+                      key: "opening" as const,
+                      label: t("Opening", "前 5 分钟", "前 5 分鐘"),
+                      color: "border-cyan-500/40 bg-cyan-500/5",
+                    },
+                    {
+                      phase: "5-15",
+                      key: "warming" as const,
+                      label: t("Warming", "5-15 分钟", "5-15 分鐘"),
+                      color: "border-cyan-500/40 bg-cyan-500/5",
+                    },
+                    {
+                      phase: "15-25",
+                      key: "depth" as const,
+                      label: t("Depth", "15-25 分钟", "15-25 分鐘"),
+                      color: "border-cyan-500/40 bg-cyan-500/5",
+                    },
+                    {
+                      phase: "25-30",
+                      key: "closing" as const,
+                      label: t("Closing", "25-30 分钟", "25-30 分鐘"),
+                      color: "border-cyan-500/40 bg-cyan-500/5",
+                    },
                   ] as const
                 ).map(({ phase, key, label, color }) => {
                   const text = conversationArc[key];
                   if (!text) return null;
                   return (
-                    <div
-                      key={phase}
-                      className={`rounded-sm border-l-2 ${color} px-3 py-2`}
-                    >
+                    <div key={phase} className={`rounded-sm border-l-2 ${color} px-3 py-2`}>
                       <span className="mr-2 text-[10px] font-mono uppercase tracking-wider text-cyan-400">
                         {phase}m
                       </span>
@@ -422,9 +430,7 @@ export function MatchCard({ match, active, loading, onPlan }: MatchCardProps) {
           {/* legacy single-line reason if v2 data is present */}
           {d.reason && resonance.length === 0 && (
             <p className="rounded-sm border-l-2 border-primary/60 bg-primary/5 px-3 py-2 text-xs text-muted-foreground">
-              <span className="font-medium text-primary">
-                {t("Why", "为何匹配", "點解配對")}:{" "}
-              </span>
+              <span className="font-medium text-primary">{t("Why", "为何匹配", "點解配對")}: </span>
               {d.reason}
             </p>
           )}

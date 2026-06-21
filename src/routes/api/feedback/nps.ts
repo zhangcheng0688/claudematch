@@ -19,9 +19,8 @@
 // + 短期签名）。
 
 import { createFileRoute } from "@tanstack/react-router";
-import { createClient } from "@supabase/supabase-js";
 import { createHmac, timingSafeEqual } from "node:crypto";
-import type { Database } from "@/integrations/supabase/types";
+import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN ?? "https://claudematch.com";
 
@@ -29,7 +28,8 @@ const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN ?? "https://claudematch.com"
 // same signing path. We re-implement here rather than import from
 // render-checkin-7day.ts to avoid a circular dep (render imports
 // nps, nps would import render back).
-const NPS_SECRET = process.env.LINQ_NPS_SIGNING_SECRET ?? process.env.FOUNDER_API_KEY ?? "dev-fallback";
+const NPS_SECRET =
+  process.env.LINQ_NPS_SIGNING_SECRET ?? process.env.FOUNDER_API_KEY ?? "dev-fallback";
 
 export function signNpsToken(userId: string, score: number | "unsubscribe"): string {
   const payload = `${userId}|${score}`;
@@ -69,26 +69,24 @@ function page(opts: { title: string; body: string; cta?: { href: string; label: 
 </html>`;
 }
 
-function getSupabase() {
-  const url = process.env.SUPABASE_URL!;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-  return createClient<Database>(url, key, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
-}
-
 /** Sign a (user_id, action) pair so the URL is unforgeable. The
  *  signature includes the score so an attacker can't downgrade
  *  a "10" to a "9" by editing the URL. */
 // (signNpsToken is exported above; no duplicate here.)
 
-function verifyNpsToken(token: string, expectedScore: number | "unsubscribe"): { userId: string } | null {
+function verifyNpsToken(
+  token: string,
+  expectedScore: number | "unsubscribe",
+): { userId: string } | null {
   const parts = token.split("|");
   if (parts.length !== 3) return null;
   const [userId, score, sig] = parts;
   if (!userId || !score || !sig) return null;
   if (score !== String(expectedScore)) return null;
-  const expected = createHmac("sha256", NPS_SECRET).update(`${userId}|${score}`).digest("base64url").slice(0, 16);
+  const expected = createHmac("sha256", NPS_SECRET)
+    .update(`${userId}|${score}`)
+    .digest("base64url")
+    .slice(0, 16);
   // constant-time compare
   try {
     if (sig.length !== expected.length) return null;
@@ -108,7 +106,7 @@ export const Route = createFileRoute("/api/feedback/nps")({
         const unsubscribe = url.searchParams.get("unsubscribe") === "1";
         const token = url.searchParams.get("token") ?? "";
 
-        const supabase = getSupabase();
+        const supabase = supabaseAdmin;
 
         // ── unsubscribe branch ──
         if (unsubscribe) {
@@ -177,16 +175,13 @@ export const Route = createFileRoute("/api/feedback/nps")({
         });
 
         // Personalized follow-up copy based on the score band
-        const verdict =
-          score >= 9 ? "超级粉丝 🥹"
-          : score >= 7 ? "还不错 👋"
-          : "有改进空间 🙏";
+        const verdict = score >= 9 ? "超级粉丝 🥹" : score >= 7 ? "还不错 👋" : "有改进空间 🙏";
         const followUp =
           score >= 9
             ? "谢谢你！如果你愿意把 linQ 推荐给 1 个朋友，我会非常感激。"
             : score >= 7
-            ? "我们还在持续优化体验 — 任何具体建议都欢迎回复这封邮件。"
-            : "我们想了解你最大的痛点是什么。回复这封邮件或去 linQ App 内的「反馈」入口告诉我们。";
+              ? "我们还在持续优化体验 — 任何具体建议都欢迎回复这封邮件。"
+              : "我们想了解你最大的痛点是什么。回复这封邮件或去 linQ App 内的「反馈」入口告诉我们。";
 
         return new Response(
           page({

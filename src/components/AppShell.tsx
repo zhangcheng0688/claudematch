@@ -8,19 +8,20 @@
 
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { LogOut, ChevronDown, Settings as SettingsIcon, Sparkles, User as UserIcon, MessageCircle } from "lucide-react";
+import {
+  LogOut,
+  ChevronDown,
+  Settings as SettingsIcon,
+  Sparkles,
+  User as UserIcon,
+  MessageCircle,
+} from "lucide-react";
 import { useLang } from "@/lib/i18n";
 import { supabase } from "@/integrations/supabase/client";
 
 export type AppShellBack = { to: string; labelEn: string; labelZh?: string; labelYue?: string };
 
-export function AppShell({
-  children,
-  back,
-}: {
-  children: ReactNode;
-  back?: AppShellBack;
-}) {
+export function AppShell({ children, back }: { children: ReactNode; back?: AppShellBack }) {
   const { lang, setLang } = useLang();
   const t = (en: string, zh: string) => (lang === "zh" ? zh : en);
 
@@ -62,15 +63,13 @@ export function AppShell({
 
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             {back && (
-              <Link
-                to={back.to}
-                className="px-2 py-1 transition-colors hover:text-foreground"
-              >
-                ← {lang === "yue"
+              <Link to={back.to} className="px-2 py-1 transition-colors hover:text-foreground">
+                ←{" "}
+                {lang === "yue"
                   ? (back.labelYue ?? back.labelEn)
                   : lang === "zh"
-                  ? (back.labelZh ?? back.labelEn)
-                  : back.labelEn}
+                    ? (back.labelZh ?? back.labelEn)
+                    : back.labelEn}
               </Link>
             )}
 
@@ -152,15 +151,7 @@ export function AppShell({
   );
 }
 
-function MenuItem({
-  to,
-  icon,
-  children,
-}: {
-  to: string;
-  icon: ReactNode;
-  children: ReactNode;
-}) {
+function MenuItem({ to, icon, children }: { to: string; icon: ReactNode; children: ReactNode }) {
   return (
     <Link
       to={to}

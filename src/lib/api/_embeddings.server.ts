@@ -13,9 +13,7 @@ export type EmbeddingError = {
   message?: string;
 };
 
-export type EmbeddingResult =
-  | { ok: true; embedding: number[] }
-  | EmbeddingError;
+export type EmbeddingResult = { ok: true; embedding: number[] } | EmbeddingError;
 
 const ENDPOINT = "https://api.openai.com/v1/embeddings";
 const MODEL = "text-embedding-3-small";

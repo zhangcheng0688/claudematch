@@ -41,7 +41,9 @@ function ProfilePage() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await authedFetch<{ data: MeResponse } | MeResponse>("/api/user/me", { method: "GET" });
+        const res = await authedFetch<{ data: MeResponse } | MeResponse>("/api/user/me", {
+          method: "GET",
+        });
         setMe((res as { data: MeResponse }).data ?? (res as MeResponse));
         setLoading(false);
       } catch (e) {
@@ -88,11 +90,7 @@ function ProfilePage() {
   const unbindWechat = async () => {
     if (
       !window.confirm(
-        t(
-          "Unbind WeChat from this account?",
-          "确定解除微信绑定？",
-          "確定解除微信綁定？",
-        ),
+        t("Unbind WeChat from this account?", "确定解除微信绑定？", "確定解除微信綁定？"),
       )
     ) {
       return;
@@ -112,8 +110,7 @@ function ProfilePage() {
       );
       if (res.error || !res.data?.unbound) {
         setErr(
-          res.error ??
-            t("Couldn't unbind. Try again?", "解除失败，请重试？", "解除失敗，再試吓？"),
+          res.error ?? t("Couldn't unbind. Try again?", "解除失败，请重试？", "解除失敗，再試吓？"),
         );
         return;
       }
@@ -195,9 +192,7 @@ function ProfilePage() {
                   <MessageCircle className="h-4 w-4" />
                 </span>
                 <div className="flex-1">
-                  <div className="text-sm font-medium">
-                    {t("WeChat", "微信", "微信")}
-                  </div>
+                  <div className="text-sm font-medium">{t("WeChat", "微信", "微信")}</div>
                   <div className="mt-0.5 text-xs text-muted-foreground">
                     {wxBound
                       ? t(
@@ -251,7 +246,11 @@ function ProfilePage() {
             </div>
 
             <p className="text-center text-xs text-muted-foreground">
-              {t("Sign out via the avatar menu (top right).", "点击右上角头像菜单退出登录。", "撳右上角個樣登出。")}
+              {t(
+                "Sign out via the avatar menu (top right).",
+                "点击右上角头像菜单退出登录。",
+                "撳右上角個樣登出。",
+              )}
             </p>
 
             <div className="text-center text-xs text-muted-foreground">linQ v1.1.0 · Web</div>

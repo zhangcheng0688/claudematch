@@ -34,7 +34,9 @@ function MatchListPage() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await authedFetch<{ data: MatchRow[] } | MatchRow[]>("/api/match", { method: "GET" });
+        const res = await authedFetch<{ data: MatchRow[] } | MatchRow[]>("/api/match", {
+          method: "GET",
+        });
         setMatches((res as { data: MatchRow[] }).data ?? (res as MatchRow[]));
         setLoading(false);
       } catch (e) {
@@ -45,7 +47,14 @@ function MatchListPage() {
   }, []);
 
   return (
-    <AppShell back={{ to: "/profile", labelEn: "Back to profile", labelZh: "返回个人中心", labelYue: "返回個人中心" }}>
+    <AppShell
+      back={{
+        to: "/profile",
+        labelEn: "Back to profile",
+        labelZh: "返回个人中心",
+        labelYue: "返回個人中心",
+      }}
+    >
       <section className="mx-auto max-w-3xl px-6 py-12 sm:py-16">
         <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
           <span className="text-gold-glow">{t("Your matches", "你的匹配", "你嘅配對")}</span>

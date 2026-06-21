@@ -37,7 +37,11 @@ export const Route = createFileRoute("/api/user/set-city")({
 
         const city = typeof body.city === "string" ? body.city : "";
         if (!VALID_CITIES.has(city)) {
-          return json({ error: "city must be 'shenzhen', 'shanghai' or 'hongkong'" }, { status: 400 }, request);
+          return json(
+            { error: "city must be 'shenzhen', 'shanghai' or 'hongkong'" },
+            { status: 400 },
+            request,
+          );
         }
 
         // We update the latest user_profiles row (the AI profile) to

@@ -25,13 +25,15 @@ export const Route = createFileRoute("/api/feedback/quality")({
           return json({ error: "Invalid JSON body" }, { status: 400 }, request);
         }
 
-        const kind = typeof body.kind === "string" && VALID_KINDS.has(body.kind)
-          ? (body.kind as "profile" | "match")
-          : null;
+        const kind =
+          typeof body.kind === "string" && VALID_KINDS.has(body.kind)
+            ? (body.kind as "profile" | "match")
+            : null;
         const targetId = typeof body.target_id === "string" ? body.target_id.trim() : "";
         const rating = typeof body.rating === "number" ? body.rating : NaN;
         const comment = typeof body.comment === "string" ? body.comment.trim() : null;
-        const promptVersion = typeof body.prompt_version === "string" ? body.prompt_version.trim() : null;
+        const promptVersion =
+          typeof body.prompt_version === "string" ? body.prompt_version.trim() : null;
         const scenario = typeof body.scenario === "string" ? body.scenario.trim() : null;
 
         if (!kind) {
@@ -44,6 +46,7 @@ export const Route = createFileRoute("/api/feedback/quality")({
           return json({ error: "rating must be an integer 1-5" }, { status: 400 }, request);
         }
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { data, error } = await (supabase.from as any)("ai_feedback")
           .insert({
             user_id: userId,

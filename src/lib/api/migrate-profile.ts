@@ -11,7 +11,20 @@
 //   v4: + life_themes, scene_predictions, growth_stage, aesthetic_signature,
 //         defense_mechanisms, communication_recipes
 
-import type { AiProfile, AiPattern, AiDimension, AiParadox, AiArchetype, AiLifeTheme, AiScenePrediction, AiGrowthStage, AiAestheticSignature, AiDefenseMechanism, AiCommunicationRecipe, AiMatchSignals } from "@/types/match";
+import type {
+  AiProfile,
+  AiPattern,
+  AiDimension,
+  AiParadox,
+  AiArchetype,
+  AiLifeTheme,
+  AiScenePrediction,
+  AiGrowthStage,
+  AiAestheticSignature,
+  AiDefenseMechanism,
+  AiCommunicationRecipe,
+  AiMatchSignals,
+} from "@/types/match";
 
 /** Coerce unknown JSON to AiProfile with safe defaults. The input is
  *  whatever Supabase returned for `profile_data.ai` (which may be
@@ -23,10 +36,12 @@ export function migrateAiProfile(raw: unknown): AiProfile {
 
   const out: AiProfile = {
     // v1 fields, normalized
-    summary: typeof r.summary === "string" ? r.summary : (typeof r.bio === "string" ? r.bio : undefined),
+    summary:
+      typeof r.summary === "string" ? r.summary : typeof r.bio === "string" ? r.bio : undefined,
     traits: isRecord(r.traits) ? (r.traits as Record<string, number>) : undefined,
     interests: Array.isArray(r.interests) ? (r.interests as string[]) : undefined,
-    communication_style: typeof r.communication_style === "string" ? r.communication_style : undefined,
+    communication_style:
+      typeof r.communication_style === "string" ? r.communication_style : undefined,
     looking_for: typeof r.looking_for === "string" ? r.looking_for : undefined,
     ideal_match: typeof r.ideal_match === "string" ? r.ideal_match : undefined,
 
@@ -43,11 +58,19 @@ export function migrateAiProfile(raw: unknown): AiProfile {
 
     // v4 fields
     life_themes: Array.isArray(r.life_themes) ? (r.life_themes as AiLifeTheme[]) : undefined,
-    scene_predictions: Array.isArray(r.scene_predictions) ? (r.scene_predictions as AiScenePrediction[]) : undefined,
+    scene_predictions: Array.isArray(r.scene_predictions)
+      ? (r.scene_predictions as AiScenePrediction[])
+      : undefined,
     growth_stage: isRecord(r.growth_stage) ? (r.growth_stage as AiGrowthStage) : undefined,
-    aesthetic_signature: isRecord(r.aesthetic_signature) ? (r.aesthetic_signature as AiAestheticSignature) : undefined,
-    defense_mechanisms: Array.isArray(r.defense_mechanisms) ? (r.defense_mechanisms as AiDefenseMechanism[]) : undefined,
-    communication_recipes: Array.isArray(r.communication_recipes) ? (r.communication_recipes as AiCommunicationRecipe[]) : undefined,
+    aesthetic_signature: isRecord(r.aesthetic_signature)
+      ? (r.aesthetic_signature as AiAestheticSignature)
+      : undefined,
+    defense_mechanisms: Array.isArray(r.defense_mechanisms)
+      ? (r.defense_mechanisms as AiDefenseMechanism[])
+      : undefined,
+    communication_recipes: Array.isArray(r.communication_recipes)
+      ? (r.communication_recipes as AiCommunicationRecipe[])
+      : undefined,
   };
 
   // Drop undefined keys so the JSON we serialize is small.

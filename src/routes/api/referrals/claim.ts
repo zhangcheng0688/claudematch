@@ -27,6 +27,7 @@ export const Route = createFileRoute("/api/referrals/claim")({
         }
 
         // Prevent self-referral.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { data: existing } = await (supabase.from as any)("referrals")
           .select("referrer_id")
           .eq("code", code)
@@ -35,15 +36,24 @@ export const Route = createFileRoute("/api/referrals/claim")({
           return json({ error: "Cannot use your own code" }, { status: 400 }, request);
         }
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { data, error } = await (supabase.from as any)("referrals")
-          .update({ referred_id: userId, status: "signed_up", converted_at: new Date().toISOString() })
+          .update({
+            referred_id: userId,
+            status: "signed_up",
+            converted_at: new Date().toISOString(),
+          })
           .eq("code", code)
           .is("referred_id", null)
           .select("*")
           .single();
 
         if (error || !data) {
-          return json({ error: safeError(error ?? { message: "Code already used or not found" }) }, { status: 400 }, request);
+          return json(
+            { error: safeError(error ?? { message: "Code already used or not found" }) },
+            { status: 400 },
+            request,
+          );
         }
         return json({ data, message: "Referral claimed" }, undefined, request);
       },

@@ -66,11 +66,24 @@ function venueToInsert(v) {
   // booking_method / notes / is_active — those are operator-managed
   // and must survive re-scrapes.
   const cols = [
-    "amap_id", "name", "city", "district", "address",
-    "lat", "lng", "cuisine_tags", "vibe_tags",
-    "price_per_person", "rating", "review_count",
-    "tel", "opening_hours", "photos", "source",
-    "source_url", "last_verified_at",
+    "amap_id",
+    "name",
+    "city",
+    "district",
+    "address",
+    "lat",
+    "lng",
+    "cuisine_tags",
+    "vibe_tags",
+    "price_per_person",
+    "rating",
+    "review_count",
+    "tel",
+    "opening_hours",
+    "photos",
+    "source",
+    "source_url",
+    "last_verified_at",
   ];
   const vals = [
     escapeSqlString(v.amap_id),

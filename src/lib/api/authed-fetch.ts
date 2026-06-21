@@ -64,8 +64,7 @@ export async function authedFetch<T = unknown>(
 
   const body = (await res.json().catch(() => ({}))) as unknown;
   if (!res.ok) {
-    const errMsg =
-      (body as { error?: string })?.error ?? `Request failed (${res.status})`;
+    const errMsg = (body as { error?: string })?.error ?? `Request failed (${res.status})`;
     throw new Error(errMsg);
   }
   return body as T;

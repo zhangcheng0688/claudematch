@@ -18,12 +18,16 @@ export const Route = createFileRoute("/api/stats")({
         if (error) {
           return json({ error: safeError(error) }, { status: 500 }, request);
         }
-        return json({
-          data: {
-            waitlist_count: count ?? 0,
-            updated_at: new Date().toISOString(),
+        return json(
+          {
+            data: {
+              waitlist_count: count ?? 0,
+              updated_at: new Date().toISOString(),
+            },
           },
-        }, undefined, request);
+          undefined,
+          request,
+        );
       },
     },
   },

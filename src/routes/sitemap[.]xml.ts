@@ -42,8 +42,7 @@ function buildHreflangAlternates(path: string): string {
   // language to the same canonical URL. When (if) we add path
   // prefixes later, this is the one place to change.
   return LOCALES.map(
-    (l) =>
-      `    <xhtml:link rel="alternate" hreflang="${l}" href="${BASE_URL}${path}" />`,
+    (l) => `    <xhtml:link rel="alternate" hreflang="${l}" href="${BASE_URL}${path}" />`,
   ).join("\n");
 }
 
@@ -99,18 +98,21 @@ export const Route = createFileRoute("/sitemap.xml")({
           // dashboard will flag this via the SQL view health check
           // (future). We log the error so the dev sees it.
           console.error(
-            JSON.stringify({ at: "sitemap_blog_query_failed", error: e instanceof Error ? e.message : String(e) }),
+            JSON.stringify({
+              at: "sitemap_blog_query_failed",
+              error: e instanceof Error ? e.message : String(e),
+            }),
           );
         }
 
         const xml = [
-            `<?xml version="1.0" encoding="UTF-8"?>`,
-            // xhtml namespace is required for xhtml:link elements
-            `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"`,
-            `        xmlns:xhtml="http://www.w3.org/1999/xhtml">`,
-            ...urls.map(buildUrlBlock),
-            `</urlset>`,
-          ].join("\n");
+          `<?xml version="1.0" encoding="UTF-8"?>`,
+          // xhtml namespace is required for xhtml:link elements
+          `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"`,
+          `        xmlns:xhtml="http://www.w3.org/1999/xhtml">`,
+          ...urls.map(buildUrlBlock),
+          `</urlset>`,
+        ].join("\n");
 
         return new Response(xml, {
           headers: {

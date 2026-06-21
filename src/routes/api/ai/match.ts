@@ -10,13 +10,16 @@ import {
   buildMatchUser,
 } from "@/lib/api/_match-prompts.server";
 import { selectPromptVersion } from "@/lib/api/_prompt-versions.server";
-import {
-  scheduleFollowUpEmails,
-  scheduleMeetFeedbackEmail,
-  scheduleRematchEmail,
-} from "@/lib/api/_scheduled-emails.server";
 import { embedText, profileToEmbeddingText } from "@/lib/api/_embeddings.server";
-import { geocodeCity, getCityCentroid, haversineKm, isVenueOpenAt, kmToWalkingMinutes, midpoint } from "@/lib/api/_geo.server";
+import { sendEmail } from "@/lib/email/send";
+import {
+  geocodeCity,
+  getCityCentroid,
+  haversineKm,
+  isVenueOpenAt,
+  kmToWalkingMinutes,
+  midpoint,
+} from "@/lib/api/_geo.server";
 
 const VALID_SCENARIOS = new Set(["business", "dating", "partner"]);
 const SCENARIO_LABEL: Record<string, string> = {
@@ -134,7 +137,8 @@ export const Route = createFileRoute("/api/ai/match")({
           typeof body.scenario === "string" && VALID_SCENARIOS.has(body.scenario)
             ? (body.scenario as "business" | "dating" | "partner")
             : "dating";
-        const lang: "zh" | "en" | "yue" = body.lang === "en" ? "en" : body.lang === "yue" ? "yue" : "zh";
+        const lang: "zh" | "en" | "yue" =
+          body.lang === "en" ? "en" : body.lang === "yue" ? "yue" : "zh";
         const llmLang: "zh" | "en" = lang === "en" ? "en" : "zh";
         const promptVersion = selectPromptVersion("match", userId);
 
@@ -201,9 +205,11 @@ export const Route = createFileRoute("/api/ai/match")({
         if (candidates.length === 0) {
           // Load the user's city from their latest profile, default
           // to shenzhen.
-          const myCity = (latestProfile.profile_data as { city?: string } | null)?.city ?? "shenzhen";
+          const myCity =
+            (latestProfile.profile_data as { city?: string } | null)?.city ?? "shenzhen";
 
           // Exclude personas this user has already matched for this scenario.
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const { data: seen } = await (supabaseAdmin.from as any)("user_persona_matches")
             .select("persona_id")
             .eq("user_id", userId)
@@ -227,7 +233,8 @@ export const Route = createFileRoute("/api/ai/match")({
               userEmbedding = existing;
             } else {
               const embedText_ = profileToEmbeddingText({
-                headline: (latestProfile.profile_data as { ai?: { headline?: string } } | null)?.ai?.headline,
+                headline: (latestProfile.profile_data as { ai?: { headline?: string } } | null)?.ai
+                  ?.headline,
                 bio: (latestProfile.profile_data as { input?: string } | null)?.input,
                 scenario_tags: [scenario],
                 profile_data: latestProfile.profile_data as Record<string, unknown>,
@@ -235,6 +242,7 @@ export const Route = createFileRoute("/api/ai/match")({
               const embedResult = await embedText(embedText_);
               if (embedResult.ok) {
                 userEmbedding = embedResult.embedding;
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
                 await (supabaseAdmin.rpc as any)("set_user_profile_embedding", {
                   p_user_id: userId,
                   p_embedding: embedResult.embedding,
@@ -244,11 +252,14 @@ export const Route = createFileRoute("/api/ai/match")({
               }
             }
           } catch (e) {
-            console.warn(JSON.stringify({ at: "match:embedding_failed", userId, scenario, error: String(e) }));
+            console.warn(
+              JSON.stringify({ at: "match:embedding_failed", userId, scenario, error: String(e) }),
+            );
           }
 
           let personas: Array<Record<string, unknown>> = [];
           if (userEmbedding) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const { data: rpcPersonas, error: rpcErr } = await (supabaseAdmin.rpc as any)(
               "match_personas_by_embedding",
               {
@@ -260,7 +271,9 @@ export const Route = createFileRoute("/api/ai/match")({
               },
             );
             if (rpcErr) {
-              console.warn(JSON.stringify({ at: "match:rpc_failed", userId, scenario, error: rpcErr.message }));
+              console.warn(
+                JSON.stringify({ at: "match:rpc_failed", userId, scenario, error: rpcErr.message }),
+              );
             } else {
               personas = (rpcPersonas ?? []) as Array<Record<string, unknown>>;
             }
@@ -270,7 +283,9 @@ export const Route = createFileRoute("/api/ai/match")({
           if (!personas || personas.length === 0) {
             let personaQuery = supabaseAdmin
               .from("ai_personas")
-              .select("id, name, age, city, occupation, headline, bio, scenario_tags, profile_data, image_url, match_count")
+              .select(
+                "id, name, age, city, occupation, headline, bio, scenario_tags, profile_data, image_url, match_count",
+              )
               .eq("is_active", true)
               .eq("city", myCity)
               .contains("scenario_tags", [scenario]);
@@ -296,11 +311,6 @@ export const Route = createFileRoute("/api/ai/match")({
                 status: `waiting:${scenario}`,
               });
             }
-            // Schedule a re-match prompt in 7 days. If new personas/users join,
-            // the cron will email them to try again.
-            await scheduleRematchEmail(supabase, userId, scenario).catch((e: unknown) => {
-              console.warn(JSON.stringify({ at: "match:schedule_rematch_failed", userId, error: String(e) }));
-            });
             return json({
               data: [],
               waitlisted: true,
@@ -316,7 +326,7 @@ export const Route = createFileRoute("/api/ai/match")({
           // is_real_user: false flag.
           for (const p of personas) {
             candidates.push({
-              user_id: String(p.id ?? ""),        // ai_personas.id is reused as the user_id slot
+              user_id: String(p.id ?? ""), // ai_personas.id is reused as the user_id slot
               profile_data: {
                 ...(p.profile_data as Record<string, unknown>),
                 _is_ai_persona: true,
@@ -371,7 +381,14 @@ export const Route = createFileRoute("/api/ai/match")({
               { role: "system", content: sys },
               { role: "user", content: prompt },
             ],
-            { json: true, temperature: 0.9, max_tokens: 2400, label: "match:round-1", traceId: `${userId}:${scenario}:r1`, deadlineMs: 50_000 },
+            {
+              json: true,
+              temperature: 0.9,
+              max_tokens: 2400,
+              label: "match:round-1",
+              traceId: `${userId}:${scenario}:r1`,
+              deadlineMs: 50_000,
+            },
           );
           const raw = round1Res?.content ?? null;
           parsed = safeParseJSON<ParsedT>(raw) ?? {};
@@ -392,28 +409,43 @@ export const Route = createFileRoute("/api/ai/match")({
         const myCity = (latestProfile.profile_data as { city?: string } | null)?.city ?? "shenzhen";
 
         const myCoords = {
-          lat: (latestProfile as { lat?: number }).lat ?? (latestProfile.profile_data as { lat?: number }).lat ?? getCityCentroid(myCity).lat,
-          lng: (latestProfile as { lng?: number }).lng ?? (latestProfile.profile_data as { lng?: number }).lng ?? getCityCentroid(myCity).lng,
+          lat:
+            (latestProfile as { lat?: number }).lat ??
+            (latestProfile.profile_data as { lat?: number }).lat ??
+            getCityCentroid(myCity).lat,
+          lng:
+            (latestProfile as { lng?: number }).lng ??
+            (latestProfile.profile_data as { lng?: number }).lng ??
+            getCityCentroid(myCity).lng,
         };
 
         let theirCoords = myCoords;
         if (matched) {
-          const isAIPersonaMatch = Boolean((matched as { _is_ai_persona?: boolean })._is_ai_persona);
+          const isAIPersonaMatch = Boolean(
+            (matched as { _is_ai_persona?: boolean })._is_ai_persona,
+          );
           if (isAIPersonaMatch) {
             theirCoords = getCityCentroid(myCity);
           } else {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const { data: theirProfile } = await (supabaseAdmin.from as any)("user_profiles")
               .select("lat, lng, profile_data")
               .eq("user_id", matched.user_id)
               .order("created_at", { ascending: false })
               .limit(1)
               .maybeSingle();
-            const theirProfileTyped = theirProfile as { lat?: number; lng?: number; profile_data?: { lat?: number; lng?: number } } | null;
+            const theirProfileTyped = theirProfile as {
+              lat?: number;
+              lng?: number;
+              profile_data?: { lat?: number; lng?: number };
+            } | null;
             theirCoords = {
-              lat: theirProfileTyped?.lat ??
+              lat:
+                theirProfileTyped?.lat ??
                 theirProfileTyped?.profile_data?.lat ??
                 getCityCentroid(myCity).lat,
-              lng: theirProfileTyped?.lng ??
+              lng:
+                theirProfileTyped?.lng ??
                 theirProfileTyped?.profile_data?.lng ??
                 getCityCentroid(myCity).lng,
             };
@@ -439,6 +471,7 @@ export const Route = createFileRoute("/api/ai/match")({
 
         let bestVenue: VenueRow | null = null;
         try {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const { data: nearby } = await (supabaseAdmin.rpc as any)("nearby_venues", {
             p_city: myCity,
             p_lat: center.lat,
@@ -471,7 +504,9 @@ export const Route = createFileRoute("/api/ai/match")({
           });
           bestVenue = scored[0] ?? null;
         } catch (e) {
-          console.warn(JSON.stringify({ at: "match:venue_lookup_failed", userId, scenario, error: String(e) }));
+          console.warn(
+            JSON.stringify({ at: "match:venue_lookup_failed", userId, scenario, error: String(e) }),
+          );
         }
 
         // ============================================================
@@ -497,17 +532,31 @@ export const Route = createFileRoute("/api/ai/match")({
               { role: "system", content: deepSys },
               { role: "user", content: deepUserPrompt },
             ],
-            { json: true, temperature: 0.9, max_tokens: 2000, label: "match:round-2", traceId: `${userId}:${scenario}:r2`, deadlineMs: 50_000 },
+            {
+              json: true,
+              temperature: 0.9,
+              max_tokens: 2000,
+              label: "match:round-2",
+              traceId: `${userId}:${scenario}:r2`,
+              deadlineMs: 50_000,
+            },
           );
           const deepRaw = round2Res?.content ?? null;
           deep = safeParseJSON<DeepT>(deepRaw) ?? {};
 
           // Persist the expensive two-round analysis so retries with the
           // same candidate set don't re-call the model.
-          await setCachedResponse(supabase, matchCacheKey, "match", matchCacheKey, matchProvider, { parsed, deep, provider: matchProvider }, 24);
+          await setCachedResponse(
+            supabase,
+            matchCacheKey,
+            "match",
+            matchCacheKey,
+            matchProvider,
+            { parsed, deep, provider: matchProvider },
+            24,
+          );
         }
-        const score =
-          typeof parsed.match_score === "number" ? parsed.match_score : 82.5;
+        const score = typeof parsed.match_score === "number" ? parsed.match_score : 82.5;
 
         const plan = parsed.meet_plan ?? {
           when: "本周六下午 3:00",
@@ -551,9 +600,7 @@ export const Route = createFileRoute("/api/ai/match")({
           headline: parsed.headline ?? "",
           bio: parsed.bio ?? "",
           summary: parsed.summary ?? parsed.bio?.slice(0, 60) ?? "",
-          shared_interests: Array.isArray(parsed.shared_interests)
-            ? parsed.shared_interests
-            : [],
+          shared_interests: Array.isArray(parsed.shared_interests) ? parsed.shared_interests : [],
           // v3 deep analysis
           resonance: Array.isArray(parsed.resonance) ? parsed.resonance : [],
           complementarity: Array.isArray(parsed.complementarity) ? parsed.complementarity : [],
@@ -589,9 +636,7 @@ export const Route = createFileRoute("/api/ai/match")({
           prompt_version: promptVersion,
         };
 
-        const isAIPersona = Boolean(
-          (matched as { _is_ai_persona?: boolean })._is_ai_persona,
-        );
+        const isAIPersona = Boolean((matched as { _is_ai_persona?: boolean })._is_ai_persona);
 
         // Patch the details flags when the match is an AI persona.
         if (isAIPersona) {
@@ -618,21 +663,6 @@ export const Route = createFileRoute("/api/ai/match")({
           .single();
         if (insErr) return json({ error: safeError(insErr) }, { status: 500 }, request);
 
-        // Schedule post-match follow-up emails based on the AI-generated
-        // follow_up_strategy (day_1 / week_1 / month_1).
-        if (!isAIPersona) {
-          await scheduleFollowUpEmails(
-            supabase,
-            userId,
-            myMatch.id,
-            deep.follow_up_strategy ?? {},
-            parsed.name ?? "匹配对象",
-            scenario,
-          ).catch((e: unknown) => {
-            console.warn(JSON.stringify({ at: "match:schedule_follow_up_failed", userId, error: String(e) }));
-          });
-        }
-
         // Only create a reverse row + email flow for REAL matches.
         // AI persona matches skip both — no other party to email.
         if (!isAIPersona) {
@@ -647,16 +677,20 @@ export const Route = createFileRoute("/api/ai/match")({
           } as never);
         } else {
           // Record this user-persona pairing so we don't repeat it.
-          await (supabaseAdmin.from as any)("user_persona_matches").insert({
-            user_id: userId,
-            persona_id: matched.user_id,
-            scenario,
-          }).catch(() => {
-            // Ignore duplicate-key races; the primary key prevents dupes.
-          });
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          await (supabaseAdmin.from as any)("user_persona_matches")
+            .insert({
+              user_id: userId,
+              persona_id: matched.user_id,
+              scenario,
+            })
+            .catch(() => {
+              // Ignore duplicate-key races; the primary key prevents dupes.
+            });
 
           // Bump the persona's match_count + last_matched_at for
           // analytics (which personas get picked most).
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           await (supabaseAdmin.rpc as any)("increment_persona_match_count", {
             persona_id: matched.user_id,
           });
@@ -677,52 +711,33 @@ export const Route = createFileRoute("/api/ai/match")({
           .select("*")
           .single();
 
-        // Schedule a 24h meet-feedback prompt for the requester.
-        if (!isAIPersona && planRow) {
-          await scheduleMeetFeedbackEmail(
-            supabase,
-            userId,
-            myMatch.id,
-            planRow.id,
-            parsed.name ?? "匹配对象",
-          ).catch((e: unknown) => {
-            console.warn(JSON.stringify({ at: "match:schedule_feedback_failed", userId, error: String(e) }));
-          });
-        }
-
-        // 7) Email both users via the transactional queue — only for
+        // 7) Email both users via Resend — only for
         //    real matches. AI persona matches have no other party to
         //    email, so we skip the queue entirely.
         if (!isAIPersona) {
-          const { data: otherUser } = await supabaseAdmin.auth.admin.getUserById(
-            matched.user_id,
-          );
+          const { data: otherUser } = await supabaseAdmin.auth.admin.getUserById(matched.user_id);
           const otherEmail = otherUser?.user?.email ?? "";
           const html = renderPlanHtml(plan);
           const text = renderPlanText(plan);
 
           for (const to of [myEmail, otherEmail].filter(Boolean)) {
-            const messageId = crypto.randomUUID();
-            await supabaseAdmin.from("email_send_log").insert({
-              message_id: messageId,
-              template_name: "meet_plan",
-              recipient_email: to,
-              status: "pending",
-            });
-            await supabaseAdmin.rpc("enqueue_email", {
-              queue_name: "transactional_emails",
-              payload: {
-                message_id: messageId,
-                to,
-                from: "linQ <noreply@claudematch.com>",
-                sender_domain: "notify.claudematch.com",
-                subject: "【linQ】您的专属见面方案已生成",
-                html,
-                text,
-                purpose: "transactional",
-                label: "meet_plan",
-                queued_at: new Date().toISOString(),
-              },
+            sendEmail({
+              to,
+              subject: "【linQ】您的专属见面方案已生成",
+              html,
+              text,
+              tag: "meet_plan",
+              traceId: `${userId}:${myMatch.id}`,
+            }).catch((e: unknown) => {
+              console.warn(
+                JSON.stringify({
+                  at: "match:send_meet_plan_email_failed",
+                  userId,
+                  matchId: myMatch.id,
+                  to,
+                  error: e instanceof Error ? e.message : String(e),
+                }),
+              );
             });
           }
         }
@@ -746,8 +761,9 @@ export const Route = createFileRoute("/api/ai/match")({
 });
 
 function escapeHtml(s: string): string {
-  return String(s).replace(/[&<>"']/g, (c) =>
-    ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!,
+  return String(s).replace(
+    /[&<>"']/g,
+    (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c]!,
   );
 }
 
@@ -764,9 +780,7 @@ type PlanForEmail = {
 };
 
 function liList(items?: string[]): string {
-  return (items ?? [])
-    .map((s) => `<li style="margin:4px 0">${escapeHtml(s)}</li>`)
-    .join("");
+  return (items ?? []).map((s) => `<li style="margin:4px 0">${escapeHtml(s)}</li>`).join("");
 }
 
 function renderPlanHtml(p: PlanForEmail): string {

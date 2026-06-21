@@ -90,7 +90,8 @@ function WxCallbackPage() {
           {t("WeChat sign-in failed", "微信登录失败", "微信登入失敗")}
         </h1>
         <p className="text-sm text-muted-foreground">
-          {reason ?? t("Something went wrong. Please try again.", "出错了，请重试。", "出咗事，再試多次。")}
+          {reason ??
+            t("Something went wrong. Please try again.", "出错了，请重试。", "出咗事，再試多次。")}
         </p>
         <div className="mt-2 flex flex-wrap justify-center gap-2">
           <Link

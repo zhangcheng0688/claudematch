@@ -29,7 +29,10 @@ export const Route = createFileRoute("/api/venues/lookup")({
 
         const url = new URL(request.url);
         const idsParam = url.searchParams.get("ids") ?? "";
-        const ids = idsParam.split(",").map((s) => s.trim()).filter(Boolean);
+        const ids = idsParam
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean);
         if (ids.length === 0) {
           return json({ data: [] }, undefined, request);
         }
@@ -39,7 +42,9 @@ export const Route = createFileRoute("/api/venues/lookup")({
 
         const { data, error } = await supabaseAdmin
           .from("venues")
-          .select("id, name, city, district, address, lat, lng, cuisine_tags, vibe_tags, price_per_person, rating, tel, opening_hours, photos, booking_method, commission_pct")
+          .select(
+            "id, name, city, district, address, lat, lng, cuisine_tags, vibe_tags, price_per_person, rating, tel, opening_hours, photos, booking_method, commission_pct",
+          )
           .in("id", ids)
           .eq("is_active", true);
 

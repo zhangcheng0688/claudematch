@@ -154,6 +154,7 @@ export const Route = createFileRoute("/api/my-thing")({
 ### "我要加一个新的 founder dashboard 视图"
 
 `/founder` SPA 调 `/api/admin/reconciliation`。新加 query param 分支：
+
 - `reconciliation.ts` 里加 `if (url.searchParams.get("xxx"))` 分支
 - 加 SQL view 到新 migration
 - 在 `founder.tsx` 加新 section 组件
@@ -163,7 +164,7 @@ export const Route = createFileRoute("/api/my-thing")({
 - ❌ **不要修改** `src/integrations/supabase/{client,client.server,auth-attacher,auth-middleware,types}.ts`（Lovable 自动生成）
 - ❌ **不要修改** `src/routeTree.gen.ts`（Lovable 自动生成）
 - ❌ **不要修改** `vite.config.ts`（Lovable 配置）
-- ❌ **不要把 API key 写进任何 git-tracked 文件**（pre-commit hook 会拦截 re_/sk-/AIza 等格式）
+- ❌ **不要把 API key 写进任何 git-tracked 文件**（pre-commit hook 会拦截 re\_/sk-/AIza 等格式）
 - ✅ 所有 server route 用 `OPTIONS + POST` 两个 handler，`OPTIONS` 必须传 `request` 给 preflight（**否则跨域 preflight 会失败**）
 - ✅ 所有 server route 错误用 `safeError(e)` 转换后返回，**不要直接 return json({ error: e.message })**
 - ✅ 所有 user-facing 错误用 `translateError(msg, lang)` 本地化（zh/yue/en）
@@ -186,6 +187,6 @@ export const Route = createFileRoute("/api/my-thing")({
 
 **"Lighthouse LCP > 2.5s"** — Hero 还没优化（pictures/<source> 没生效）。跑 `bun add -d sharp && node scripts/optimize-images.mjs` 然后 commit + push。
 
-**"所有 /api/ai/* 504"** — Cloudflare 60s gateway 触顶。检查 `optimize-images.mjs` 输出的 v4+ round 5+6 是否还在跑（已经并行化，如果还 504 减 max_tokens）。
+**"所有 /api/ai/\* 504"** — Cloudflare 60s gateway 触顶。检查 `optimize-images.mjs` 输出的 v4+ round 5+6 是否还在跑（已经并行化，如果还 504 减 max_tokens）。
 
 **"Founder dashboard 显示 'No data'"** — SQL view 没建。跑 `supabase/migrations/20260610210000_reconciliation_views.sql`。

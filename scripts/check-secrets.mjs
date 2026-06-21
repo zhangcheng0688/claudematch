@@ -25,10 +25,10 @@
 import { execSync } from "node:child_process";
 
 const PATTERNS = [
-  { name: "Resend",    re: /re_[A-Za-z0-9]{20,}/g },
-  { name: "OpenAI",    re: /sk-[A-Za-z0-9]{20,}/g },
+  { name: "Resend", re: /re_[A-Za-z0-9]{20,}/g },
+  { name: "OpenAI", re: /sk-[A-Za-z0-9]{20,}/g },
   { name: "Anthropic", re: /sk-ant-[A-Za-z0-9-]{20,}/g },
-  { name: "Google",    re: /AIza[0-9A-Za-z_-]{20,}/g },
+  { name: "Google", re: /AIza[0-9A-Za-z_-]{20,}/g },
 ];
 
 let diff = "";
@@ -39,7 +39,7 @@ try {
   // that's already in history (intentional if you actually
   // rotated a previously-leaked key in a real fixup commit).
   diff = execSync(
-    'git diff --cached --unified=0 --diff-filter=ACMR -- src/ scripts/ supabase/ README.md package.json .env* 2>/dev/null',
+    "git diff --cached --unified=0 --diff-filter=ACMR -- src/ scripts/ supabase/ README.md package.json .env* 2>/dev/null",
     { encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] },
   );
 } catch {

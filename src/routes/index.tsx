@@ -1,5 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, Check, Minus, Headphones, Mail, MessageCircle, Sparkles, Loader2 } from "lucide-react";
+import {
+  ArrowRight,
+  Check,
+  Minus,
+  Headphones,
+  Mail,
+  MessageCircle,
+  Sparkles,
+  Loader2,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import { CookieBanner } from "@/components/CookieBanner";
 import { MomentsImg } from "@/components/shared/MomentsImg";
@@ -18,7 +27,11 @@ export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
       { title: "linQ — The Claude-native matching platform" },
-      { name: "description", content: "AI-powered matching for work, love, and life. Business, dating, and local friends — one AI connection covers them all." },
+      {
+        name: "description",
+        content:
+          "AI-powered matching for work, love, and life. Business, dating, and local friends — one AI connection covers them all.",
+      },
       { property: "og:title", content: "linQ — The Claude-native matching platform" },
       { property: "og:description", content: "AI-powered matching for work, love, and life." },
       { property: "og:url", content: "https://claudematch.com" },
@@ -29,9 +42,7 @@ export const Route = createFileRoute("/")({
       { name: "twitter:description", content: "No forms. No tags. Just the real you." },
       { name: "twitter:image", content: `https://claudematch.com${ogImageUrl}` },
     ],
-    links: [
-      { rel: "canonical", href: "https://claudematch.com" },
-    ],
+    links: [{ rel: "canonical", href: "https://claudematch.com" }],
     scripts: [
       {
         type: "application/ld+json",
@@ -50,7 +61,8 @@ export const Route = createFileRoute("/")({
           "@type": "WebSite",
           name: "linQ",
           url: "https://claudematch.com",
-          description: "AI-powered matching for work, love, and life. Business, dating, and local friends — one Claude-native connection covers them all.",
+          description:
+            "AI-powered matching for work, love, and life. Business, dating, and local friends — one Claude-native connection covers them all.",
         }),
       },
     ],
@@ -67,11 +79,21 @@ function Nav() {
           lin<span className="font-display text-primary text-2xl align-middle">Q</span>
         </a>
         <nav className="hidden items-center gap-8 text-sm text-muted-foreground md:flex">
-          <a href="#values" className="transition-colors hover:text-foreground">{t("nav_why")}</a>
-          <a href="#how" className="transition-colors hover:text-foreground">{t("nav_how")}</a>
-          <a href="#moments" className="transition-colors hover:text-foreground">{t("nav_moments")}</a>
-          <a href="#compare" className="transition-colors hover:text-foreground">{t("nav_compare")}</a>
-          <a href="#trust" className="transition-colors hover:text-foreground">{t("nav_trust")}</a>
+          <a href="#values" className="transition-colors hover:text-foreground">
+            {t("nav_why")}
+          </a>
+          <a href="#how" className="transition-colors hover:text-foreground">
+            {t("nav_how")}
+          </a>
+          <a href="#moments" className="transition-colors hover:text-foreground">
+            {t("nav_moments")}
+          </a>
+          <a href="#compare" className="transition-colors hover:text-foreground">
+            {t("nav_compare")}
+          </a>
+          <a href="#trust" className="transition-colors hover:text-foreground">
+            {t("nav_trust")}
+          </a>
         </nav>
         <div className="flex items-center gap-3">
           <button
@@ -121,11 +143,11 @@ function Hero() {
             <br />
             <span className="font-display text-foreground/50">{t("hero_for")}</span>{" "}
             <span className="font-display text-[#3b82f6]">{t("hero_work")}</span>
-            <span className="font-display text-foreground/30">​</span>{" "}
+            <span className="font-display text-foreground/30"> </span>{" "}
             <span className="font-display text-[#ef4444]">{t("hero_love")}</span>
-            <span className="font-display text-foreground/30">​</span>{" "}
+            <span className="font-display text-foreground/30"> </span>{" "}
             <span className="font-display text-[#22c55e]">{t("hero_life")}</span>
-            <span className="font-display text-foreground/30">​</span>
+            <span className="font-display text-foreground/30"> </span>
           </h1>
           <p className="mx-auto mt-6 sm:mt-8 max-w-2xl text-[15px] leading-[1.75] sm:leading-relaxed text-muted-foreground sm:text-base md:text-lg whitespace-pre-line">
             {t("hero_desc")}
@@ -136,7 +158,11 @@ function Hero() {
               className="group relative inline-flex h-14 items-center gap-3 rounded-sm bg-primary pl-3 pr-6 text-sm font-medium text-primary-foreground shadow-[0_20px_60px_-12px_oklch(0.85_0.17_90/0.65),0_0_0_1px_oklch(0.85_0.17_90/0.4),inset_0_1px_0_oklch(1_0_0/0.35)] transition-all hover:-translate-y-0.5 hover:shadow-[0_28px_80px_-12px_oklch(0.85_0.17_90/0.8),0_0_0_1px_oklch(0.85_0.17_90/0.6),inset_0_1px_0_oklch(1_0_0/0.45)]"
             >
               <span className="font-display text-base leading-none text-primary-foreground/95">
-                {lang === "zh" ? "每周三晚 7 点" : lang === "yue" ? "每個禮拜三晚 7 點" : "Every Wed · 7pm"}
+                {lang === "zh"
+                  ? "每周三晚 7 点"
+                  : lang === "yue"
+                    ? "每個禮拜三晚 7 點"
+                    : "Every Wed · 7pm"}
               </span>
               <span className="h-6 w-px bg-primary-foreground/25" />
               <span className="tracking-wide uppercase">{t("hero_joinNow")}</span>
@@ -178,17 +204,32 @@ function WeeklyDate() {
   const { lang, t } = useLang();
   const target = nextWednesday();
   const { d, h, m, s } = useCountdown(target);
-  const dateLabel = target.toLocaleDateString(lang === "zh" ? "zh-CN" : "en-US", { month: "short", day: "numeric", year: "numeric" });
+  const dateLabel = target.toLocaleDateString(lang === "zh" ? "zh-CN" : "en-US", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  });
   const now = new Date();
   const isMatchDay = now.getUTCDay() === 3 && now.getUTCHours() < 19;
   return (
-    <section id="weekly" className="relative overflow-hidden border-b border-border/60 bg-secondary/30">
-      <div className="absolute inset-0 -z-10 opacity-40" aria-hidden="true"
-        style={{ background: "radial-gradient(60% 50% at 50% 0%, oklch(0.85 0.17 90 / 0.18), transparent 70%)" }} />
+    <section
+      id="weekly"
+      className="relative overflow-hidden border-b border-border/60 bg-secondary/30"
+    >
+      <div
+        className="absolute inset-0 -z-10 opacity-40"
+        aria-hidden="true"
+        style={{
+          background:
+            "radial-gradient(60% 50% at 50% 0%, oklch(0.85 0.17 90 / 0.18), transparent 70%)",
+        }}
+      />
       <div className="mx-auto max-w-6xl px-5 py-20 sm:px-6 sm:py-24 md:py-32">
         <div className="grid items-center gap-14 sm:gap-12 md:grid-cols-2">
           <div>
-            <p className="text-xs font-medium uppercase tracking-[0.18em] text-primary">{t("weekly_kicker")}</p>
+            <p className="text-xs font-medium uppercase tracking-[0.18em] text-primary">
+              {t("weekly_kicker")}
+            </p>
             <h2 className="mt-4 font-display text-[2.75rem] sm:text-5xl leading-[1.05] sm:leading-[0.95] tracking-tight md:text-7xl">
               <span className="text-gold-glow">{t("weekly_title1")}</span>
               <br />
@@ -200,45 +241,74 @@ function WeeklyDate() {
 
             {isMatchDay ? (
               <p className="mt-8 sm:mt-10 font-display text-2xl sm:text-3xl leading-snug text-gold-glow md:text-4xl">
-                {lang === "zh" ? "今天就是匹配日！你的专属匹配已就绪。" : "Match Day is here! Your curated match is ready."}
+                {lang === "zh"
+                  ? "今天就是匹配日！你的专属匹配已就绪。"
+                  : "Match Day is here! Your curated match is ready."}
               </p>
             ) : (
-            <div className="mt-8 sm:mt-10 flex items-end gap-2 sm:gap-3 font-display text-4xl sm:text-5xl tracking-tight text-gold-glow md:text-6xl">
-              {[
-                { v: d, l: t("weekly_days") },
-                { v: h, l: t("weekly_hrs") },
-                { v: m, l: t("weekly_min") },
-                { v: s, l: t("weekly_sec") },
-              ].map((c, i) => (
-                <div key={c.l} className="flex items-end gap-3">
-                  <div className="flex flex-col items-center">
-                    <span className="tabular-nums">{c.v}</span>
-                    <span className="mt-2 text-[10px] font-medium uppercase tracking-[0.2em] text-muted-foreground">{c.l}</span>
+              <div className="mt-8 sm:mt-10 flex items-end gap-2 sm:gap-3 font-display text-4xl sm:text-5xl tracking-tight text-gold-glow md:text-6xl">
+                {[
+                  { v: d, l: t("weekly_days") },
+                  { v: h, l: t("weekly_hrs") },
+                  { v: m, l: t("weekly_min") },
+                  { v: s, l: t("weekly_sec") },
+                ].map((c, i) => (
+                  <div key={c.l} className="flex items-end gap-3">
+                    <div className="flex flex-col items-center">
+                      <span className="tabular-nums">{c.v}</span>
+                      <span className="mt-2 text-[10px] font-medium uppercase tracking-[0.2em] text-muted-foreground">
+                        {c.l}
+                      </span>
+                    </div>
+                    {i < 3 && <span className="pb-6 text-muted-foreground/40">:</span>}
                   </div>
-                  {i < 3 && <span className="pb-6 text-muted-foreground/40">:</span>}
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
             )}
 
             <div className="mt-6 space-y-1 text-sm text-muted-foreground">
-              <p>{t("weekly_next")} <span className="text-foreground">{dateLabel}</span></p>
-              <p>{t("weekly_joined")} <span className="text-foreground">{t("weekly_joined_value")}</span></p>
+              <p>
+                {t("weekly_next")} <span className="text-foreground">{dateLabel}</span>
+              </p>
+              <p>
+                {t("weekly_joined")}{" "}
+                <span className="text-foreground">{t("weekly_joined_value")}</span>
+              </p>
             </div>
           </div>
 
           <div className="relative mx-auto flex h-[420px] w-full max-w-md items-center justify-center md:h-[480px]">
-            <div className="absolute inset-0 -z-10 blur-3xl opacity-50"
-              style={{ background: "radial-gradient(40% 40% at 50% 50%, oklch(0.85 0.17 90 / 0.35), transparent 70%)" }} />
+            <div
+              className="absolute inset-0 -z-10 blur-3xl opacity-50"
+              style={{
+                background:
+                  "radial-gradient(40% 40% at 50% 50%, oklch(0.85 0.17 90 / 0.35), transparent 70%)",
+              }}
+            />
             <figure className="polaroid -rotate-3 w-[240px] md:w-[280px]">
-              <MomentsImg base="moment-2" alt="Weekly match meet-up" className="aspect-[4/5] w-full object-cover" />
+              <MomentsImg
+                base="moment-2"
+                alt="Weekly match meet-up"
+                className="aspect-[4/5] w-full object-cover"
+              />
               <figcaption className="mt-3 px-1 text-left">
-                <div className="text-[10px] font-medium uppercase tracking-wider" style={{ color: "oklch(0.45 0.03 260)" }}>Match Day · Wed</div>
-                <div className="mt-1 text-sm font-medium" style={{ color: "oklch(0.2 0.03 260)" }}>Jay & Priya</div>
+                <div
+                  className="text-[10px] font-medium uppercase tracking-wider"
+                  style={{ color: "oklch(0.45 0.03 260)" }}
+                >
+                  Match Day · Wed
+                </div>
+                <div className="mt-1 text-sm font-medium" style={{ color: "oklch(0.2 0.03 260)" }}>
+                  Jay & Priya
+                </div>
               </figcaption>
             </figure>
             <figure className="polaroid rotate-6 absolute right-2 top-8 w-[170px] md:w-[200px]">
-              <MomentsImg base="moment-5" alt="Weekly match meet-up" className="aspect-square w-full object-cover" />
+              <MomentsImg
+                base="moment-5"
+                alt="Weekly match meet-up"
+                className="aspect-square w-full object-cover"
+              />
             </figure>
           </div>
         </div>
@@ -291,7 +361,9 @@ function Values() {
     <section id="values" className="border-b border-border/60">
       <div className="mx-auto max-w-6xl px-5 py-20 sm:px-6 sm:py-24 md:py-32">
         <div className="max-w-2xl">
-          <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">{t("values_kicker")}</p>
+          <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
+            {t("values_kicker")}
+          </p>
           <h2 className="mt-4 text-[1.75rem] sm:text-3xl font-semibold leading-[1.2] tracking-tight md:text-5xl">
             {t("values_title")}
           </h2>
@@ -300,8 +372,12 @@ function Values() {
           {values.map((v, i) => (
             <div key={i} className="bg-background p-7 sm:p-8 md:p-10">
               <div className="text-sm font-medium text-primary">0{i + 1}</div>
-              <h3 className="mt-5 sm:mt-6 text-lg sm:text-xl font-semibold leading-snug tracking-tight">{v.title}</h3>
-              <p className="mt-3 sm:mt-4 text-[15px] leading-[1.7] text-muted-foreground sm:text-sm sm:leading-relaxed">{v.body}</p>
+              <h3 className="mt-5 sm:mt-6 text-lg sm:text-xl font-semibold leading-snug tracking-tight">
+                {v.title}
+              </h3>
+              <p className="mt-3 sm:mt-4 text-[15px] leading-[1.7] text-muted-foreground sm:text-sm sm:leading-relaxed">
+                {v.body}
+              </p>
             </div>
           ))}
         </div>
@@ -317,7 +393,9 @@ function HowItWorks() {
     <section id="how" className="border-b border-border/60 bg-secondary/40">
       <div className="mx-auto max-w-6xl px-5 py-20 sm:px-6 sm:py-24 md:py-32">
         <div className="max-w-2xl">
-          <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">{t("how_kicker")}</p>
+          <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
+            {t("how_kicker")}
+          </p>
           <h2 className="mt-4 text-[1.75rem] sm:text-3xl font-semibold leading-[1.2] tracking-tight md:text-5xl">
             {t("how_title")}
           </h2>
@@ -327,8 +405,12 @@ function HowItWorks() {
             <div key={s.n}>
               <div className="text-sm font-medium text-primary">{s.n}</div>
               <div className="mt-4 h-px w-full bg-border" />
-              <h3 className="mt-5 sm:mt-6 text-lg font-semibold leading-snug tracking-tight">{s.title}</h3>
-              <p className="mt-3 text-[15px] leading-[1.7] text-muted-foreground sm:text-sm sm:leading-relaxed">{s.body}</p>
+              <h3 className="mt-5 sm:mt-6 text-lg font-semibold leading-snug tracking-tight">
+                {s.title}
+              </h3>
+              <p className="mt-3 text-[15px] leading-[1.7] text-muted-foreground sm:text-sm sm:leading-relaxed">
+                {s.body}
+              </p>
             </div>
           ))}
         </div>
@@ -344,7 +426,9 @@ function Compare() {
     <section id="compare" className="border-b border-border/60">
       <div className="mx-auto max-w-6xl px-5 py-20 sm:px-6 sm:py-24 md:py-32">
         <div className="max-w-2xl">
-          <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">{t("compare_kicker")}</p>
+          <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
+            {t("compare_kicker")}
+          </p>
           <h2 className="mt-4 text-[1.75rem] sm:text-3xl font-semibold leading-[1.2] tracking-tight md:text-5xl">
             {t("compare_title")}
           </h2>
@@ -384,7 +468,9 @@ function Trust() {
     <section id="trust" className="border-b border-border/60 bg-secondary/40">
       <div className="mx-auto max-w-6xl px-5 py-20 sm:px-6 sm:py-24 md:py-32">
         <div className="max-w-2xl">
-          <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">{t("trust_kicker")}</p>
+          <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
+            {t("trust_kicker")}
+          </p>
           <h2 className="mt-4 text-[1.75rem] sm:text-3xl font-semibold leading-[1.2] tracking-tight md:text-5xl">
             {t("trust_title")}
           </h2>
@@ -393,7 +479,9 @@ function Trust() {
           {trust.map((t, i) => (
             <div key={i} className="border-t border-foreground pt-6">
               <h3 className="text-lg font-semibold leading-snug tracking-tight">{t.title}</h3>
-              <p className="mt-3 text-[15px] leading-[1.7] text-muted-foreground sm:text-sm sm:leading-relaxed">{t.body}</p>
+              <p className="mt-3 text-[15px] leading-[1.7] text-muted-foreground sm:text-sm sm:leading-relaxed">
+                {t.body}
+              </p>
             </div>
           ))}
         </div>
@@ -439,9 +527,12 @@ function Moments() {
     <section id="moments" className="border-b border-border/60">
       <div className="py-20 sm:py-24 md:py-32">
         <div className="mx-auto max-w-7xl px-5 sm:px-6 max-w-2xl">
-          <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">{t("moments_kicker")}</p>
+          <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
+            {t("moments_kicker")}
+          </p>
           <h2 className="mt-4 text-[1.75rem] sm:text-3xl font-semibold leading-[1.2] tracking-tight md:text-5xl">
-            <span className="font-display text-gold-glow">{t("moments_title1")}</span> {t("moments_title2")}
+            <span className="font-display text-gold-glow">{t("moments_title1")}</span>{" "}
+            {t("moments_title2")}
           </h2>
           <p className="mt-4 text-[15px] leading-[1.7] text-muted-foreground sm:text-sm sm:leading-relaxed md:text-base">
             {t("moments_desc")}
@@ -450,27 +541,38 @@ function Moments() {
         <div
           className="marquee-wrap mt-16 overflow-hidden"
           style={{
-            maskImage:
-              "linear-gradient(to right, transparent, black 6%, black 94%, transparent)",
+            maskImage: "linear-gradient(to right, transparent, black 6%, black 94%, transparent)",
             WebkitMaskImage:
               "linear-gradient(to right, transparent, black 6%, black 94%, transparent)",
           }}
         >
           <div className="marquee px-6">
             {loop.map((m, i) => (
-              <figure
-                key={i}
-                className={`polaroid ${m.rotate} w-[220px] shrink-0 md:w-[260px]`}
-              >
+              <figure key={i} className={`polaroid ${m.rotate} w-[220px] shrink-0 md:w-[260px]`}>
                 <MomentsImg
                   base={m.base}
                   alt={`${m.name} — ${m.tag}`}
                   className="aspect-square w-full object-cover"
                 />
                 <figcaption className="mt-3 px-1 text-left">
-                  <div className="text-[10px] font-medium uppercase tracking-wider" style={{ color: "oklch(0.45 0.03 260)" }}>{m.tag}</div>
-                  <div className="mt-1 text-sm font-medium" style={{ color: "oklch(0.2 0.03 260)" }}>{m.name}</div>
-                  <p className="mt-1 text-xs leading-snug" style={{ color: "oklch(0.35 0.03 260)" }}>"{m.quote}"</p>
+                  <div
+                    className="text-[10px] font-medium uppercase tracking-wider"
+                    style={{ color: "oklch(0.45 0.03 260)" }}
+                  >
+                    {m.tag}
+                  </div>
+                  <div
+                    className="mt-1 text-sm font-medium"
+                    style={{ color: "oklch(0.2 0.03 260)" }}
+                  >
+                    {m.name}
+                  </div>
+                  <p
+                    className="mt-1 text-xs leading-snug"
+                    style={{ color: "oklch(0.35 0.03 260)" }}
+                  >
+                    "{m.quote}"
+                  </p>
                 </figcaption>
               </figure>
             ))}
@@ -533,25 +635,87 @@ function Footer() {
           {/* Link columns */}
           <div className="md:col-span-7 grid grid-cols-2 gap-10 sm:grid-cols-3">
             <div>
-              <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">{t("footer_product")}</p>
+              <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
+                {t("footer_product")}
+              </p>
               <ul className="mt-5 space-y-3 text-sm">
-                <li><a href="#values" className="text-foreground/80 transition-colors hover:text-primary">{t("nav_why")}</a></li>
-                <li><a href="#how" className="text-foreground/80 transition-colors hover:text-primary">{t("nav_how")}</a></li>
-                <li><a href="#moments" className="text-foreground/80 transition-colors hover:text-primary">{t("nav_moments")}</a></li>
-                <li><a href="#compare" className="text-foreground/80 transition-colors hover:text-primary">{t("nav_compare")}</a></li>
+                <li>
+                  <a
+                    href="#values"
+                    className="text-foreground/80 transition-colors hover:text-primary"
+                  >
+                    {t("nav_why")}
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="#how"
+                    className="text-foreground/80 transition-colors hover:text-primary"
+                  >
+                    {t("nav_how")}
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="#moments"
+                    className="text-foreground/80 transition-colors hover:text-primary"
+                  >
+                    {t("nav_moments")}
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="#compare"
+                    className="text-foreground/80 transition-colors hover:text-primary"
+                  >
+                    {t("nav_compare")}
+                  </a>
+                </li>
               </ul>
             </div>
             <div>
-              <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">{t("footer_resources")}</p>
+              <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
+                {t("footer_resources")}
+              </p>
               <ul className="mt-5 space-y-3 text-sm">
-                <li><a href="mailto:zhangcheng0688@gmail.com?subject=linQ%20Careers" className="inline-flex items-center gap-1 text-foreground/80 transition-colors hover:text-primary">{t("footer_careers")} <ArrowRight className="h-3 w-3 -rotate-45" /></a></li>
-                <li><a href="#values" className="inline-flex items-center gap-1 text-foreground/80 transition-colors hover:text-primary">{t("footer_manifesto")} <ArrowRight className="h-3 w-3 -rotate-45" /></a></li>
-                <li><a href="mailto:zhangcheng0688@gmail.com?subject=linQ%20Press%20Kit" className="inline-flex items-center gap-1 text-foreground/80 transition-colors hover:text-primary">{t("footer_press")} <ArrowRight className="h-3 w-3 -rotate-45" /></a></li>
-                <li><Link to="/blog" className="inline-flex items-center gap-1 text-foreground/80 transition-colors hover:text-primary">{t("footer_blog")} <ArrowRight className="h-3 w-3 -rotate-45" /></Link></li>
+                <li>
+                  <a
+                    href="mailto:zhangcheng0688@gmail.com?subject=linQ%20Careers"
+                    className="inline-flex items-center gap-1 text-foreground/80 transition-colors hover:text-primary"
+                  >
+                    {t("footer_careers")} <ArrowRight className="h-3 w-3 -rotate-45" />
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="#values"
+                    className="inline-flex items-center gap-1 text-foreground/80 transition-colors hover:text-primary"
+                  >
+                    {t("footer_manifesto")} <ArrowRight className="h-3 w-3 -rotate-45" />
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="mailto:zhangcheng0688@gmail.com?subject=linQ%20Press%20Kit"
+                    className="inline-flex items-center gap-1 text-foreground/80 transition-colors hover:text-primary"
+                  >
+                    {t("footer_press")} <ArrowRight className="h-3 w-3 -rotate-45" />
+                  </a>
+                </li>
+                <li>
+                  <Link
+                    to="/blog"
+                    className="inline-flex items-center gap-1 text-foreground/80 transition-colors hover:text-primary"
+                  >
+                    {t("footer_blog")} <ArrowRight className="h-3 w-3 -rotate-45" />
+                  </Link>
+                </li>
               </ul>
             </div>
             <div>
-              <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">{t("footer_support")}</p>
+              <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
+                {t("footer_support")}
+              </p>
               <ul className="mt-5 space-y-3 text-sm">
                 <li className="flex items-center gap-2 text-foreground/80">
                   <span className="relative flex h-2 w-2">
@@ -560,9 +724,30 @@ function Footer() {
                   </span>
                   {t("footer_chat")}
                 </li>
-                <li><a href="mailto:zhangcheng0688@gmail.com?subject=linQ%20Support" className="inline-flex items-center gap-1.5 text-foreground/80 transition-colors hover:text-primary"><Mail className="h-3.5 w-3.5" /> [email protected]</a></li>
-                <li><Link to="/trust" className="text-foreground/80 transition-colors hover:text-primary">{t("footer_trust")}</Link></li>
-                <li><a href="mailto:zhangcheng0688@gmail.com?subject=linQ%20Help" className="text-foreground/80 transition-colors hover:text-primary">{t("footer_help")}</a></li>
+                <li>
+                  <a
+                    href="mailto:zhangcheng0688@gmail.com?subject=linQ%20Support"
+                    className="inline-flex items-center gap-1.5 text-foreground/80 transition-colors hover:text-primary"
+                  >
+                    <Mail className="h-3.5 w-3.5" /> [email protected]
+                  </a>
+                </li>
+                <li>
+                  <Link
+                    to="/trust"
+                    className="text-foreground/80 transition-colors hover:text-primary"
+                  >
+                    {t("footer_trust")}
+                  </Link>
+                </li>
+                <li>
+                  <a
+                    href="mailto:zhangcheng0688@gmail.com?subject=linQ%20Help"
+                    className="text-foreground/80 transition-colors hover:text-primary"
+                  >
+                    {t("footer_help")}
+                  </a>
+                </li>
               </ul>
             </div>
           </div>
@@ -594,12 +779,18 @@ function Footer() {
                 {state === "loading" ? (
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
                 ) : (
-                  <>{t("footer_news_join")} <ArrowRight className="h-3.5 w-3.5" /></>
+                  <>
+                    {t("footer_news_join")} <ArrowRight className="h-3.5 w-3.5" />
+                  </>
                 )}
               </button>
             </form>
             {msg && (
-              <p className={`mt-2 text-xs ${state === "success" ? "text-primary" : "text-destructive"}`}>{msg}</p>
+              <p
+                className={`mt-2 text-xs ${state === "success" ? "text-primary" : "text-destructive"}`}
+              >
+                {msg}
+              </p>
             )}
           </div>
         </div>
@@ -609,14 +800,30 @@ function Footer() {
       <div className="border-t border-border/60">
         <div className="mx-auto flex max-w-6xl flex-col items-start justify-between gap-4 px-6 py-6 text-xs text-muted-foreground md:flex-row md:items-center">
           <div className="flex items-center gap-4">
-            <a href="mailto:zhangcheng0688@gmail.com" aria-label="Email linQ" className="transition-colors hover:text-primary"><Mail className="h-4 w-4" /></a>
+            <a
+              href="mailto:zhangcheng0688@gmail.com"
+              aria-label="Email linQ"
+              className="transition-colors hover:text-primary"
+            >
+              <Mail className="h-4 w-4" />
+            </a>
           </div>
-          <p>© {new Date().getFullYear()} {t("footer_copy")}</p>
+          <p>
+            © {new Date().getFullYear()} {t("footer_copy")}
+          </p>
           <div className="flex items-center gap-5">
-            <Link to="/terms" className="transition-colors hover:text-primary">{t("footer_terms")}</Link>
-            <Link to="/privacy" className="transition-colors hover:text-primary">{t("footer_privacy")}</Link>
-            <Link to="/cookies" className="transition-colors hover:text-primary">{t("footer_cookies")}</Link>
-            <Link to="/dpa" className="transition-colors hover:text-primary">{t("footer_dpa")}</Link>
+            <Link to="/terms" className="transition-colors hover:text-primary">
+              {t("footer_terms")}
+            </Link>
+            <Link to="/privacy" className="transition-colors hover:text-primary">
+              {t("footer_privacy")}
+            </Link>
+            <Link to="/cookies" className="transition-colors hover:text-primary">
+              {t("footer_cookies")}
+            </Link>
+            <Link to="/dpa" className="transition-colors hover:text-primary">
+              {t("footer_dpa")}
+            </Link>
           </div>
         </div>
       </div>
@@ -627,34 +834,34 @@ function Footer() {
 function Index() {
   return (
     <LanguageProvider>
-    <div className="min-h-screen bg-background text-foreground">
-      <div className="aurora" aria-hidden="true">
-        <div className="aurora-extra" />
-        <div className="aurora-extra-2" />
-        <div className="aurora-extra-3" />
+      <div className="min-h-screen bg-background text-foreground">
+        <div className="aurora" aria-hidden="true">
+          <div className="aurora-extra" />
+          <div className="aurora-extra-2" />
+          <div className="aurora-extra-3" />
+        </div>
+        <div className="stars" aria-hidden="true" />
+        <span className="orb orb-1" aria-hidden="true" />
+        <span className="orb orb-2" aria-hidden="true" />
+        <span className="orb orb-3" aria-hidden="true" />
+        <span className="orb orb-4" aria-hidden="true" />
+        <span className="orb orb-5" aria-hidden="true" />
+        <div className="grain" aria-hidden="true" />
+        <Nav />
+        <main>
+          <Hero />
+          <WeeklyDate />
+          <SendRealYou />
+          <Values />
+          <HowItWorks />
+          <Moments />
+          <Compare />
+          <Trust />
+          <FinalCTA />
+        </main>
+        <Footer />
+        <CookieBanner />
       </div>
-      <div className="stars" aria-hidden="true" />
-      <span className="orb orb-1" aria-hidden="true" />
-      <span className="orb orb-2" aria-hidden="true" />
-      <span className="orb orb-3" aria-hidden="true" />
-      <span className="orb orb-4" aria-hidden="true" />
-      <span className="orb orb-5" aria-hidden="true" />
-      <div className="grain" aria-hidden="true" />
-      <Nav />
-      <main>
-        <Hero />
-        <WeeklyDate />
-        <SendRealYou />
-        <Values />
-        <HowItWorks />
-        <Moments />
-        <Compare />
-        <Trust />
-        <FinalCTA />
-      </main>
-      <Footer />
-      <CookieBanner />
-    </div>
     </LanguageProvider>
   );
 }

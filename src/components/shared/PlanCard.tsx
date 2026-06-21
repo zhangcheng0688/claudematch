@@ -63,9 +63,7 @@ export function PlanCard({ plan, match }: PlanCardProps) {
 
   // v2: multi-plan with selectable tab. Default to first plan.
   const multiPlan = ai.multi_plan ?? [];
-  const [activePlanId, setActivePlanId] = useState<string>(
-    multiPlan[0]?.id ?? "A",
-  );
+  const [activePlanId, setActivePlanId] = useState<string>(multiPlan[0]?.id ?? "A");
   const activePlan = multiPlan.find((p) => p.id === activePlanId) ?? multiPlan[0];
 
   // Venue lookup table (id -> row). Comes from plan_content.venue_lookup
@@ -100,11 +98,7 @@ export function PlanCard({ plan, match }: PlanCardProps) {
             />
           )}
           {ai.duration && (
-            <PlanRow
-              icon={Calendar}
-              label={t("Duration", "时长", "時長")}
-              value={ai.duration}
-            />
+            <PlanRow icon={Calendar} label={t("Duration", "时长", "時長")} value={ai.duration} />
           )}
           {ai.budget && (
             <PlanRow
@@ -144,8 +138,7 @@ export function PlanCard({ plan, match }: PlanCardProps) {
                   : "text-muted-foreground hover:text-foreground"
               }`}
             >
-              <span className="font-mono text-[10px]">{p.id}</span>{" "}
-              {p.label}
+              <span className="font-mono text-[10px]">{p.id}</span> {p.label}
             </button>
           ))}
         </div>
@@ -154,9 +147,7 @@ export function PlanCard({ plan, match }: PlanCardProps) {
       {activePlan && (
         <div className="rounded-sm border border-primary/40 bg-gradient-to-br from-primary/10 to-transparent p-6 space-y-5">
           {activePlan.description && (
-            <p className="text-sm italic text-foreground/85">
-              {activePlan.description}
-            </p>
+            <p className="text-sm italic text-foreground/85">{activePlan.description}</p>
           )}
 
           {/* Venue options — now backed by the venues table */}
@@ -246,9 +237,7 @@ export function PlanCard({ plan, match }: PlanCardProps) {
                     <p className="text-[10px] uppercase tracking-wider text-emerald-400">
                       {t("Best", "最佳", "最好")}
                     </p>
-                    <p className="mt-0.5 text-sm">
-                      {activePlan.time_considerations.best_window}
-                    </p>
+                    <p className="mt-0.5 text-sm">{activePlan.time_considerations.best_window}</p>
                   </div>
                 )}
                 {activePlan.time_considerations.avoid_window && (
@@ -256,9 +245,7 @@ export function PlanCard({ plan, match }: PlanCardProps) {
                     <p className="text-[10px] uppercase tracking-wider text-rose-400">
                       {t("Avoid", "避免", "避免")}
                     </p>
-                    <p className="mt-0.5 text-sm">
-                      {activePlan.time_considerations.avoid_window}
-                    </p>
+                    <p className="mt-0.5 text-sm">{activePlan.time_considerations.avoid_window}</p>
                   </div>
                 )}
               </div>
@@ -356,9 +343,7 @@ function VenueCard({
             </span>
           )}
         </div>
-        {why && (
-          <p className="mt-1 text-xs leading-relaxed text-foreground/85">{why}</p>
-        )}
+        {why && <p className="mt-1 text-xs leading-relaxed text-foreground/85">{why}</p>}
         <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-muted-foreground">
           {venue?.district && <span>📍 {venue.district}</span>}
           {venue?.cuisine_tags && venue.cuisine_tags.length > 0 && (
@@ -369,9 +354,7 @@ function VenueCard({
               <Star className="h-3 w-3 fill-amber-400 text-amber-400" /> {venue.rating.toFixed(1)}
             </span>
           )}
-          {typeof distanceWalkingMin === "number" && (
-            <span>🚶 {distanceWalkingMin}m</span>
-          )}
+          {typeof distanceWalkingMin === "number" && <span>🚶 {distanceWalkingMin}m</span>}
         </div>
         {tappable && (
           <div className="mt-2 flex items-center justify-end gap-1 text-[10px] font-medium text-primary">
@@ -539,9 +522,7 @@ function BookingModal({
         </div>
 
         <div className="space-y-3 p-4 text-sm">
-          {venue.address && (
-            <p className="text-foreground/85">📍 {venue.address}</p>
-          )}
+          {venue.address && <p className="text-foreground/85">📍 {venue.address}</p>}
           <div className="flex flex-wrap gap-2 text-[11px] text-muted-foreground">
             {typeof venue.price_per_person === "number" && (
               <span className="rounded-full border border-border bg-background/40 px-2 py-0.5">
@@ -555,7 +536,10 @@ function BookingModal({
               </span>
             )}
             {venue.cuisine_tags.slice(0, 3).map((c) => (
-              <span key={c} className="rounded-full border border-border bg-background/40 px-2 py-0.5">
+              <span
+                key={c}
+                className="rounded-full border border-border bg-background/40 px-2 py-0.5"
+              >
                 {c}
               </span>
             ))}
@@ -573,7 +557,9 @@ function BookingModal({
             className="inline-flex h-11 items-center justify-center gap-2 rounded-sm border border-border bg-background/40 text-sm font-medium text-foreground transition-colors hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Phone className="h-4 w-4" />
-            {venue.tel ? t("Call to book", "电话预订", "電話預訂") : t("No phone listed", "无电话", "無電話")}
+            {venue.tel
+              ? t("Call to book", "电话预订", "電話預訂")
+              : t("No phone listed", "无电话", "無電話")}
           </button>
           <button
             type="button"
@@ -590,11 +576,7 @@ function BookingModal({
           {confirmed ? (
             <p className="flex items-center gap-2 text-sm text-primary">
               <CheckCircle2 className="h-4 w-4" />
-              {t(
-                "Marked — enjoy!",
-                "已标记，祝玩得开心！",
-                "已標記，玩得開心啲！",
-              )}
+              {t("Marked — enjoy!", "已标记，祝玩得开心！", "已標記，玩得開心啲！")}
             </p>
           ) : (
             <button

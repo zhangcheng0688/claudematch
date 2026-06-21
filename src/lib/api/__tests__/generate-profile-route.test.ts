@@ -29,7 +29,9 @@ vi.mock("@/lib/api/_llm.server", () => ({
 
 vi.mock("@/integrations/supabase/client.server", () => ({
   supabaseAdmin: {
-    from: vi.fn(() => ({ select: vi.fn(() => ({ eq: vi.fn(() => ({ maybeSingle: () => ({ data: null }) })) })) })),
+    from: vi.fn(() => ({
+      select: vi.fn(() => ({ eq: vi.fn(() => ({ maybeSingle: () => ({ data: null }) })) })),
+    })),
     auth: { admin: { getUserById: vi.fn() } },
   },
 }));
@@ -39,5 +41,25 @@ describe("/api/ai/generate-profile module", () => {
     const mod = await import("@/routes/api/ai/generate-profile");
     expect(mod).toBeDefined();
     expect((mod as { Route?: unknown }).Route).toBeDefined();
+  });
+
+  it("buildFallbackProfile returns a zh profile for llmLang=zh", async () => {
+    const mod = await import("@/routes/api/ai/generate-profile");
+    const profile = mod.buildFallbackProfile("I like coffee and books.", "zh") as {
+      headline: string;
+      narrative: string;
+    };
+    expect(profile.headline).toBe("独一无二的你");
+    expect(profile.narrative).toContain("你正在寻找属于自己的连接");
+  });
+
+  it("buildFallbackProfile returns an en profile for llmLang=en", async () => {
+    const mod = await import("@/routes/api/ai/generate-profile");
+    const profile = mod.buildFallbackProfile("I like coffee and books.", "en") as {
+      headline: string;
+      narrative: string;
+    };
+    expect(profile.headline).toBe("One of a kind");
+    expect(profile.narrative).toContain("You're looking for a connection");
   });
 });

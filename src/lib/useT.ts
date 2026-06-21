@@ -31,7 +31,7 @@ import { useLang, translations, type Lang } from "@/lib/i18n";
 type TripleArgs =
   | [string] // dict key only
   | [string, string, string?] // inline triple, last is optional yue
-  | [string, undefined, string?, string?] // dict + zh + yue (overrides)
+  | [string, undefined, string?, string?]; // dict + zh + yue (overrides)
 // The 4-arg form lets you say t("Key", undefined, "中文", "粵語") —
 // "key for fallback, then zh, then yue". We only use this in 1-2
 // places; the 3-arg form (t(en, zh, yue)) is the workhorse.

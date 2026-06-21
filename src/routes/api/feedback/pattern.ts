@@ -27,7 +27,8 @@ export const Route = createFileRoute("/api/feedback/pattern")({
         }
 
         const text = typeof body.pattern_text === "string" ? body.pattern_text.trim() : "";
-        const verdict = body.verdict === "agree" || body.verdict === "disagree" ? body.verdict : null;
+        const verdict =
+          body.verdict === "agree" || body.verdict === "disagree" ? body.verdict : null;
         const section = typeof body.section === "string" ? body.section.slice(0, 64) : "patterns";
 
         if (text.length < 4 || text.length > 1000) {

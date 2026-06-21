@@ -1,9 +1,8 @@
 # .github/workflows/cron-drain.yml
 #
-# 架构债 I: scheduled cron that pings /api/cron/drain every 6
-# hours. GitHub Actions free tier is 2000 minutes/month; this
-# workflow uses ~1 min × 4 runs × 30 days = 120 minutes. Well
-# within budget.
+# Scheduled cron that pings /api/cron/drain every 6 hours. GitHub
+# Actions free tier is 2000 minutes/month; this workflow uses
+# ~1 min × 4 runs × 30 days = 120 minutes. Well within budget.
 #
 # To enable:
 #   1. Push this file to main.
@@ -26,7 +25,7 @@ on:
   schedule:
     # 00:00, 06:00, 12:00, 18:00 UTC every day.
     - cron: "0 */6 * * *"
-  workflow_dispatch:  # allow manual trigger from Actions tab
+  workflow_dispatch: # allow manual trigger from Actions tab
 
 jobs:
   drain:

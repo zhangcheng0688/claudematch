@@ -24,10 +24,9 @@ export const Route = createFileRoute("/api/authorize")({
 
         const { data, error } = await supabase
           .from("user_authorizations")
-          .upsert(
-            { user_id: userId, business, dating, partner, discoverable } as never,
-            { onConflict: "user_id" },
-          )
+          .upsert({ user_id: userId, business, dating, partner, discoverable } as never, {
+            onConflict: "user_id",
+          })
           .select("*")
           .single();
 

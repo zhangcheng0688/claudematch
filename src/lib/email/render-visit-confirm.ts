@@ -17,15 +17,17 @@ export function renderVisitConfirmEmail(args: {
   recipientName?: string;
 }): { html: string; text: string; subject: string } {
   const subject = `昨天在 ${args.venueName} 怎么样？`;
-  const html = "<!DOCTYPE html>" + renderToStaticMarkup(
-    VisitConfirmEmail({
-      venueName: args.venueName,
-      venueCity: args.venueCity,
-      confirmUrl: args.confirmUrl,
-      denyUrl: args.denyUrl,
-      recipientName: args.recipientName,
-    }),
-  );
+  const html =
+    "<!DOCTYPE html>" +
+    renderToStaticMarkup(
+      VisitConfirmEmail({
+        venueName: args.venueName,
+        venueCity: args.venueCity,
+        confirmUrl: args.confirmUrl,
+        denyUrl: args.denyUrl,
+        recipientName: args.recipientName,
+      }),
+    );
   const text = `${subject}
 
 ${args.recipientName ? args.recipientName + "，" : ""}昨天你在 linQ 上标记了「我去了 ${args.venueName}」。

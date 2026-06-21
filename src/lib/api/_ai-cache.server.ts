@@ -37,7 +37,7 @@ export async function getCachedResponse<T = unknown>(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   supabase: any,
   cacheKey: string,
-): Promise<CachedResponse & { response: T } | null> {
+): Promise<(CachedResponse & { response: T }) | null> {
   const { data, error } = await supabase
     .from("ai_cache")
     .select("provider, response_json, expires_at")

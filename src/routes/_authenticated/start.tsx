@@ -50,7 +50,9 @@ function StartPage() {
   const [profileRating, setProfileRating] = useState<number | null>(null);
   const [profileFeedbackComment, setProfileFeedbackComment] = useState("");
   const [profileFeedbackSubmitting, setProfileFeedbackSubmitting] = useState(false);
-  const [interviewQuestions, setInterviewQuestions] = useState<Array<{ id: string; question: string; why_ask?: string }>>([]);
+  const [interviewQuestions, setInterviewQuestions] = useState<
+    Array<{ id: string; question: string; why_ask?: string }>
+  >([]);
   const [interviewAnswers, setInterviewAnswers] = useState<Record<string, string>>({});
   const [interviewLoading, setInterviewLoading] = useState(false);
   // 漏洞 C: city is a required field — feeding it to the meet-plan LLM
@@ -62,9 +64,32 @@ function StartPage() {
 
   const scenarios = useMemo(
     () => [
-      { id: "business" as const, label: t("Business", "工作", "工作"), icon: Briefcase, desc: t("Co-founders, collaborators, mentors.", "合伙人、合作者、导师。", "Co-founder、合作拍檔、師傅。") },
-      { id: "dating" as const, label: t("Dating", "恋爱", "拍拖"), icon: Heart, desc: t("Real chemistry, not endless swipes.", "真实的化学反应，告别无限左滑。", "真正嘅化學反應，唔係無止境嘅左掃。") },
-      { id: "partner" as const, label: t("Local friends", "本地朋友", "本地朋友"), icon: Users, desc: t("Weekend partners, hobby buddies.", "周末搭子、兴趣伙伴。", "週末拍檔、興趣班底。") },
+      {
+        id: "business" as const,
+        label: t("Business", "工作", "工作"),
+        icon: Briefcase,
+        desc: t(
+          "Co-founders, collaborators, mentors.",
+          "合伙人、合作者、导师。",
+          "Co-founder、合作拍檔、師傅。",
+        ),
+      },
+      {
+        id: "dating" as const,
+        label: t("Dating", "恋爱", "拍拖"),
+        icon: Heart,
+        desc: t(
+          "Real chemistry, not endless swipes.",
+          "真实的化学反应，告别无限左滑。",
+          "真正嘅化學反應，唔係無止境嘅左掃。",
+        ),
+      },
+      {
+        id: "partner" as const,
+        label: t("Local friends", "本地朋友", "本地朋友"),
+        icon: Users,
+        desc: t("Weekend partners, hobby buddies.", "周末搭子、兴趣伙伴。", "週末拍檔、興趣班底。"),
+      },
     ],
     [lang],
   );
@@ -78,7 +103,8 @@ function StartPage() {
           "/api/user/me",
           { method: "GET" },
         );
-        const me = (res as { data?: { ai_profile?: { profile_data?: { city?: string } } } }).data?.ai_profile;
+        const me = (res as { data?: { ai_profile?: { profile_data?: { city?: string } } } }).data
+          ?.ai_profile;
         const c = me?.profile_data?.city;
         if (c === "shenzhen" || c === "shanghai" || c === "hongkong") {
           setCity(c);
@@ -98,8 +124,10 @@ function StartPage() {
       if (!raw) return;
       const saved = JSON.parse(raw);
       if (typeof saved.input === "string") setInput(saved.input);
-      if (saved.scenario && ["business", "dating", "partner"].includes(saved.scenario)) setScenario(saved.scenario);
-      if (saved.city && ["shenzhen", "shanghai", "hongkong"].includes(saved.city)) setCity(saved.city);
+      if (saved.scenario && ["business", "dating", "partner"].includes(saved.scenario))
+        setScenario(saved.scenario);
+      if (saved.city && ["shenzhen", "shanghai", "hongkong"].includes(saved.city))
+        setCity(saved.city);
       if (saved.step === "interview" || typeof saved.step === "number") {
         setStep(saved.step);
       }
@@ -167,13 +195,12 @@ function StartPage() {
     }
     setInterviewLoading(true);
     try {
-      const res = await authedFetch<{ data: Array<{ id: string; question: string; why_ask?: string }> }>(
-        "/api/ai/interview-questions",
-        {
-          method: "POST",
-          body: JSON.stringify({ input, scenario, lang }),
-        },
-      );
+      const res = await authedFetch<{
+        data: Array<{ id: string; question: string; why_ask?: string }>;
+      }>("/api/ai/interview-questions", {
+        method: "POST",
+        body: JSON.stringify({ input, scenario, lang }),
+      });
       setInterviewQuestions(res.data ?? []);
       setInterviewAnswers({});
       setStep("interview");
@@ -192,10 +219,13 @@ function StartPage() {
       if (followUpAnswers && followUpAnswers.length > 0) {
         body.follow_up_answers = followUpAnswers;
       }
-      const res = await authedFetch<{ data: Profile; prompt_version?: string }>("/api/ai/generate-profile", {
-        method: "POST",
-        body: JSON.stringify(body),
-      });
+      const res = await authedFetch<{ data: Profile; prompt_version?: string }>(
+        "/api/ai/generate-profile",
+        {
+          method: "POST",
+          body: JSON.stringify(body),
+        },
+      );
       setProfile(res.data);
       setProfilePromptVersion(res.prompt_version ?? null);
       setProfileRating(null);
@@ -230,7 +260,10 @@ function StartPage() {
       setMatches(res.data ?? []);
       setMatchedType(res.matched_type ?? null);
       if (res.waitlisted) {
-        setWaitlistMsg(res.message ?? t("暂无匹配，已加入等待池。", "暂无匹配，已加入等待池。", "暫無配對，已加入等候池。"));
+        setWaitlistMsg(
+          res.message ??
+            t("暂无匹配，已加入等待池。", "暂无匹配，已加入等待池。", "暫無配對，已加入等候池。"),
+        );
       } else if (res.data?.[0]) {
         setActiveMatch(res.data[0]);
         if (res.plan) setPlan(res.plan);
@@ -283,11 +316,11 @@ function StartPage() {
               )}
             </p>
             <div className="grid gap-3 sm:grid-cols-2">
-              {([
+              {[
                 { id: "shenzhen" as const, name: "深圳 / Shenzhen", emoji: "🌃" },
                 { id: "shanghai" as const, name: "上海 / Shanghai", emoji: "🌆" },
                 { id: "hongkong" as const, name: "香港 / Hong Kong", emoji: "🌊" },
-              ]).map((opt) => (
+              ].map((opt) => (
                 <button
                   key={opt.id}
                   type="button"
@@ -309,16 +342,16 @@ function StartPage() {
                 </button>
               ))}
             </div>
-            {err && (
-              <p className="text-xs text-destructive">{err}</p>
-            )}
+            {err && <p className="text-xs text-destructive">{err}</p>}
           </div>
         )}
 
         {step === 1 && (
           <div className="mt-10 space-y-6">
             <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-              <span className="text-gold-glow">{t("Tell linQ about you", "告诉 linQ 你是谁", "同 linQ 講下你係邊個")}</span>
+              <span className="text-gold-glow">
+                {t("Tell linQ about you", "告诉 linQ 你是谁", "同 linQ 講下你係邊個")}
+              </span>
             </h1>
             <p className="text-sm text-muted-foreground">
               {t(
@@ -343,7 +376,9 @@ function StartPage() {
                         : "border-border hover:border-primary/40"
                     }`}
                   >
-                    <Icon className={`h-5 w-5 ${active ? "text-primary" : "text-muted-foreground"}`} />
+                    <Icon
+                      className={`h-5 w-5 ${active ? "text-primary" : "text-muted-foreground"}`}
+                    />
                     <div className="mt-2 text-sm font-medium">{s.label}</div>
                     <div className="mt-1 text-xs text-muted-foreground">{s.desc}</div>
                   </button>
@@ -370,7 +405,11 @@ function StartPage() {
                 disabled={interviewLoading}
                 className="group inline-flex h-12 items-center gap-2 rounded-sm bg-primary px-6 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-60"
               >
-                {interviewLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                {interviewLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Sparkles className="h-4 w-4" />
+                )}
                 {t("Continue", "继续", "繼續")}
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </button>
@@ -386,7 +425,9 @@ function StartPage() {
         {step === "interview" && (
           <div className="mt-10 space-y-6">
             <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-              <span className="text-gold-glow">{t("A few follow-ups", "再回答 2-3 个问题", "再答 2-3 條問題")}</span>
+              <span className="text-gold-glow">
+                {t("A few follow-ups", "再回答 2-3 个问题", "再答 2-3 條問題")}
+              </span>
             </h1>
             <p className="text-sm text-muted-foreground">
               {t(
@@ -440,13 +481,20 @@ function StartPage() {
                     generateProfile(
                       interviewQuestions
                         .filter((q) => (interviewAnswers[q.id] ?? "").trim().length > 0)
-                        .map((q) => ({ question: q.question, answer: interviewAnswers[q.id].trim() })),
+                        .map((q) => ({
+                          question: q.question,
+                          answer: interviewAnswers[q.id].trim(),
+                        })),
                     )
                   }
                   disabled={loading === "profile"}
                   className="group inline-flex h-12 items-center gap-2 rounded-sm bg-primary px-6 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-60"
                 >
-                  {loading === "profile" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                  {loading === "profile" ? (
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                  ) : (
+                    <Sparkles className="h-4 w-4" />
+                  )}
                   {t("Generate AI profile", "生成 AI 画像", "整 AI 檔案")}
                   <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
                 </button>
@@ -459,10 +507,16 @@ function StartPage() {
         {step === 2 && profile && (
           <div className="mt-10 space-y-6">
             <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">
-              <span className="text-gold-glow">{t("Your AI profile", "你的 AI 画像", "你嘅 AI 檔案")}</span>
+              <span className="text-gold-glow">
+                {t("Your AI profile", "你的 AI 画像", "你嘅 AI 檔案")}
+              </span>
             </h2>
             <p className="text-sm text-muted-foreground">
-              {t("Looks good? Let AI find your top 3 matches.", "看起来对吗？让 AI 为你挑出 3 个最佳匹配。", "睇落 OK 嗎？等 AI 幫你搵 3 個最夾嘅人。")}
+              {t(
+                "Looks good? Let AI find your top 3 matches.",
+                "看起来对吗？让 AI 为你挑出 3 个最佳匹配。",
+                "睇落 OK 嗎？等 AI 幫你搵 3 個最夾嘅人。",
+              )}
             </p>
             <ProfileCard
               profile={profile}
@@ -483,7 +537,9 @@ function StartPage() {
                     onClick={() => setProfileRating(star)}
                     disabled={profileFeedbackSubmitting}
                     className={`text-xl transition-colors ${
-                      (profileRating ?? 0) >= star ? "text-gold-glow" : "text-muted-foreground/30 hover:text-gold-glow/70"
+                      (profileRating ?? 0) >= star
+                        ? "text-gold-glow"
+                        : "text-muted-foreground/30 hover:text-gold-glow/70"
                     }`}
                     aria-label={t(`${star} star`, `${star} 星`, `${star} 星`)}
                   >
@@ -498,7 +554,11 @@ function StartPage() {
                     onChange={(e) => setProfileFeedbackComment(e.target.value)}
                     rows={2}
                     maxLength={400}
-                    placeholder={t("What feels right or wrong? (optional)", "哪里对、哪里不对？（可选）", "邊度啱、邊度唔啱？（可選）")}
+                    placeholder={t(
+                      "What feels right or wrong? (optional)",
+                      "哪里对、哪里不对？（可选）",
+                      "邊度啱、邊度唔啱？（可選）",
+                    )}
                     className="w-full rounded-sm border border-border bg-background/60 p-3 text-xs leading-relaxed outline-none focus:border-primary"
                   />
                   <button
@@ -515,7 +575,8 @@ function StartPage() {
                             scenario,
                             rating: profileRating,
                             comment: profileFeedbackComment,
-                            prompt_version: profilePromptVersion ?? profile.profile_data?.prompt_version,
+                            prompt_version:
+                              profilePromptVersion ?? profile.profile_data?.prompt_version,
                           }),
                         });
                       } catch {
@@ -527,14 +588,19 @@ function StartPage() {
                     disabled={profileFeedbackSubmitting}
                     className="inline-flex h-8 items-center rounded-sm bg-primary px-4 text-xs font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-60"
                   >
-                    {profileFeedbackSubmitting ? t("Submitting…", "提交中…", "提交緊…") : t("Submit feedback", "提交反馈", "提交反饋")}
+                    {profileFeedbackSubmitting
+                      ? t("Submitting…", "提交中…", "提交緊…")
+                      : t("Submit feedback", "提交反馈", "提交反饋")}
                   </button>
                 </div>
               )}
             </div>
 
             <div className="flex items-center justify-between">
-              <button onClick={() => setStep(1)} className="text-xs text-muted-foreground hover:text-foreground">
+              <button
+                onClick={() => setStep(1)}
+                className="text-xs text-muted-foreground hover:text-foreground"
+              >
                 ← {t("Edit description", "重新描述", "再講過")}
               </button>
               <button
@@ -542,7 +608,11 @@ function StartPage() {
                 disabled={loading === "match"}
                 className="group inline-flex h-12 items-center gap-2 rounded-sm bg-primary px-6 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-60"
               >
-                {loading === "match" ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                {loading === "match" ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <Sparkles className="h-4 w-4" />
+                )}
                 {t("Find my matches", "开始匹配", "即刻配對")}
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
               </button>
@@ -599,7 +669,11 @@ function StartPage() {
                   setProfileRating(null);
                   setProfileFeedbackComment("");
                   setMatches([]);
-                  try { localStorage.removeItem(ONBOARDING_STORAGE_KEY); } catch {}
+                  try {
+                    localStorage.removeItem(ONBOARDING_STORAGE_KEY);
+                  } catch {
+                    // localStorage may be disabled or unavailable; ignore.
+                  }
                   setPlan(null);
                   setActiveMatch(null);
                   setWaitlistMsg(null);
@@ -645,7 +719,9 @@ function AiLoadingSteps({ t }: { t: (en: string, zh: string, yue: string) => str
         <div key={i} className="flex items-center gap-3 text-sm">
           <span
             className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] ${
-              i <= tick ? "bg-primary text-primary-foreground" : "border border-border text-muted-foreground"
+              i <= tick
+                ? "bg-primary text-primary-foreground"
+                : "border border-border text-muted-foreground"
             }`}
           >
             {i < tick ? "✓" : i + 1}
@@ -657,7 +733,13 @@ function AiLoadingSteps({ t }: { t: (en: string, zh: string, yue: string) => str
   );
 }
 
-function Stepper({ step, t }: { step: number | "interview"; t: (en: string, zh: string, yue: string) => string }) {
+function Stepper({
+  step,
+  t,
+}: {
+  step: number | "interview";
+  t: (en: string, zh: string, yue: string) => string;
+}) {
   const items = [
     { n: 1, label: t("Describe", "描述", "講下你"), isInterview: false },
     { n: "interview", label: t("Follow-up", "追问", "追問"), isInterview: true },
@@ -678,12 +760,16 @@ function Stepper({ step, t }: { step: number | "interview"; t: (en: string, zh: 
           <li key={String(it.n)} className="flex items-center gap-3">
             <span
               className={`flex h-7 w-7 items-center justify-center rounded-full border ${
-                isActive || isCompleted ? "border-primary bg-primary text-primary-foreground" : "border-border text-muted-foreground"
+                isActive || isCompleted
+                  ? "border-primary bg-primary text-primary-foreground"
+                  : "border-border text-muted-foreground"
               }`}
             >
               {isCompleted ? <CheckCircle2 className="h-4 w-4" /> : it.isInterview ? "?" : it.n}
             </span>
-            <span className={isActive || isCompleted ? "text-foreground" : "text-muted-foreground"}>{it.label}</span>
+            <span className={isActive || isCompleted ? "text-foreground" : "text-muted-foreground"}>
+              {it.label}
+            </span>
             {i < items.length - 1 && <span className="h-px w-8 bg-border" />}
           </li>
         );
@@ -771,13 +857,14 @@ function ProfileCard({
   const defenseMechanisms = ai.defense_mechanisms ?? [];
   const communicationRecipes = ai.communication_recipes ?? [];
 
-  const fallbackDimensions = dimensions.length > 0
-    ? dimensions
-    : Object.entries(ai.traits ?? {}).map(([k, v]) => ({
-        key: k,
-        score: Number(v),
-        why: "",
-      }));
+  const fallbackDimensions =
+    dimensions.length > 0
+      ? dimensions
+      : Object.entries(ai.traits ?? {}).map(([k, v]) => ({
+          key: k,
+          score: Number(v),
+          why: "",
+        }));
 
   return (
     <div className="rounded-sm border border-border bg-background/40 p-6 sm:p-8 space-y-7">
@@ -812,14 +899,9 @@ function ProfileCard({
           </p>
           <div className="space-y-2">
             {lifeThemes.map((lt, i) => (
-              <div
-                key={i}
-                className="rounded-sm border border-rose-500/20 bg-rose-500/5 p-3"
-              >
+              <div key={i} className="rounded-sm border border-rose-500/20 bg-rose-500/5 p-3">
                 <p className="text-sm font-medium text-rose-300">{lt.name}</p>
-                <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                  {lt.evidence}
-                </p>
+                <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{lt.evidence}</p>
               </div>
             ))}
           </div>
@@ -841,9 +923,7 @@ function ProfileCard({
                 {growthStage.stage}
               </span>
             </div>
-            <p className="mt-2 text-sm leading-relaxed text-foreground/90">
-              {growthStage.why}
-            </p>
+            <p className="mt-2 text-sm leading-relaxed text-foreground/90">{growthStage.why}</p>
           </div>
         </div>
       )}
@@ -852,31 +932,28 @@ function ProfileCard({
       {paradoxes.length > 0 && (
         <div>
           <p className="mb-3 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
-            {t("What you want vs what you actually want", "你表面想要 vs 实际想要的", "你表面想要 vs 實際想要嘅")}
+            {t(
+              "What you want vs what you actually want",
+              "你表面想要 vs 实际想要的",
+              "你表面想要 vs 實際想要嘅",
+            )}
           </p>
           <div className="space-y-3">
             {paradoxes.map((p, i) => (
-              <div
-                key={i}
-                className="rounded-sm border border-amber-500/30 bg-amber-500/5 p-4"
-              >
+              <div key={i} className="rounded-sm border border-amber-500/30 bg-amber-500/5 p-4">
                 <div className="flex items-start gap-3">
                   <div className="flex-1">
                     <p className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
                       {t("You said", "你表面说的", "你表面講嘅")}
                     </p>
-                    <p className="mt-1 text-sm leading-relaxed text-foreground/90">
-                      {p.surface}
-                    </p>
+                    <p className="mt-1 text-sm leading-relaxed text-foreground/90">{p.surface}</p>
                   </div>
                   <span className="self-center text-lg text-amber-500/70">↔</span>
                   <div className="flex-1">
                     <p className="text-[10px] font-medium uppercase tracking-wider text-amber-400">
                       {t("You actually want", "你实际想要的", "你實際想要嘅")}
                     </p>
-                    <p className="mt-1 text-sm leading-relaxed text-foreground/95">
-                      {p.depth}
-                    </p>
+                    <p className="mt-1 text-sm leading-relaxed text-foreground/95">{p.depth}</p>
                   </div>
                 </div>
                 {p.tension && (
@@ -898,16 +975,11 @@ function ProfileCard({
           </p>
           <div className="grid gap-3 sm:grid-cols-2">
             {archetypes.map((a, i) => (
-              <div
-                key={i}
-                className="rounded-sm border border-violet-500/30 bg-violet-500/5 p-4"
-              >
+              <div key={i} className="rounded-sm border border-violet-500/30 bg-violet-500/5 p-4">
                 <p className="font-display text-base font-semibold italic text-violet-300">
                   {a.name}
                 </p>
-                <p className="mt-2 text-sm leading-relaxed text-foreground/90">
-                  {a.why}
-                </p>
+                <p className="mt-2 text-sm leading-relaxed text-foreground/90">{a.why}</p>
                 {a.shadow && (
                   <p className="mt-2 text-xs italic text-muted-foreground">
                     {t("Shadow:", "阴影面：", "陰影面：")} {a.shadow}
@@ -927,19 +999,12 @@ function ProfileCard({
           </p>
           <div className="space-y-3">
             {scenePredictions.map((sp, i) => (
-              <div
-                key={i}
-                className="rounded-sm border border-cyan-500/30 bg-cyan-500/5 p-4"
-              >
+              <div key={i} className="rounded-sm border border-cyan-500/30 bg-cyan-500/5 p-4">
                 <p className="text-[10px] font-medium uppercase tracking-wider text-cyan-400">
                   {sp.context}
                 </p>
-                <p className="mt-2 text-sm leading-relaxed text-foreground/95">
-                  {sp.behavior}
-                </p>
-                <p className="mt-1 text-[11px] italic text-muted-foreground">
-                  — {sp.why}
-                </p>
+                <p className="mt-2 text-sm leading-relaxed text-foreground/95">{sp.behavior}</p>
+                <p className="mt-1 text-[11px] italic text-muted-foreground">— {sp.why}</p>
               </div>
             ))}
           </div>
@@ -1066,22 +1131,13 @@ function ProfileCard({
           </p>
           <div className="space-y-2">
             {defenseMechanisms.map((dm, i) => (
-              <div
-                key={i}
-                className="rounded-sm border border-orange-500/30 bg-orange-500/5 p-3"
-              >
-                <p className="text-sm font-medium text-orange-300">
-                  {dm.mechanism}
-                </p>
+              <div key={i} className="rounded-sm border border-orange-500/30 bg-orange-500/5 p-3">
+                <p className="text-sm font-medium text-orange-300">{dm.mechanism}</p>
                 <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                  <span className="text-orange-400/80">
-                    {t("Trigger:", "触发：", "觸發：")}
-                  </span>{" "}
+                  <span className="text-orange-400/80">{t("Trigger:", "触发：", "觸發：")}</span>{" "}
                   {dm.when_triggered}
                 </p>
-                <p className="mt-1 text-xs leading-relaxed text-foreground/85">
-                  {dm.behavior}
-                </p>
+                <p className="mt-1 text-xs leading-relaxed text-foreground/85">{dm.behavior}</p>
               </div>
             ))}
           </div>
@@ -1096,10 +1152,7 @@ function ProfileCard({
           </p>
           <div className="space-y-2">
             {communicationRecipes.map((r, i) => (
-              <div
-                key={i}
-                className="rounded-sm border border-teal-500/30 bg-teal-500/5 p-3"
-              >
+              <div key={i} className="rounded-sm border border-teal-500/30 bg-teal-500/5 p-3">
                 <p className="text-[10px] font-medium uppercase tracking-wider text-teal-400">
                   {r.context}
                 </p>
@@ -1134,9 +1187,7 @@ function ProfileCard({
                     {matchSignals.needs.map((n, i) => (
                       <li key={i}>
                         <p className="text-sm text-foreground/95">{n.what}</p>
-                        <p className="mt-0.5 text-[11px] italic text-muted-foreground">
-                          {n.why}
-                        </p>
+                        <p className="mt-0.5 text-[11px] italic text-muted-foreground">{n.why}</p>
                       </li>
                     ))}
                   </ul>
@@ -1151,9 +1202,7 @@ function ProfileCard({
                     {matchSignals.gifts.map((g, i) => (
                       <li key={i}>
                         <p className="text-sm text-foreground/95">{g.what}</p>
-                        <p className="mt-0.5 text-[11px] italic text-muted-foreground">
-                          {g.why}
-                        </p>
+                        <p className="mt-0.5 text-[11px] italic text-muted-foreground">{g.why}</p>
                       </li>
                     ))}
                   </ul>
@@ -1213,11 +1262,7 @@ function ProfileCard({
             ) : (
               <Sparkles className="h-3 w-3" />
             )}
-            {t(
-              "Re-analyze me from scratch",
-              "再深度分析一次",
-              "再深入分析一次",
-            )}
+            {t("Re-analyze me from scratch", "再深度分析一次", "再深入分析一次")}
           </button>
         </div>
       )}
@@ -1269,9 +1314,7 @@ function PatternRow({
   };
 
   return (
-    <details
-      className="group rounded-sm border border-primary/20 bg-primary/5 transition-colors hover:border-primary/40"
-    >
+    <details className="group rounded-sm border border-primary/20 bg-primary/5 transition-colors hover:border-primary/40">
       <summary className="cursor-pointer list-none p-4">
         <p className="text-sm leading-relaxed text-foreground/95">{insight}</p>
         {evidence && (
@@ -1330,9 +1373,7 @@ function PatternRow({
           <ol className="mt-2 space-y-1.5 text-xs leading-relaxed text-foreground/85">
             {reasoningChain.map((step, j) => (
               <li key={j} className="flex gap-2">
-                <span className="shrink-0 font-mono text-muted-foreground/70">
-                  {j + 1}.
-                </span>
+                <span className="shrink-0 font-mono text-muted-foreground/70">{j + 1}.</span>
                 <span>{step}</span>
               </li>
             ))}

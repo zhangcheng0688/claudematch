@@ -42,16 +42,22 @@ export const Route = createFileRoute("/api/ai/interview-questions")({
           typeof body.scenario === "string" && VALID_SCENARIOS.has(body.scenario)
             ? (body.scenario as "business" | "dating" | "partner")
             : "dating";
-        const lang: "en" | "zh" | "yue" = body.lang === "en" ? "en" : body.lang === "yue" ? "yue" : "zh";
+        const lang: "en" | "zh" | "yue" =
+          body.lang === "en" ? "en" : body.lang === "yue" ? "yue" : "zh";
         const llmLang: "en" | "zh" = lang === "en" ? "en" : "zh";
 
         const moderation = await moderateText(input, llmLang, "interview-questions");
         if (!moderation.safe) {
-          return json({ error: "Input violates content policy", moderation }, { status: 400 }, request);
+          return json(
+            { error: "Input violates content policy", moderation },
+            { status: 400 },
+            request,
+          );
         }
 
-        const sys = llmLang === "zh"
-          ? `你是 linQ 的 AI 訪談設計師。用戶剛寫了一段自我描述，你的任務是設計 2-3 個最應該追問的問題。
+        const sys =
+          llmLang === "zh"
+            ? `你是 linQ 的 AI 訪談設計師。用戶剛寫了一段自我描述，你的任務是設計 2-3 個最應該追問的問題。
 
 設計原則：
 1. 不要問已經明確說過的事（例如用戶已經講咗做咩工，就唔好再問職業）
@@ -61,7 +67,7 @@ export const Route = createFileRoute("/api/ai/interview-questions")({
 5. 問題要短，一句話，口语化，像一個細心朋友在問
 
 輸出嚴格 JSON。`
-          : `You are linQ's AI interview designer. The user just wrote a self-description. Design 2-3 follow-up questions that dig into the gaps, tensions, or subtext.
+            : `You are linQ's AI interview designer. The user just wrote a self-description. Design 2-3 follow-up questions that dig into the gaps, tensions, or subtext.
 
 Principles:
 1. Don't ask what is already explicitly stated.
@@ -72,27 +78,43 @@ Principles:
 
 Strict JSON output.`;
 
-        const userPrompt = llmLang === "zh"
-          ? `場景：${scenario}\n用戶描述："""${input}"""\n\n請輸出 JSON：\n{\n  "questions": [\n    { "id": "q1", "question": "第一條追問", "why_ask": "為什麼這條問題對這個人重要" },\n    { "id": "q2", "question": "第二條追問", "why_ask": "..." },\n    { "id": "q3", "question": "第三條追問（可選，如果已經夠清楚可以只有兩條）", "why_ask": "..." }\n  ]\n}`
-          : `Scenario: ${scenario}\nUser description: """${input}"""\n\nOutput JSON:\n{\n  "questions": [\n    { "id": "q1", "question": "first follow-up", "why_ask": "why this matters for this person" },\n    { "id": "q2", "question": "second follow-up", "why_ask": "..." },\n    { "id": "q3", "question": "optional third follow-up", "why_ask": "..." }\n  ]\n}`;
+        const userPrompt =
+          llmLang === "zh"
+            ? `場景：${scenario}\n用戶描述："""${input}"""\n\n請輸出 JSON：\n{\n  "questions": [\n    { "id": "q1", "question": "第一條追問", "why_ask": "為什麼這條問題對這個人重要" },\n    { "id": "q2", "question": "第二條追問", "why_ask": "..." },\n    { "id": "q3", "question": "第三條追問（可選，如果已經夠清楚可以只有兩條）", "why_ask": "..." }\n  ]\n}`
+            : `Scenario: ${scenario}\nUser description: """${input}"""\n\nOutput JSON:\n{\n  "questions": [\n    { "id": "q1", "question": "first follow-up", "why_ask": "why this matters for this person" },\n    { "id": "q2", "question": "second follow-up", "why_ask": "..." },\n    { "id": "q3", "question": "optional third follow-up", "why_ask": "..." }\n  ]\n}`;
 
         const res = await llmChatEx(
           [
             { role: "system", content: sys },
             { role: "user", content: userPrompt },
           ],
-          { json: true, temperature: 0.85, max_tokens: 1200, label: "interview-questions", deadlineMs: 30_000 },
+          {
+            json: true,
+            temperature: 0.85,
+            max_tokens: 1200,
+            label: "interview-questions",
+            deadlineMs: 30_000,
+          },
         );
 
-        const parsed = safeParseJSON<{ questions?: Array<{ id?: string; question?: string; why_ask?: string }> }>(
-          res?.content ?? null,
-        ) ?? {};
+        const parsed =
+          safeParseJSON<{
+            questions?: Array<{ id?: string; question?: string; why_ask?: string }>;
+          }>(res?.content ?? null) ?? {};
         const questions = (parsed.questions ?? [])
           .filter((q) => typeof q.question === "string" && q.question.trim().length > 0)
           .slice(0, 3)
-          .map((q) => ({ id: q.id ?? `q_${Math.random().toString(36).slice(2, 8)}`, question: q.question!.trim(), why_ask: q.why_ask ?? "" }));
+          .map((q) => ({
+            id: q.id ?? `q_${Math.random().toString(36).slice(2, 8)}`,
+            question: q.question!.trim(),
+            why_ask: q.why_ask ?? "",
+          }));
 
-        return json({ data: questions, ai_provider: res?.provider ?? "fallback" }, undefined, request);
+        return json(
+          { data: questions, ai_provider: res?.provider ?? "fallback" },
+          undefined,
+          request,
+        );
       },
     },
   },

@@ -3,6 +3,37 @@ import { useState } from "react";
 import { ArrowRight, Mail, Loader2, CheckCircle2 } from "lucide-react";
 import { LanguageProvider, useLang } from "@/lib/i18n";
 
+const BASE_URL = "https://claudematch.com";
+
+function buildBlogSchema(lang: "en" | "zh" | "yue") {
+  return {
+    "@context": "https://schema.org",
+    "@type": "Blog",
+    name: lang === "zh" ? "linQ 笔记" : lang === "yue" ? "linQ 筆記" : "linQ Journal",
+    url: `${BASE_URL}/blog`,
+    description:
+      lang === "zh"
+        ? "linQ 团队关于 AI 匹配、隐私优先和 Claude-native 产品构建的第一手笔记。"
+        : lang === "yue"
+          ? "linQ 團隊關於 AI 配對、私隱優先同 Claude-native 產品構建嘅第一手筆記。"
+          : "Field notes from the linQ team on AI matching, privacy by default, and Claude-native product building.",
+    publisher: {
+      "@type": "Organization",
+      name: "linQ",
+      url: BASE_URL,
+    },
+    blogPost: DRAFTS.map((p, i) => ({
+      "@type": "BlogPosting",
+      headline: p.title[lang],
+      description: p.excerpt[lang],
+      author: { "@type": "Organization", name: "linQ" },
+      publisher: { "@type": "Organization", name: "linQ", url: BASE_URL },
+      url: `${BASE_URL}/blog/${i}`,
+      inLanguage: lang === "yue" ? "zh-Hant" : lang,
+    })),
+  };
+}
+
 export const Route = createFileRoute("/blog")({
   head: () => ({
     meta: [
@@ -20,6 +51,12 @@ export const Route = createFileRoute("/blog")({
       { property: "og:url", content: "https://claudematch.com/blog" },
     ],
     links: [{ rel: "canonical", href: "https://claudematch.com/blog" }],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify(buildBlogSchema("en")),
+      },
+    ],
   }),
   component: () => (
     <LanguageProvider>
@@ -131,7 +168,13 @@ function BlogPage() {
         return;
       }
       setState("success");
-      setMsg(t("Done. We'll send the first post the day it ships.", "搞定，第一篇发布当天就送到。", "搞掂，第一篇出街當日就送到。"));
+      setMsg(
+        t(
+          "Done. We'll send the first post the day it ships.",
+          "搞定，第一篇发布当天就送到。",
+          "搞掂，第一篇出街當日就送到。",
+        ),
+      );
       setEmail("");
     } catch {
       setState("error");
@@ -190,7 +233,11 @@ function BlogPage() {
               </p>
               <div className="mt-4 flex items-center gap-1 text-xs text-muted-foreground">
                 <span>
-                  {t("Subscribe below to read it first.", "订阅即可第一时间阅读。", "訂閱即可第一時間睇。")}
+                  {t(
+                    "Subscribe below to read it first.",
+                    "订阅即可第一时间阅读。",
+                    "訂閱即可第一時間睇。",
+                  )}
                 </span>
                 <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" />
               </div>
@@ -213,7 +260,10 @@ function BlogPage() {
                 )}
               </p>
             </div>
-            <form onSubmit={submit} className="flex w-full items-center gap-2 sm:w-auto sm:min-w-[320px]">
+            <form
+              onSubmit={submit}
+              className="flex w-full items-center gap-2 sm:w-auto sm:min-w-[320px]"
+            >
               <div className="flex h-10 flex-1 items-center gap-2 rounded-sm border border-border bg-background px-3 sm:flex-initial sm:w-64">
                 <Mail className="h-3.5 w-3.5 text-muted-foreground" />
                 <input
@@ -255,11 +305,7 @@ function BlogPage() {
         </div>
 
         <p className="mt-12 text-center text-xs text-muted-foreground">
-          {t(
-            "Prefer to talk to a human? ",
-            "想直接找人聊？",
-            "想直接搵人傾？",
-          )}
+          {t("Prefer to talk to a human? ", "想直接找人聊？", "想直接搵人傾？")}
           <a
             href="mailto:zhangcheng0688@gmail.com?subject=linQ%20Journal"
             className="text-primary hover:underline"

@@ -14,8 +14,7 @@
 // 不可枚举。
 
 import { createFileRoute } from "@tanstack/react-router";
-import { createClient } from "@supabase/supabase-js";
-import type { Database } from "@/integrations/supabase/types";
+import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN ?? "https://claudematch.com";
 
@@ -53,14 +52,6 @@ function page(opts: { title: string; body: string; cta?: { href: string; label: 
 </html>`;
 }
 
-function getSupabase() {
-  const url = process.env.SUPABASE_URL!;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-  return createClient<Database>(url, key, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
-}
-
 export const Route = createFileRoute("/api/email/visit-confirm")({
   server: {
     handlers: {
@@ -81,7 +72,7 @@ export const Route = createFileRoute("/api/email/visit-confirm")({
           );
         }
 
-        const supabase = getSupabase();
+        const supabase = supabaseAdmin;
         const { data: row, error } = await supabase
           .from("visit_confirmations")
           .select("id, expires_at, confirmed_at, denied_at, venue_id")
@@ -129,7 +120,9 @@ export const Route = createFileRoute("/api/email/visit-confirm")({
           .eq("id", row.id);
 
         if (updErr) {
-          console.error(JSON.stringify({ at: "visit_confirm_update_failed", error: updErr.message }));
+          console.error(
+            JSON.stringify({ at: "visit_confirm_update_failed", error: updErr.message }),
+          );
           return new Response(
             page({
               title: "出了点小问题",

@@ -21,23 +21,29 @@ export const Route = createFileRoute("/api/referrals")({
         if ("error" in auth) return auth.error;
         const { userId, supabase } = auth;
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { data } = await (supabase.from as any)("referrals")
           .select("*")
           .eq("referrer_id", userId)
           .maybeSingle();
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const stats = await (supabase.from as any)("referrals")
           .select("status", { count: "exact" })
           .eq("referrer_id", userId)
           .eq("status", "signed_up");
 
-        return json({
-          data: {
-            code: data?.code ?? null,
-            status: data?.status ?? null,
-            signed_up_count: stats.count ?? 0,
+        return json(
+          {
+            data: {
+              code: data?.code ?? null,
+              status: data?.status ?? null,
+              signed_up_count: stats.count ?? 0,
+            },
           },
-        }, undefined, request);
+          undefined,
+          request,
+        );
       },
       POST: async ({ request }) => {
         const auth = await requireUser(request);
@@ -45,6 +51,7 @@ export const Route = createFileRoute("/api/referrals")({
         const { userId, supabase } = auth;
 
         const code = generateCode(userId);
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { data, error } = await (supabase.from as any)("referrals")
           .insert({ referrer_id: userId, code, status: "pending" })
           .select("*")
@@ -52,6 +59,7 @@ export const Route = createFileRoute("/api/referrals")({
 
         if (error) {
           if ((error as { code?: string }).code === "23505") {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const { data: existing } = await (supabase.from as any)("referrals")
               .select("*")
               .eq("referrer_id", userId)

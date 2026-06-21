@@ -54,7 +54,9 @@ async function saveProfile(
   let embedding: number[] | null = null;
   try {
     const embedText_ = profileToEmbeddingText({
-      headline: (profile_data.ai as Record<string, unknown> | undefined)?.headline as string | undefined,
+      headline: (profile_data.ai as Record<string, unknown> | undefined)?.headline as
+        | string
+        | undefined,
       bio: input,
       scenario_tags: [scenario],
       profile_data: { ai: profile_data.ai },
@@ -63,7 +65,11 @@ async function saveProfile(
     if (embedResult.ok) embedding = embedResult.embedding;
     else {
       console.warn(
-        JSON.stringify({ at: "generate-profile:embedding_failed", traceId, reason: embedResult.reason }),
+        JSON.stringify({
+          at: "generate-profile:embedding_failed",
+          traceId,
+          reason: embedResult.reason,
+        }),
       );
     }
   } catch (e) {
@@ -80,13 +86,18 @@ async function saveProfile(
 
   if (embedding && !error) {
     try {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       await (supabase.rpc as any)("set_user_profile_embedding", {
         p_user_id: userId,
         p_embedding: embedding,
       });
     } catch (e) {
       console.warn(
-        JSON.stringify({ at: "generate-profile:embedding_write_failed", traceId, error: String(e) }),
+        JSON.stringify({
+          at: "generate-profile:embedding_write_failed",
+          traceId,
+          error: String(e),
+        }),
       );
     }
   }
@@ -98,6 +109,246 @@ async function saveProfile(
     ai_provider: profile_data.ai_provider,
     prompt_version: promptVersion ?? (profile_data.prompt_version as string | undefined) ?? "v5",
   });
+}
+
+export function buildFallbackProfile(input: string, llmLang: "zh" | "en"): Record<string, unknown> {
+  return llmLang === "zh"
+    ? {
+        headline: "独一无二的你",
+        narrative:
+          "你正在寻找属于自己的连接。这段描述是一个起点 —— 告诉 AI 你关心什么、你在意什么，AI 会把这些信号打包成一份让对方一眼看懂你的画像。\n\n每一次重新描述，都会被 AI 重新理解。linQ 不会把任何标签贴在你身上。",
+        hidden_superpower: {
+          what: "你愿意先敞开自己，这是稀缺的能力",
+          evidence: input.slice(0, 24),
+        },
+        blind_spot: {
+          what: "可能把「被理解」的期待放得太高",
+          cost: "容易因为对方一次没听懂就撤退",
+        },
+        patterns: [
+          {
+            insight: "你愿意花时间描述自己 —— 这本身说明你在认真对待这次匹配。",
+            evidence: input.slice(0, 24),
+            reasoning_chain: [
+              "观察：你写了一段自我介绍",
+              "假设：多数人不会这样做",
+              "推断：你把这次匹配当回事",
+            ],
+            confidence: 0.8,
+          },
+        ],
+        dimensions: [
+          { key: "决策模式", score: 0.7, why: "愿意先描述再决策", signals: [] },
+          { key: "信任建立", score: 0.6, why: "通过文字建立连接", signals: [] },
+          { key: "能量来源", score: 0.5, why: "通过深度对话获取能量", signals: [] },
+          { key: "冲突处理", score: 0.7, why: "倾向直接表达", signals: [] },
+          { key: "理想匹配", score: 0.7, why: "寻找能理解自己的人", signals: [] },
+        ],
+        paradoxes: [
+          {
+            surface: "你说你想找一个能「懂」你的人",
+            depth: "但你其实想要的是「被看见但不必解释」",
+            tension: "前者要你主动展示，后者要求对方主动观察",
+          },
+        ],
+        archetypes: [
+          {
+            name: "深夜独行侠",
+            why: "你用文字整理自己，说明你需要先内化再表达",
+            shadow: "在需要快速反应的场合会显得犹豫",
+          },
+        ],
+        match_signals: {
+          needs: [{ what: "被安静地倾听", why: "你已经在描述中透露这是你最稀缺的事" }],
+          gifts: [{ what: "认真的态度", why: "愿意花时间写出来本身就是一种稀缺" }],
+          risks: [{ what: "在被快速匹配时感到不被理解", impact: "会因为「太快了」而退出对话" }],
+        },
+        what_people_miss: {
+          surface_impression: "看起来在认真找一个人",
+          reality: "其实在找一个能接住自己敏感的人",
+          why: "描述里充满了对「被理解」的精确要求",
+        },
+        growth_edge: {
+          area: "信任",
+          what: "太快把对方的犹豫解读为「不夠懂我」",
+          invitation: "如果願意給多一兩次解釋的機會，關係會深很多",
+        },
+        attachment_signals: {
+          trust_build: "透過對方記得細節來建立信任",
+          need_expression: "傾向暗示多過直接開口",
+          distance_response: "會先退後觀察，確定安全再靠近",
+          repair_style: "需要對方主動開口，但很難主動破冰",
+        },
+        stress_response: {
+          early_signal: "話變少，開始分析而非感受",
+          escalation: "進入「算了」模式，表面冷靜但內心撤退",
+          repair: "獨處、寫東西、或聽熟悉的音樂",
+          support_need: "不需要建議，只需要被問「你現在怎樣」",
+        },
+        life_themes: [{ name: "寻找连接", evidence: "你写下了这段话，本身就是寻找的一部分" }],
+        scene_predictions: [
+          {
+            context: "周三晚上 9 点独自在家",
+            behavior: "你会打开手机，反复看这段描述",
+            why: "你在思考，思考是 ta 充电的方式",
+          },
+        ],
+        growth_stage: { stage: "exploration", label: "探索期", why: "你正在尝试一种新的连接方式" },
+        aesthetic_signature: {
+          preferences: ["偏好深度胜过广度", "重视真实性胜过表达性"],
+          contradiction: "想要被看见，但又不想被太多人看见",
+        },
+        defense_mechanisms: [
+          {
+            mechanism: "理智化",
+            when_triggered: "当情绪可能失控时",
+            behavior: "把感受转化为分析和判断",
+          },
+        ],
+        communication_recipes: [
+          {
+            context: "想拒绝时",
+            recipe: "先肯定对方的善意，再用具体边界说明",
+            avoid: "直接拒绝 + 不解释",
+          },
+        ],
+      }
+    : {
+        headline: "One of a kind",
+        narrative:
+          "You're looking for a connection that's actually yours. This description is a starting point — tell AI what you care about, and it'll package the honest signals into a profile the other side can actually read.\n\nEvery time you re-describe, AI re-understands. linQ never slaps a label on you.",
+        hidden_superpower: {
+          what: "Your willingness to open up first is rare",
+          evidence: input.slice(0, 24),
+        },
+        blind_spot: {
+          what: "You may expect to be understood too quickly",
+          cost: "You might withdraw after one mismatch",
+        },
+        patterns: [
+          {
+            insight:
+              "You took the time to describe yourself — that alone signals you're taking this match seriously.",
+            evidence: input.slice(0, 24),
+            reasoning_chain: [
+              "Observation: you wrote a self-intro",
+              "Hypothesis: most people don't do this",
+              "Inference: you take this match seriously",
+            ],
+            confidence: 0.8,
+          },
+        ],
+        dimensions: [
+          {
+            key: "decision_style",
+            score: 0.7,
+            why: "describes first, decides second",
+            signals: [],
+          },
+          { key: "trust_pattern", score: 0.6, why: "builds connection through text", signals: [] },
+          { key: "energy_source", score: 0.5, why: "energized by deep conversation", signals: [] },
+          { key: "conflict_mode", score: 0.7, why: "leans toward direct expression", signals: [] },
+          {
+            key: "ideal_match",
+            score: 0.7,
+            why: "seeks someone who understands them",
+            signals: [],
+          },
+        ],
+        paradoxes: [
+          {
+            surface: "You say you want someone who 'gets' you",
+            depth: "But what you actually want is 'to be seen without having to explain'",
+            tension:
+              "These look the same but differ: the first requires you to perform, the second requires the other to perceive",
+          },
+        ],
+        archetypes: [
+          {
+            name: "Midnight Wanderer",
+            why: "You use text to organize yourself, which suggests you need to internalize before expressing",
+            shadow: "May seem hesitant in moments that demand quick reactions",
+          },
+        ],
+        match_signals: {
+          needs: [
+            {
+              what: "Quiet listening",
+              why: "Your description reveals this is your scarcest thing",
+            },
+          ],
+          gifts: [
+            {
+              what: "Earnest attention",
+              why: "Your willingness to write at length is itself rare",
+            },
+          ],
+          risks: [
+            {
+              what: "May feel misunderstood when matched quickly",
+              impact: "Will exit conversations that feel 'too fast'",
+            },
+          ],
+        },
+        what_people_miss: {
+          surface_impression: "Looks like someone seriously looking",
+          reality: "Actually looking for someone who can catch their sensitivity",
+          why: "The description is full of precise demands to be understood",
+        },
+        growth_edge: {
+          area: "trust",
+          what: "Reads hesitation as 'they don't get me' too quickly",
+          invitation: "Giving one or two more chances to explain would deepen relationships",
+        },
+        attachment_signals: {
+          trust_build: "Builds trust through remembered details",
+          need_expression: "Tends to hint more than ask directly",
+          distance_response: "Steps back to observe before moving closer",
+          repair_style: "Needs the other to initiate, finds it hard to break the ice",
+        },
+        stress_response: {
+          early_signal: "Talks less, starts analyzing instead of feeling",
+          escalation: "Shuts down into 'never mind' mode, outwardly calm but inwardly withdrawing",
+          repair: "Solitude, writing, or listening to familiar music",
+          support_need: "Doesn't need advice, just to be asked 'how are you right now'",
+        },
+        life_themes: [
+          {
+            name: "Seeking connection",
+            evidence: "Your willingness to write at length signals this",
+          },
+        ],
+        scene_predictions: [
+          {
+            context: "Wednesday 9pm, alone at home",
+            behavior: "You re-read what you wrote",
+            why: "Reflection is how you recharge",
+          },
+        ],
+        growth_stage: {
+          stage: "exploration",
+          label: "exploration",
+          why: "You're trying a new way to connect",
+        },
+        aesthetic_signature: {
+          preferences: ["depth over breadth", "authenticity over expression"],
+          contradiction: "wants to be seen, but not by too many",
+        },
+        defense_mechanisms: [
+          {
+            mechanism: "Intellectualization",
+            when_triggered: "When emotions might slip out",
+            behavior: "Converts feelings into analysis",
+          },
+        ],
+        communication_recipes: [
+          {
+            context: "Wanting to decline",
+            recipe: "Affirm the intent, then state a specific boundary",
+            avoid: "Direct refusal with no explanation",
+          },
+        ],
+      };
 }
 
 const VALID_SCENARIOS = new Set(["business", "dating", "partner"]);
@@ -132,7 +383,8 @@ export const Route = createFileRoute("/api/ai/generate-profile")({
         if ("error" in auth) return auth.error;
         const { userId, supabase } = auth;
 
-        const traceId = (crypto as { randomUUID?: () => string })?.randomUUID?.() ??
+        const traceId =
+          (crypto as { randomUUID?: () => string })?.randomUUID?.() ??
           Math.random().toString(36).slice(2) + Date.now().toString(36);
 
         let body: {
@@ -154,7 +406,8 @@ export const Route = createFileRoute("/api/ai/generate-profile")({
           typeof body.scenario === "string" && VALID_SCENARIOS.has(body.scenario)
             ? (body.scenario as "business" | "dating" | "partner")
             : "dating";
-        const lang: "zh" | "en" | "yue" = body.lang === "en" ? "en" : body.lang === "yue" ? "yue" : "zh";
+        const lang: "zh" | "en" | "yue" =
+          body.lang === "en" ? "en" : body.lang === "yue" ? "yue" : "zh";
         const llmLang: "zh" | "en" = lang === "en" ? "en" : "zh";
         const promptVersion = selectPromptVersion("profile", userId);
 
@@ -164,7 +417,9 @@ export const Route = createFileRoute("/api/ai/generate-profile")({
               .map((a) => ({ question: String(a.question ?? ""), answer: a.answer!.trim() }))
           : [];
 
-        const fullInput = [input, ...followUpAnswers.map((a) => `${a.question} ${a.answer}`)].join("\n");
+        const fullInput = [input, ...followUpAnswers.map((a) => `${a.question} ${a.answer}`)].join(
+          "\n",
+        );
         const moderation = await moderateText(fullInput, llmLang, "generate-profile");
         if (!moderation.safe) {
           return json(
@@ -174,14 +429,15 @@ export const Route = createFileRoute("/api/ai/generate-profile")({
           );
         }
 
-        const interviewBlock = followUpAnswers.length > 0
-          ? (llmLang === "zh"
-            ? `\n\n【用戶對追問的回答】\n${followUpAnswers.map((a, i) => `${i + 1}. 問題：${a.question}\n   回答：${a.answer}`).join("\n\n")}\n`
-            : `\n\n[User's follow-up answers]\n${followUpAnswers.map((a, i) => `${i + 1}. Q: ${a.question}\n   A: ${a.answer}`).join("\n\n")}\n`)
-          : "";
+        const interviewBlock =
+          followUpAnswers.length > 0
+            ? llmLang === "zh"
+              ? `\n\n【用戶對追問的回答】\n${followUpAnswers.map((a, i) => `${i + 1}. 問題：${a.question}\n   回答：${a.answer}`).join("\n\n")}\n`
+              : `\n\n[User's follow-up answers]\n${followUpAnswers.map((a, i) => `${i + 1}. Q: ${a.question}\n   A: ${a.answer}`).join("\n\n")}\n`
+            : "";
 
         // MEMORY LAYER — fetch user's past pattern_feedback.
-        let feedbackContext: { agrees: string[]; disagrees: string[] } = {
+        const feedbackContext: { agrees: string[]; disagrees: string[] } = {
           agrees: [],
           disagrees: [],
         };
@@ -210,15 +466,22 @@ export const Route = createFileRoute("/api/ai/generate-profile")({
 
         const feedbackContextBlock =
           feedbackContext.agrees.length > 0 || feedbackContext.disagrees.length > 0
-            ? (llmLang === "zh"
+            ? llmLang === "zh"
               ? `\n\n【用户过去反馈 - 必须参考】\n用户过去同意过的洞察方向（这些方向应该强化）：\n${feedbackContext.agrees.map((s) => `  - ${s}`).join("\n")}\n用户过去否定过的洞察方向（这些方向应该避开或换角度）：\n${feedbackContext.disagrees.map((s) => `  - ${s}`).join("\n")}\n`
-              : `\n\n[User's past feedback — must consider]\nDirections the user agreed with (lean into these):\n${feedbackContext.agrees.map((s) => `  - ${s}`).join("\n")}\nDirections the user disagreed with (avoid or reframe these):\n${feedbackContext.disagrees.map((s) => `  - ${s}`).join("\n")}\n`)
+              : `\n\n[User's past feedback — must consider]\nDirections the user agreed with (lean into these):\n${feedbackContext.agrees.map((s) => `  - ${s}`).join("\n")}\nDirections the user disagreed with (avoid or reframe these):\n${feedbackContext.disagrees.map((s) => `  - ${s}`).join("\n")}\n`
             : "";
 
         // P1-3: result cache. Profile generation for identical input +
         // scenario + lang + feedback is deterministic and expensive.
         const feedbackHash = await hashInputs(feedbackContext.agrees, feedbackContext.disagrees);
-        const profileCacheKey = await hashInputs("profile", userId, input, scenario, lang, feedbackHash);
+        const profileCacheKey = await hashInputs(
+          "profile",
+          userId,
+          input,
+          scenario,
+          lang,
+          feedbackHash,
+        );
         type CachedProfileData = {
           version: string;
           prompt_version: string;
@@ -238,32 +501,63 @@ export const Route = createFileRoute("/api/ai/generate-profile")({
             generated_at: new Date().toISOString(),
             ai_provider: `cached:${cachedData.ai_provider}`,
           };
-          return await saveProfile(supabase, userId, profile_data as never, input, scenario, traceId, request, cachedData.prompt_version);
+          return await saveProfile(
+            supabase,
+            userId,
+            profile_data as never,
+            input,
+            scenario,
+            traceId,
+            request,
+            cachedData.prompt_version,
+          );
         }
 
         // ============================================================
         // CALL 1 — Perceive (facts + deep inference + scene/context)
         // ============================================================
         const dimensionKeysZh = ["决策模式", "信任建立", "能量来源", "冲突处理", "理想匹配"];
-        const dimensionKeysEn = ["decision_style", "trust_pattern", "energy_source", "conflict_mode", "ideal_match"];
+        const dimensionKeysEn = [
+          "decision_style",
+          "trust_pattern",
+          "energy_source",
+          "conflict_mode",
+          "ideal_match",
+        ];
         const dimensionKeys = llmLang === "zh" ? dimensionKeysZh : dimensionKeysEn;
 
         const perceiveSys = buildPerceiveSys(llmLang, scenario, promptVersion);
-        const perceiveUser = buildPerceiveUser(llmLang, scenario, input, interviewBlock, feedbackContextBlock, promptVersion);
+        const perceiveUser = buildPerceiveUser(
+          llmLang,
+          scenario,
+          input,
+          interviewBlock,
+          feedbackContextBlock,
+          promptVersion,
+        );
 
         const perceiveRes = await llmChatEx(
           [
             { role: "system", content: perceiveSys },
             { role: "user", content: perceiveUser },
           ],
-          { json: true, temperature: 0.85, max_tokens: 4000, label: "call-1-perceive", traceId, timeoutMs: 30_000, deadlineMs: 50_000 },
+          {
+            json: true,
+            temperature: 0.85,
+            max_tokens: 4000,
+            label: "call-1-perceive",
+            traceId,
+            timeoutMs: 30_000,
+            deadlineMs: 50_000,
+          },
         );
         const perceiveRaw = perceiveRes?.content ?? null;
-        const perceive = safeParseJSON<{
-          facts?: Record<string, unknown>;
-          inferred?: Record<string, unknown>;
-          sceneFields?: Record<string, unknown>;
-        }>(perceiveRaw) ?? {};
+        const perceive =
+          safeParseJSON<{
+            facts?: Record<string, unknown>;
+            inferred?: Record<string, unknown>;
+            sceneFields?: Record<string, unknown>;
+          }>(perceiveRaw) ?? {};
         const facts = perceive.facts ?? {};
         const inferred = perceive.inferred ?? {};
         const sceneFields = perceive.sceneFields ?? {};
@@ -272,14 +566,30 @@ export const Route = createFileRoute("/api/ai/generate-profile")({
         // CALL 2 — Synthesize (headline / narrative / dimensions)
         // ============================================================
         const synthSys = buildSynthSys(llmLang, promptVersion);
-        const synthUser = buildSynthUser(llmLang, input, facts, inferred, sceneFields, dimensionKeys, promptVersion);
+        const synthUser = buildSynthUser(
+          llmLang,
+          input,
+          facts,
+          inferred,
+          sceneFields,
+          dimensionKeys,
+          promptVersion,
+        );
 
         const synthRes = await llmChatEx(
           [
             { role: "system", content: synthSys },
             { role: "user", content: synthUser },
           ],
-          { json: true, temperature: 0.85, max_tokens: 2000, label: "call-2-synth", traceId, timeoutMs: 25_000, deadlineMs: 50_000 },
+          {
+            json: true,
+            temperature: 0.85,
+            max_tokens: 2000,
+            label: "call-2-synth",
+            traceId,
+            timeoutMs: 25_000,
+            deadlineMs: 50_000,
+          },
         );
         const synthRaw = synthRes?.content ?? null;
         const synth = safeParseJSON<Record<string, unknown>>(synthRaw) ?? {};
@@ -297,19 +607,33 @@ export const Route = createFileRoute("/api/ai/generate-profile")({
             { role: "system", content: refineSys },
             { role: "user", content: refineUser },
           ],
-          { json: true, temperature: 0.7, max_tokens: 2500, label: "call-3-refine", traceId, timeoutMs: 30_000, deadlineMs: 50_000 },
+          {
+            json: true,
+            temperature: 0.7,
+            max_tokens: 2500,
+            label: "call-3-refine",
+            traceId,
+            timeoutMs: 30_000,
+            deadlineMs: 50_000,
+          },
         );
         const refineRaw = refineRes?.content ?? null;
-        const refine = safeParseJSON<{
-          critique?: Record<string, unknown>;
-          persona_tournament?: Array<{
-            persona: string;
-            label: string;
-            most_moved?: Array<{ field: string; why: string }>;
-            most_disappointed?: Array<{ field: string; quote?: string; why: string; rewrite: string }>;
-          }>;
-          final_revision?: Record<string, unknown>;
-        }>(refineRaw) ?? {};
+        const refine =
+          safeParseJSON<{
+            critique?: Record<string, unknown>;
+            persona_tournament?: Array<{
+              persona: string;
+              label: string;
+              most_moved?: Array<{ field: string; why: string }>;
+              most_disappointed?: Array<{
+                field: string;
+                quote?: string;
+                why: string;
+                rewrite: string;
+              }>;
+            }>;
+            final_revision?: Record<string, unknown>;
+          }>(refineRaw) ?? {};
 
         const critique = refine.critique ?? {};
         const finalRevision = refine.final_revision ?? {};
@@ -358,12 +682,12 @@ export const Route = createFileRoute("/api/ai/generate-profile")({
 
           if (Array.isArray(out.dimensions)) {
             out.dimensions = (out.dimensions as Array<Record<string, unknown>>).map((d) => {
-              const fpMatch = (finalRevision.dimensions as Array<Record<string, unknown>> | undefined)?.find(
-                (cd) => cd.key === d.key,
-              );
-              const cMatch = (critique.dimensions as Array<Record<string, unknown>> | undefined)?.find(
-                (cd) => cd.key === d.key,
-              );
+              const fpMatch = (
+                finalRevision.dimensions as Array<Record<string, unknown>> | undefined
+              )?.find((cd) => cd.key === d.key);
+              const cMatch = (
+                critique.dimensions as Array<Record<string, unknown>> | undefined
+              )?.find((cd) => cd.key === d.key);
               const winner = fpMatch ?? cMatch;
               if (winner) {
                 return {
@@ -378,195 +702,7 @@ export const Route = createFileRoute("/api/ai/generate-profile")({
           return out;
         };
 
-        const fallback = llmLang === "zh"
-          ? {
-              headline: "独一无二的你",
-              narrative:
-                "你正在寻找属于自己的连接。这段描述是一个起点 —— 告诉 AI 你关心什么、你在意什么，AI 会把这些信号打包成一份让对方一眼看懂你的画像。\n\n每一次重新描述，都会被 AI 重新理解。linQ 不会把任何标签贴在你身上。",
-              hidden_superpower: { what: "你愿意先敞开自己，这是稀缺的能力", evidence: input.slice(0, 24) },
-              blind_spot: { what: "可能把「被理解」的期待放得太高", cost: "容易因为对方一次没听懂就撤退" },
-              patterns: [
-                {
-                  insight: "你愿意花时间描述自己 —— 这本身说明你在认真对待这次匹配。",
-                  evidence: input.slice(0, 24),
-                  reasoning_chain: [
-                    "观察：你写了一段自我介绍",
-                    "假设：多数人不会这样做",
-                    "推断：你把这次匹配当回事",
-                  ],
-                  confidence: 0.8,
-                },
-              ],
-              dimensions: [
-                { key: "决策模式", score: 0.7, why: "愿意先描述再决策", signals: [] },
-                { key: "信任建立", score: 0.6, why: "通过文字建立连接", signals: [] },
-                { key: "能量来源", score: 0.5, why: "通过深度对话获取能量", signals: [] },
-                { key: "冲突处理", score: 0.7, why: "倾向直接表达", signals: [] },
-                { key: "理想匹配", score: 0.7, why: "寻找能理解自己的人", signals: [] },
-              ],
-              paradoxes: [
-                {
-                  surface: "你说你想找一个能「懂」你的人",
-                  depth: "但你其实想要的是「被看见但不必解释」",
-                  tension: "前者要你主动展示，后者要求对方主动观察",
-                },
-              ],
-              archetypes: [
-                {
-                  name: "深夜独行侠",
-                  why: "你用文字整理自己，说明你需要先内化再表达",
-                  shadow: "在需要快速反应的场合会显得犹豫",
-                },
-              ],
-              match_signals: {
-                needs: [{ what: "被安静地倾听", why: "你已经在描述中透露这是你最稀缺的事" }],
-                gifts: [{ what: "认真的态度", why: "愿意花时间写出来本身就是一种稀缺" }],
-                risks: [
-                  { what: "在被快速匹配时感到不被理解", impact: "会因为「太快了」而退出对话" },
-                ],
-              },
-              what_people_miss: {
-                surface_impression: "看起来在认真找一个人",
-                reality: "其实在找一个能接住自己敏感的人",
-                why: "描述里充满了对「被理解」的精确要求",
-              },
-              growth_edge: {
-                area: "信任",
-                what: "太快把对方的犹豫解读为「不夠懂我」",
-                invitation: "如果願意給多一兩次解釋的機會，關係會深很多",
-              },
-              attachment_signals: {
-                trust_build: "透過對方記得細節來建立信任",
-                need_expression: "傾向暗示多過直接開口",
-                distance_response: "會先退後觀察，確定安全再靠近",
-                repair_style: "需要對方主動開口，但很難主動破冰",
-              },
-              stress_response: {
-                early_signal: "話變少，開始分析而非感受",
-                escalation: "進入「算了」模式，表面冷靜但內心撤退",
-                repair: "獨處、寫東西、或聽熟悉的音樂",
-                support_need: "不需要建議，只需要被問「你現在怎樣」",
-              },
-              life_themes: [
-                { name: "寻找连接", evidence: "你写下了这段话，本身就是寻找的一部分" },
-              ],
-              scene_predictions: [
-                {
-                  context: "周三晚上 9 点独自在家",
-                  behavior: "你会打开手机，反复看这段描述",
-                  why: "你在思考，思考是 ta 充电的方式",
-                },
-              ],
-              growth_stage: { stage: "exploration", label: "探索期", why: "你正在尝试一种新的连接方式" },
-              aesthetic_signature: {
-                preferences: ["偏好深度胜过广度", "重视真实性胜过表达性"],
-                contradiction: "想要被看见，但又不想被太多人看见",
-              },
-              defense_mechanisms: [
-                {
-                  mechanism: "理智化",
-                  when_triggered: "当情绪可能失控时",
-                  behavior: "把感受转化为分析和判断",
-                },
-              ],
-              communication_recipes: [
-                {
-                  context: "想拒绝时",
-                  recipe: "先肯定对方的善意，再用具体边界说明",
-                  avoid: "直接拒绝 + 不解释",
-                },
-              ],
-            }
-          : {
-              headline: "One of a kind",
-              narrative:
-                "You're looking for a connection that's actually yours. This description is a starting point — tell AI what you care about, and it'll package the honest signals into a profile the other side can actually read.\n\nEvery time you re-describe, AI re-understands. linQ never slaps a label on you.",
-              hidden_superpower: { what: "Your willingness to open up first is rare", evidence: input.slice(0, 24) },
-              blind_spot: { what: "You may expect to be understood too quickly", cost: "You might withdraw after one mismatch" },
-              patterns: [
-                {
-                  insight: "You took the time to describe yourself — that alone signals you're taking this match seriously.",
-                  evidence: input.slice(0, 24),
-                  reasoning_chain: [
-                    "Observation: you wrote a self-intro",
-                    "Hypothesis: most people don't do this",
-                    "Inference: you take this match seriously",
-                  ],
-                  confidence: 0.8,
-                },
-              ],
-              dimensions: [
-                { key: "decision_style", score: 0.7, why: "describes first, decides second", signals: [] },
-                { key: "trust_pattern", score: 0.6, why: "builds connection through text", signals: [] },
-                { key: "energy_source", score: 0.5, why: "energized by deep conversation", signals: [] },
-                { key: "conflict_mode", score: 0.7, why: "leans toward direct expression", signals: [] },
-                { key: "ideal_match", score: 0.7, why: "seeks someone who understands them", signals: [] },
-              ],
-              paradoxes: [
-                {
-                  surface: "You say you want someone who 'gets' you",
-                  depth: "But what you actually want is 'to be seen without having to explain'",
-                  tension: "These look the same but differ: the first requires you to perform, the second requires the other to perceive",
-                },
-              ],
-              archetypes: [
-                {
-                  name: "Midnight Wanderer",
-                  why: "You use text to organize yourself, which suggests you need to internalize before expressing",
-                  shadow: "May seem hesitant in moments that demand quick reactions",
-                },
-              ],
-              match_signals: {
-                needs: [{ what: "Quiet listening", why: "Your description reveals this is your scarcest thing" }],
-                gifts: [{ what: "Earnest attention", why: "Your willingness to write at length is itself rare" }],
-                risks: [
-                  { what: "May feel misunderstood when matched quickly", impact: "Will exit conversations that feel 'too fast'" },
-                ],
-              },
-              what_people_miss: {
-                surface_impression: "Looks like someone seriously looking",
-                reality: "Actually looking for someone who can catch their sensitivity",
-                why: "The description is full of precise demands to be understood",
-              },
-              growth_edge: {
-                area: "trust",
-                what: "Reads hesitation as 'they don't get me' too quickly",
-                invitation: "Giving one or two more chances to explain would deepen relationships",
-              },
-              attachment_signals: {
-                trust_build: "Builds trust through remembered details",
-                need_expression: "Tends to hint more than ask directly",
-                distance_response: "Steps back to observe before moving closer",
-                repair_style: "Needs the other to initiate, finds it hard to break the ice",
-              },
-              stress_response: {
-                early_signal: "Talks less, starts analyzing instead of feeling",
-                escalation: "Shuts down into 'never mind' mode, outwardly calm but inwardly withdrawing",
-                repair: "Solitude, writing, or listening to familiar music",
-                support_need: "Doesn't need advice, just to be asked 'how are you right now'",
-              },
-              life_themes: [
-                { name: "Seeking connection", evidence: "Your willingness to write at length signals this" },
-              ],
-              scene_predictions: [
-                {
-                  context: "Wednesday 9pm, alone at home",
-                  behavior: "You re-read what you wrote",
-                  why: "Reflection is how you recharge",
-                },
-              ],
-              growth_stage: { stage: "exploration", label: "exploration", why: "You're trying a new way to connect" },
-              aesthetic_signature: {
-                preferences: ["depth over breadth", "authenticity over expression"],
-                contradiction: "wants to be seen, but not by too many",
-              },
-              defense_mechanisms: [
-                { mechanism: "Intellectualization", when_triggered: "When emotions might slip out", behavior: "Converts feelings into analysis" },
-              ],
-              communication_recipes: [
-                { context: "Wanting to decline", recipe: "Affirm the intent, then state a specific boundary", avoid: "Direct refusal with no explanation" },
-              ],
-            };
+        const fallback = buildFallbackProfile(input, llmLang);
 
         const useFallback = !synth || !synth.headline;
 
@@ -639,9 +775,26 @@ export const Route = createFileRoute("/api/ai/generate-profile")({
         // Persist the expensive final profile so identical input doesn't
         // re-call the model pipeline. TTL is short (1h) because feedback
         // and user state evolve quickly.
-        await setCachedResponse(supabase, profileCacheKey, "profile", profileCacheKey, perceiveRes?.provider, profile_data, 1);
+        await setCachedResponse(
+          supabase,
+          profileCacheKey,
+          "profile",
+          profileCacheKey,
+          perceiveRes?.provider,
+          profile_data,
+          1,
+        );
 
-        return await saveProfile(supabase, userId, profile_data, input, scenario, traceId, request, promptVersion);
+        return await saveProfile(
+          supabase,
+          userId,
+          profile_data,
+          input,
+          scenario,
+          traceId,
+          request,
+          promptVersion,
+        );
       },
     },
   },

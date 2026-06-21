@@ -19,10 +19,7 @@ export function RadarChart({ data }: { data: RadarDataPoint[] }) {
       <ResponsiveContainer width="100%" height="100%">
         <ReRadarChart cx="50%" cy="50%" outerRadius="70%" data={data}>
           <PolarGrid stroke="rgba(255,255,255,0.12)" />
-          <PolarAngleAxis
-            dataKey="label"
-            tick={{ fill: "rgba(255,255,255,0.6)", fontSize: 11 }}
-          />
+          <PolarAngleAxis dataKey="label" tick={{ fill: "rgba(255,255,255,0.6)", fontSize: 11 }} />
           <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
           <Radar
             name="Compatibility"
