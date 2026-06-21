@@ -41,7 +41,10 @@ export const Route = createFileRoute("/api/waitlist")({
 
         const { data, error } = await supabaseAdmin
           .from("waitlist")
-          .upsert({ email: normalized, status: "pending" }, { onConflict: "email", ignoreDuplicates: false })
+          .upsert(
+            { email: normalized, status: "pending" },
+            { onConflict: "email", ignoreDuplicates: false },
+          )
           .select("id, email, status, created_at")
           .single();
 

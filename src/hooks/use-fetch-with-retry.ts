@@ -68,7 +68,12 @@ export function useFetchWithRetry<T>(
   // deps change. The retry button just increments retryCount,
   // which the effect also depends on.
   const mounted = useRef(true);
-  useEffect(() => () => { mounted.current = false; }, []);
+  useEffect(
+    () => () => {
+      mounted.current = false;
+    },
+    [],
+  );
 
   const run = useCallback(async () => {
     if (state.data !== null) {

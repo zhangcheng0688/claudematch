@@ -4,7 +4,14 @@ import { supabaseAdmin } from "@/integrations/supabase/client.server";
 import { llmChatEx, safeParseJSON } from "@/lib/api/_llm.server";
 import { getCachedResponse, hashInputs, setCachedResponse } from "@/lib/api/_ai-cache.server";
 import { extractInterests, fallbackVenueName } from "@/lib/api/extract-interests";
-import { geocodeCity, getCityCentroid, haversineKm, isVenueOpenAt, kmToWalkingMinutes, midpoint } from "@/lib/api/_geo.server";
+import {
+  geocodeCity,
+  getCityCentroid,
+  haversineKm,
+  isVenueOpenAt,
+  kmToWalkingMinutes,
+  midpoint,
+} from "@/lib/api/_geo.server";
 
 /**
  * POST /api/ai/meet-plan
@@ -59,6 +66,7 @@ async function loadVenuesNearMidpoint(
 ): Promise<VenueCandidate[]> {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { data: nearby } = await (supabaseAdmin.rpc as any)("nearby_venues", {
     p_city: city,
     p_lat: center.lat,
@@ -159,28 +167,39 @@ export const Route = createFileRoute("/api/ai/meet-plan")({
 
         // Resolve coordinates for the requester and the matched user so
         // we can ground the plan in venues near their midpoint.
-        const myLat = (myProfile as { lat?: number }).lat ??
-          ((myProfile?.profile_data as { lat?: number } | null)?.lat) ??
+        const myLat =
+          (myProfile as { lat?: number }).lat ??
+          (myProfile?.profile_data as { lat?: number } | null)?.lat ??
           getCityCentroid(myCity).lat;
-        const myLng = (myProfile as { lng?: number }).lng ??
-          ((myProfile?.profile_data as { lng?: number } | null)?.lng) ??
+        const myLng =
+          (myProfile as { lng?: number }).lng ??
+          (myProfile?.profile_data as { lng?: number } | null)?.lng ??
           getCityCentroid(myCity).lng;
 
-        const isAIPersonaMatch = Boolean((match.details as { is_real_user?: boolean } | null)?.is_real_user === false);
+        const isAIPersonaMatch = Boolean(
+          (match.details as { is_real_user?: boolean } | null)?.is_real_user === false,
+        );
         let theirLat = myLat;
         let theirLng = myLng;
         if (!isAIPersonaMatch) {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           const { data: theirProfile } = await (supabaseAdmin.from as any)("user_profiles")
             .select("lat, lng, profile_data")
             .eq("user_id", match.matched_user_id)
             .order("created_at", { ascending: false })
             .limit(1)
             .maybeSingle();
-          const theirProfileTyped = theirProfile as { lat?: number; lng?: number; profile_data?: { lat?: number; lng?: number } } | null;
-          theirLat = theirProfileTyped?.lat ??
+          const theirProfileTyped = theirProfile as {
+            lat?: number;
+            lng?: number;
+            profile_data?: { lat?: number; lng?: number };
+          } | null;
+          theirLat =
+            theirProfileTyped?.lat ??
             theirProfileTyped?.profile_data?.lat ??
             getCityCentroid(myCity).lat;
-          theirLng = theirProfileTyped?.lng ??
+          theirLng =
+            theirProfileTyped?.lng ??
             theirProfileTyped?.profile_data?.lng ??
             getCityCentroid(myCity).lng;
         } else {
@@ -199,7 +218,13 @@ export const Route = createFileRoute("/api/ai/meet-plan")({
 
         // P1-3: result cache. meet-plan for a given match_id + lang is
         // deterministic and expensive; cache it for 7 days.
-        const cachePayload = { match_id, lang, myCity, scenario: match.scenario, candidateIds: candidates.map((v) => v.id) };
+        const cachePayload = {
+          match_id,
+          lang,
+          myCity,
+          scenario: match.scenario,
+          candidateIds: candidates.map((v) => v.id),
+        };
         const cacheKey = await hashInputs("meet-plan", cachePayload);
         type MeetPlanParsed = {
           multi_plan?: Array<{
@@ -232,11 +257,12 @@ export const Route = createFileRoute("/api/ai/meet-plan")({
         let planProvider = cached?.provider;
 
         if (!parsed || !Array.isArray(parsed.multi_plan)) {
-        // LLM system prompt — same as v2, but explicitly notes that
-        // venue options are *real* restaurants and the model must
-        // pick from them (not invent).
-        const sys = llmLang === "zh"
-          ? `你是 linQ 的 AI 见面策划师 —— 一个比朋友更懂这两人的角色。
+          // LLM system prompt — same as v2, but explicitly notes that
+          // venue options are *real* restaurants and the model must
+          // pick from them (not invent).
+          const sys =
+            llmLang === "zh"
+              ? `你是 linQ 的 AI 见面策划师 —— 一个比朋友更懂这两人的角色。
 
 任务：为这对匹配设计 **3 套备选见面方案**（plan A / B / C），让用户能选。
 
@@ -257,7 +283,7 @@ C = 折中型：兼有两类元素
 - exit_strategy 不能是"说再见然后走"——要具体到"如果你感觉到 ta 在 60 分钟就开始看手机，你应该怎么接住这个信号"
 
 严格输出 JSON。`
-          : `You are linQ's AI meet-up planner — a role that knows these two people better than their friends do.
+              : `You are linQ's AI meet-up planner — a role that knows these two people better than their friends do.
 
 Task: design 3 alternative meet-up plans (A / B / C) for this match, so the user can pick.
 
@@ -279,20 +305,26 @@ Critical:
 
 Strict JSON output.`;
 
-        // User prompt: scenario + match details + candidate venue list.
-        const candidatesBlock = hasVenues
-          ? (llmLang === "zh"
-            ? `\n\n候选餐厅清单（必须从下面选，**不要**自己编）：\n${candidates
-                .map((v, i) => `[${i}] venue_id=${v.id}\n    name=${v.name}\n    district=${v.district ?? "?"}\n    cuisine=${v.cuisine_tags.join("/")}\n    vibe=${v.vibe_tags.join("/")}\n    price_per_person=${v.price_per_person ?? "?"} 元\n    rating=${v.rating ?? "?"}`)
-                .join("\n\n")}`
-            : `\n\nCandidate venues (pick from this list — DO NOT invent):\n${candidates
-                .map((v, i) => `[${i}] venue_id=${v.id}\n    name=${v.name}\n    district=${v.district ?? "?"}\n    cuisine=${v.cuisine_tags.join("/")}\n    vibe=${v.vibe_tags.join("/")}\n    price_per_person=${v.price_per_person ?? "?"} CNY\n    rating=${v.rating ?? "?"}`)
-                .join("\n\n")}`)
-          : (lang === "zh"
-            ? "\n\n注意：当前城市的餐厅数据尚未入库。请输出 venue_options 为空数组，activity_design 仍然生成。"
-            : "\n\nNote: no venue data available for this city. Output venue_options as an empty array, but still generate activity_design.");
+          // User prompt: scenario + match details + candidate venue list.
+          const candidatesBlock = hasVenues
+            ? llmLang === "zh"
+              ? `\n\n候选餐厅清单（必须从下面选，**不要**自己编）：\n${candidates
+                  .map(
+                    (v, i) =>
+                      `[${i}] venue_id=${v.id}\n    name=${v.name}\n    district=${v.district ?? "?"}\n    cuisine=${v.cuisine_tags.join("/")}\n    vibe=${v.vibe_tags.join("/")}\n    price_per_person=${v.price_per_person ?? "?"} 元\n    rating=${v.rating ?? "?"}`,
+                  )
+                  .join("\n\n")}`
+              : `\n\nCandidate venues (pick from this list — DO NOT invent):\n${candidates
+                  .map(
+                    (v, i) =>
+                      `[${i}] venue_id=${v.id}\n    name=${v.name}\n    district=${v.district ?? "?"}\n    cuisine=${v.cuisine_tags.join("/")}\n    vibe=${v.vibe_tags.join("/")}\n    price_per_person=${v.price_per_person ?? "?"} CNY\n    rating=${v.rating ?? "?"}`,
+                  )
+                  .join("\n\n")}`
+            : lang === "zh"
+              ? "\n\n注意：当前城市的餐厅数据尚未入库。请输出 venue_options 为空数组，activity_design 仍然生成。"
+              : "\n\nNote: no venue data available for this city. Output venue_options as an empty array, but still generate activity_design.";
 
-        const prompt = `Scenario: ${match.scenario}
+          const prompt = `Scenario: ${match.scenario}
 Match details: ${JSON.stringify(match.details, null, 2)}${candidatesBlock}
 
 Return JSON of shape:
@@ -332,47 +364,63 @@ Return JSON of shape:
 }
 ${llmLang === "zh" ? "全部用中文表达" : "Express in English"}.`;
 
-        const llmRes = await llmChatEx(
-          [
-            { role: "system", content: sys },
-            { role: "user", content: prompt },
-          ],
-          { json: true, temperature: 0.9, max_tokens: 2800, label: "meet-plan", traceId: `${userId}:${match_id}`, deadlineMs: 50_000 },
-        );
-        const raw = llmRes?.content ?? null;
-        planProvider = llmRes?.provider ?? planProvider;
+          const llmRes = await llmChatEx(
+            [
+              { role: "system", content: sys },
+              { role: "user", content: prompt },
+            ],
+            {
+              json: true,
+              temperature: 0.9,
+              max_tokens: 2800,
+              label: "meet-plan",
+              traceId: `${userId}:${match_id}`,
+              deadlineMs: 50_000,
+            },
+          );
+          const raw = llmRes?.content ?? null;
+          planProvider = llmRes?.provider ?? planProvider;
 
-        const llmParsed = safeParseJSON<{
-          multi_plan?: Array<{
-            id?: string;
-            label?: string;
-            description?: string;
-            venue_options?: Array<{
-              venue_id?: string;
-              why?: string;
-              distance_walking_minutes?: number;
-            }>;
-            activity_design?: {
-              why_this_activity?: string;
-              flow?: { "0_30_min"?: string; "30_60_min"?: string; "60_90_min"?: string };
-              backup_if_bored?: string;
-            };
-            time_considerations?: {
-              best_window?: string;
-              avoid_window?: string;
-              weather_check?: string;
-            };
-            exit_strategy?: {
-              natural_close?: string;
-              followup_anchor?: string;
-            };
-          }>;
-        }>(raw) ?? {};
-        parsed = llmParsed;
+          const llmParsed =
+            safeParseJSON<{
+              multi_plan?: Array<{
+                id?: string;
+                label?: string;
+                description?: string;
+                venue_options?: Array<{
+                  venue_id?: string;
+                  why?: string;
+                  distance_walking_minutes?: number;
+                }>;
+                activity_design?: {
+                  why_this_activity?: string;
+                  flow?: { "0_30_min"?: string; "30_60_min"?: string; "60_90_min"?: string };
+                  backup_if_bored?: string;
+                };
+                time_considerations?: {
+                  best_window?: string;
+                  avoid_window?: string;
+                  weather_check?: string;
+                };
+                exit_strategy?: {
+                  natural_close?: string;
+                  followup_anchor?: string;
+                };
+              }>;
+            }>(raw) ?? {};
+          parsed = llmParsed;
 
-        // Persist the expensive LLM result so future identical requests
-        // (e.g. user refreshing the plan page) don't re-call the model.
-        await setCachedResponse(supabase, cacheKey, "meet-plan", cacheKey, llmRes?.provider, llmParsed, 24 * 7);
+          // Persist the expensive LLM result so future identical requests
+          // (e.g. user refreshing the plan page) don't re-call the model.
+          await setCachedResponse(
+            supabase,
+            cacheKey,
+            "meet-plan",
+            cacheKey,
+            llmRes?.provider,
+            llmParsed,
+            24 * 7,
+          );
         } // end cache miss
 
         const finalParsed = parsed ?? {};
@@ -432,7 +480,11 @@ ${llmLang === "zh" ? "全部用中文表达" : "Express in English"}.`;
               description: lang === "en" ? "For your slow-burn rhythm" : "适合你们慢热的节奏",
               venue_options: candidates.slice(0, 1).map((v) => ({
                 venue_id: v.id,
-                why: fallbackVenue ?? (lang === "en" ? "Quiet, conducive to depth conversation" : "环境安静，便于深度交谈"),
+                why:
+                  fallbackVenue ??
+                  (lang === "en"
+                    ? "Quiet, conducive to depth conversation"
+                    : "环境安静，便于深度交谈"),
                 distance_walking_minutes: kmToWalkingMinutes(
                   haversineKm(center.lat, center.lng, v.lat, v.lng),
                 ),
@@ -440,11 +492,16 @@ ${llmLang === "zh" ? "全部用中文表达" : "Express in English"}.`;
               activity_design: {
                 why_this_activity: lang === "en" ? "Both introverted" : "两人都是慢热型",
                 flow: {
-                  "0_30_min": lang === "en" ? "Order, find a seat, start from the menu" : "点单，找位子，从菜单聊起",
-                  "30_60_min": lang === "en" ? "Talk about what excites you lately" : "聊近期最让你兴奋的事",
+                  "0_30_min":
+                    lang === "en"
+                      ? "Order, find a seat, start from the menu"
+                      : "点单，找位子，从菜单聊起",
+                  "30_60_min":
+                    lang === "en" ? "Talk about what excites you lately" : "聊近期最让你兴奋的事",
                   "60_90_min": lang === "en" ? "Wrap up, plan next time" : "自然地收，约定下次",
                 },
-                backup_if_bored: lang === "en" ? "Switch topic: childhood food" : "换话题：童年食物",
+                backup_if_bored:
+                  lang === "en" ? "Switch topic: childhood food" : "换话题：童年食物",
               },
               time_considerations: {
                 best_window: lang === "en" ? "Wed-Fri 7-8:30pm" : "周三到周五 19:00-20:30",
@@ -452,8 +509,12 @@ ${llmLang === "zh" ? "全部用中文表达" : "Express in English"}.`;
                 weather_check: lang === "en" ? "Indoor" : "室内",
               },
               exit_strategy: {
-                natural_close: lang === "en" ? "If it feels off, mention another commitment" : "感觉不对就以'还有事'为由",
-                followup_anchor: lang === "en" ? "Plan another coffee this weekend" : "约 ta 周末再喝一杯",
+                natural_close:
+                  lang === "en"
+                    ? "If it feels off, mention another commitment"
+                    : "感觉不对就以'还有事'为由",
+                followup_anchor:
+                  lang === "en" ? "Plan another coffee this weekend" : "约 ta 周末再喝一杯",
               },
             },
           ],

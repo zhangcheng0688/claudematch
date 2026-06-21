@@ -21,10 +21,11 @@ function NotFoundComponent() {
   // them onto a public page they can't really use; show a
   // "back to your dashboard" link instead.
   const router = useRouter();
-  const isAuthenticatedRoute = router.state.location.pathname.startsWith("/start")
-    || router.state.location.pathname.startsWith("/match")
-    || router.state.location.pathname.startsWith("/settings")
-    || router.state.location.pathname.startsWith("/profile");
+  const isAuthenticatedRoute =
+    router.state.location.pathname.startsWith("/start") ||
+    router.state.location.pathname.startsWith("/match") ||
+    router.state.location.pathname.startsWith("/settings") ||
+    router.state.location.pathname.startsWith("/profile");
   return (
     <div className="min-h-screen bg-background text-foreground">
       <header className="sticky top-0 z-50 w-full border-b border-border/60 bg-background/70 backdrop-blur-xl">
@@ -32,7 +33,10 @@ function NotFoundComponent() {
           <Link to="/" className="text-lg font-semibold tracking-tight">
             lin<span className="font-display text-primary text-2xl align-middle">Q</span>
           </Link>
-          <Link to={isAuthenticatedRoute ? "/start" : "/"} className="text-sm text-muted-foreground hover:text-foreground">
+          <Link
+            to={isAuthenticatedRoute ? "/start" : "/"}
+            className="text-sm text-muted-foreground hover:text-foreground"
+          >
             {isAuthenticatedRoute ? "回到你的工作台" : "Back to home"}
           </Link>
         </div>
@@ -43,7 +47,8 @@ function NotFoundComponent() {
           Lost in the links?
         </h1>
         <p className="mt-6 max-w-md text-[15px] leading-[1.75] text-muted-foreground">
-          The page you're looking for doesn't exist — or maybe it never did. Let's get you back on the right thread.
+          The page you're looking for doesn't exist — or maybe it never did. Let's get you back on
+          the right thread.
         </p>
         <div className="mt-10 flex flex-wrap items-center justify-center gap-3">
           <button
@@ -118,15 +123,19 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient; init
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
       { title: "linQ — The Claude-native matching platform" },
-      { name: "description", content: "AI-powered matching for work, love, and life. Business, dating, and local friends — one Claude-native connection covers them all." },
+      {
+        name: "description",
+        content:
+          "AI-powered matching for work, love, and life. Business, dating, and local friends — one Claude-native connection covers them all.",
+      },
       { property: "og:site_name", content: "linQ" },
       { property: "og:type", content: "website" },
       { property: "og:title", content: "linQ — The Claude-native matching platform" },
       { property: "og:description", content: "AI-powered matching for work, love, and life." },
       { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: "linQ — The Claude-native matching platform" },
-       { name: "twitter:description", content: "AI-powered matching for work, love, and life." },
-     ],
+      { name: "twitter:description", content: "AI-powered matching for work, love, and life." },
+    ],
     links: [
       {
         rel: "stylesheet",

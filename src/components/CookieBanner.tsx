@@ -73,10 +73,7 @@ export function CookieBanner() {
           >
             {lang === "zh" ? "我们使用 Cookies" : "We use cookies"}
           </p>
-          <p
-            id="cookie-banner-desc"
-            className="mt-1 text-sm leading-relaxed text-muted-foreground"
-          >
+          <p id="cookie-banner-desc" className="mt-1 text-sm leading-relaxed text-muted-foreground">
             {lang === "zh"
               ? "继续浏览即表示你同意我们使用必要的 Cookies 来改善你的体验。"
               : "By continuing, you agree to our necessary cookies to improve your experience. We don't sell data or run third-party trackers."}{" "}

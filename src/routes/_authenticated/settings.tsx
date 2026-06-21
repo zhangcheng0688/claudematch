@@ -33,7 +33,11 @@ function SettingsPage() {
   const t = (en: string, zh: string, yue: string) =>
     lang === "yue" ? yue : lang === "zh" ? zh : en;
 
-  const [scenarios, setScenarios] = useState<Scenarios>({ business: false, dating: false, partner: false });
+  const [scenarios, setScenarios] = useState<Scenarios>({
+    business: false,
+    dating: false,
+    partner: false,
+  });
   const [discoverable, setDiscoverable] = useState(true);
   const [referralCode, setReferralCode] = useState<string | null>(null);
   const [referralCount, setReferralCount] = useState(0);
@@ -47,7 +51,9 @@ function SettingsPage() {
   useEffect(() => {
     (async () => {
       try {
-        const res = await authedFetch<{ data: MeResponse } | MeResponse>("/api/user/me", { method: "GET" });
+        const res = await authedFetch<{ data: MeResponse } | MeResponse>("/api/user/me", {
+          method: "GET",
+        });
         const me: MeResponse = (res as { data: MeResponse }).data ?? (res as MeResponse);
         setScenarios(me.authorizations ?? { business: false, dating: false, partner: false });
         setDiscoverable(me.authorizations?.discoverable !== false);
@@ -62,7 +68,10 @@ function SettingsPage() {
 
   const loadReferral = async () => {
     try {
-      const res = await authedFetch<{ data: { code: string | null; signed_up_count: number } }>("/api/referrals", { method: "GET" });
+      const res = await authedFetch<{ data: { code: string | null; signed_up_count: number } }>(
+        "/api/referrals",
+        { method: "GET" },
+      );
       if (res.data?.code) {
         setReferralCode(res.data.code);
         setReferralCount(res.data.signed_up_count ?? 0);
@@ -74,7 +83,9 @@ function SettingsPage() {
 
   const generateReferral = async () => {
     try {
-      const res = await authedFetch<{ data: { code: string } }>("/api/referrals", { method: "POST" });
+      const res = await authedFetch<{ data: { code: string } }>("/api/referrals", {
+        method: "POST",
+      });
       setReferralCode(res.data?.code ?? null);
     } catch {
       /* ignore */
@@ -127,7 +138,14 @@ function SettingsPage() {
   };
 
   return (
-    <AppShell back={{ to: "/profile", labelEn: "Back to profile", labelZh: "返回个人中心", labelYue: "返回個人中心" }}>
+    <AppShell
+      back={{
+        to: "/profile",
+        labelEn: "Back to profile",
+        labelZh: "返回个人中心",
+        labelYue: "返回個人中心",
+      }}
+    >
       <section className="mx-auto max-w-md px-6 py-12 sm:py-16">
         <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
           <span className="text-gold-glow">{t("Settings", "设置", "設定")}</span>
@@ -171,8 +189,16 @@ function SettingsPage() {
         <div className="mt-6 overflow-hidden rounded-sm border border-border bg-background/40">
           <label className="flex cursor-pointer items-center gap-3 px-5 py-4 transition-colors hover:bg-accent">
             <div className="flex-1">
-              <div className="text-sm font-medium">{t("Allow matching", "允许被匹配", "允許被配對")}</div>
-              <div className="text-xs text-muted-foreground">{t("Others can see and match with you", "其他人可以发现并匹配你", "其他人可以發現並配對你")}</div>
+              <div className="text-sm font-medium">
+                {t("Allow matching", "允许被匹配", "允許被配對")}
+              </div>
+              <div className="text-xs text-muted-foreground">
+                {t(
+                  "Others can see and match with you",
+                  "其他人可以发现并匹配你",
+                  "其他人可以發現並配對你",
+                )}
+              </div>
             </div>
             <button
               type="button"
@@ -182,22 +208,30 @@ function SettingsPage() {
               onClick={() => setDiscoverable((v) => !v)}
               className={`relative h-6 w-11 rounded-full transition-colors ${discoverable ? "bg-primary" : "bg-muted"}`}
             >
-              <span className={`absolute top-0.5 h-5 w-5 rounded-full bg-background shadow-sm transition-all ${discoverable ? "left-6" : "left-0.5"}`} />
+              <span
+                className={`absolute top-0.5 h-5 w-5 rounded-full bg-background shadow-sm transition-all ${discoverable ? "left-6" : "left-0.5"}`}
+              />
             </button>
           </label>
         </div>
 
-                <div className="mt-8 overflow-hidden rounded-sm border border-border bg-background/40 p-5">
+        <div className="mt-8 overflow-hidden rounded-sm border border-border bg-background/40 p-5">
           <div className="flex items-center gap-2 text-sm font-medium">
             <Gift className="h-4 w-4 text-primary" />
             {t("Invite friends", "邀请朋友", "邀請朋友")}
           </div>
           <p className="mt-1 text-xs text-muted-foreground">
-            {t("Share linQ. Both sides get perks as more people join.", "分享 linQ。更多人加入后双方都会获得奖励。", "分享 linQ。更多人加入後雙方都會獲得獎勵。")}
+            {t(
+              "Share linQ. Both sides get perks as more people join.",
+              "分享 linQ。更多人加入后双方都会获得奖励。",
+              "分享 linQ。更多人加入後雙方都會獲得獎勵。",
+            )}
           </p>
           {referralCode ? (
             <div className="mt-3 flex items-center gap-2">
-              <code className="rounded-sm border border-border bg-background px-3 py-1.5 text-sm tracking-wider">{referralCode}</code>
+              <code className="rounded-sm border border-border bg-background px-3 py-1.5 text-sm tracking-wider">
+                {referralCode}
+              </code>
               <button
                 type="button"
                 onClick={copyCode}
@@ -206,7 +240,9 @@ function SettingsPage() {
                 <Copy className="h-3 w-3" />
                 {copied ? t("Copied", "已复制", "複製咗") : t("Copy", "复制", "複製")}
               </button>
-              <span className="text-xs text-muted-foreground">{referralCount} {t("joined", "已加入", "已加入")}</span>
+              <span className="text-xs text-muted-foreground">
+                {referralCount} {t("joined", "已加入", "已加入")}
+              </span>
             </div>
           ) : (
             <button
@@ -241,7 +277,9 @@ function SettingsPage() {
           className="mt-6 flex w-full items-center justify-center gap-2 rounded-sm bg-primary px-4 py-3 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-60"
         >
           <Save className="h-4 w-4" />
-          {saving ? t("Saving…", "保存中…", "儲存緊…") : t("Save preferences", "保存设置", "儲存設定")}
+          {saving
+            ? t("Saving…", "保存中…", "儲存緊…")
+            : t("Save preferences", "保存设置", "儲存設定")}
         </button>
 
         {savedAt && !err && (
@@ -249,9 +287,7 @@ function SettingsPage() {
             {t("Saved ✓", "已保存 ✓", "儲存咗 ✓")}
           </p>
         )}
-        {err && (
-          <p className="mt-3 text-center text-xs text-destructive">{err}</p>
-        )}
+        {err && <p className="mt-3 text-center text-xs text-destructive">{err}</p>}
       </section>
     </AppShell>
   );

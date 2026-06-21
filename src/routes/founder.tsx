@@ -25,17 +25,22 @@
 import { useCallback, useEffect, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { LanguageProvider, useLang } from "@/lib/i18n";
-import { ArrowRight, CheckCircle2, ChevronDown, ChevronUp, Loader2, RefreshCw, XCircle } from "lucide-react";
+import {
+  ArrowRight,
+  CheckCircle2,
+  ChevronDown,
+  ChevronUp,
+  Loader2,
+  RefreshCw,
+  XCircle,
+} from "lucide-react";
 
 const KEY_STORAGE = "linq.founder.key";
 const DEFAULT_SINCE_DAYS = 30;
 
 export const Route = createFileRoute("/founder")({
   head: () => ({
-    meta: [
-      { title: "linQ · Founder dashboard" },
-      { name: "robots", content: "noindex, nofollow" },
-    ],
+    meta: [{ title: "linQ · Founder dashboard" }, { name: "robots", content: "noindex, nofollow" }],
   }),
   component: () => (
     <LanguageProvider>
@@ -127,10 +132,7 @@ function FounderDashboard() {
       const headers = { "X-Founder-Key": k };
       try {
         const [dRes, pRes, nRes] = await Promise.all([
-          fetch(
-            `/api/admin/reconciliation?since_days=${sinceDays}`,
-            { headers },
-          ),
+          fetch(`/api/admin/reconciliation?since_days=${sinceDays}`, { headers }),
           fetch(`/api/admin/reconciliation?pending=true`, { headers }),
           fetch(`/api/admin/reconciliation?nps=true`, { headers }),
         ]);
@@ -196,8 +198,7 @@ function FounderDashboard() {
         <header className="mb-8 flex flex-wrap items-center justify-between gap-4">
           <div>
             <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
-              <span className="text-gold-glow">linQ</span>{" "}
-              {t("Founder dashboard", "Founder 后台")}
+              <span className="text-gold-glow">linQ</span> {t("Founder dashboard", "Founder 后台")}
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
               {t(
@@ -222,7 +223,11 @@ function FounderDashboard() {
               disabled={!key || loading}
               className="inline-flex h-8 items-center gap-1.5 rounded-sm border border-border bg-background/40 px-3 text-xs hover:bg-accent disabled:opacity-50"
             >
-              {loading ? <Loader2 className="h-3 w-3 animate-spin" /> : <RefreshCw className="h-3 w-3" />}
+              {loading ? (
+                <Loader2 className="h-3 w-3 animate-spin" />
+              ) : (
+                <RefreshCw className="h-3 w-3" />
+              )}
               {t("Refresh", "刷新")}
             </button>
           </div>
@@ -261,11 +266,7 @@ function FounderDashboard() {
             <FunnelSection rows={data.funnel_summary} t={t} />
             <VenuesSection venues={data.venues_this_month} t={t} />
             <NpsSection rows={npsRows ?? []} t={t} />
-            <PendingSection
-              rows={pending ?? []}
-              onClear={clearKey}
-              t={t}
-            />
+            <PendingSection rows={pending ?? []} onClear={clearKey} t={t} />
           </div>
         )}
       </div>
@@ -314,20 +315,10 @@ function FunnelSection({ rows, t }: { rows: FunnelRow[]; t: (en: string, zh: str
   const lastWindow = rows.find((r) => r.scope.startsWith("last_")) ?? null;
   return (
     <section>
-      <h2 className="text-lg font-semibold tracking-tight">
-        {t("Funnel summary", "漏斗汇总")}
-      </h2>
+      <h2 className="text-lg font-semibold tracking-tight">{t("Funnel summary", "漏斗汇总")}</h2>
       <div className="mt-4 grid gap-4 sm:grid-cols-2">
-        <FunnelCard
-          title={t("All time", "总计")}
-          rows={allTime}
-          t={t}
-        />
-        <FunnelCard
-          title={t("Recent window", "最近窗口")}
-          rows={lastWindow}
-          t={t}
-        />
+        <FunnelCard title={t("All time", "总计")} rows={allTime} t={t} />
+        <FunnelCard title={t("Recent window", "最近窗口")} rows={lastWindow} t={t} />
       </div>
     </section>
   );
@@ -349,12 +340,12 @@ function FunnelCard({
       </div>
     );
   }
-  const claimRate = rows.total_booking_taps > 0
-    ? Math.round((rows.total_claims / rows.total_booking_taps) * 100)
-    : 0;
-  const validRate = rows.total_claims > 0
-    ? Math.round((rows.total_valid_visits / rows.total_claims) * 100)
-    : 0;
+  const claimRate =
+    rows.total_booking_taps > 0
+      ? Math.round((rows.total_claims / rows.total_booking_taps) * 100)
+      : 0;
+  const validRate =
+    rows.total_claims > 0 ? Math.round((rows.total_valid_visits / rows.total_claims) * 100) : 0;
   return (
     <div className="rounded-sm border border-border bg-background/40 p-5">
       <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
@@ -366,11 +357,7 @@ function FunnelCard({
         <Metric label={t("Plan views", "方案查看")} value={rows.total_plan_views} />
         <Metric label={t("Booking taps", "预订点击")} value={rows.total_booking_taps} />
         <Metric label={t("Claims", "声称去")} value={rows.total_claims} />
-        <Metric
-          label={t("Valid visits", "有效到店")}
-          value={rows.total_valid_visits}
-          accent
-        />
+        <Metric label={t("Valid visits", "有效到店")} value={rows.total_valid_visits} accent />
       </div>
       <div className="mt-4 space-y-1 text-[11px] text-muted-foreground">
         <p>
@@ -386,17 +373,11 @@ function FunnelCard({
   );
 }
 
-function Metric({
-  label,
-  value,
-  accent,
-}: {
-  label: string;
-  value: number;
-  accent?: boolean;
-}) {
+function Metric({ label, value, accent }: { label: string; value: number; accent?: boolean }) {
   return (
-    <div className={`rounded-sm border border-border/60 px-3 py-2 ${accent ? "bg-primary/10" : ""}`}>
+    <div
+      className={`rounded-sm border border-border/60 px-3 py-2 ${accent ? "bg-primary/10" : ""}`}
+    >
       <div className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</div>
       <div className={`mt-0.5 text-xl font-semibold tabular-nums ${accent ? "text-primary" : ""}`}>
         {value.toLocaleString()}
@@ -469,7 +450,9 @@ function VenuesSection({
                     )}
                   </td>
                   <td className="px-3 py-2 text-right tabular-nums">{v.unique_users}</td>
-                  <td className="px-3 py-2 text-right tabular-nums">{v.total_call_taps + v.total_navigate_taps}</td>
+                  <td className="px-3 py-2 text-right tabular-nums">
+                    {v.total_call_taps + v.total_navigate_taps}
+                  </td>
                   <td className="px-3 py-2 text-right tabular-nums">{v.total_claims}</td>
                   <td className="px-3 py-2 text-right tabular-nums font-semibold text-primary">
                     {v.total_valid_visits}
@@ -510,20 +493,13 @@ function VenuesSection({
   );
 }
 
-function NpsSection({
-  rows,
-  t,
-}: {
-  rows: NpsRow[];
-  t: (en: string, zh: string) => string;
-}) {
+function NpsSection({ rows, t }: { rows: NpsRow[]; t: (en: string, zh: string) => string }) {
   const npsScores = rows.filter((r) => r.kind === "nps" && typeof r.score === "number");
   const promoter = npsScores.filter((r) => (r.score ?? 0) >= 9).length;
   const passive = npsScores.filter((r) => (r.score ?? 0) >= 7 && (r.score ?? 0) <= 8).length;
   const detractor = npsScores.filter((r) => (r.score ?? 0) <= 6).length;
-  const nps = npsScores.length > 0
-    ? Math.round(((promoter - detractor) / npsScores.length) * 100)
-    : null;
+  const nps =
+    npsScores.length > 0 ? Math.round(((promoter - detractor) / npsScores.length) * 100) : null;
   const unsubs = rows.filter((r) => r.kind === "unsubscribe").length;
   const surveys = rows.filter((r) => r.kind === "survey");
 
@@ -557,11 +533,7 @@ function NpsSection({
           value={`${detractor} / ${npsScores.length}`}
           t={t}
         />
-        <SummaryTile
-          label={t("Unsubscribes", "退订数")}
-          value={unsubs}
-          t={t}
-        />
+        <SummaryTile label={t("Unsubscribes", "退订数")} value={unsubs} t={t} />
       </div>
 
       {recent.length > 0 && (
@@ -577,8 +549,8 @@ function NpsSection({
                   (r.score ?? 0) >= 9
                     ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-400"
                     : (r.score ?? 0) >= 7
-                    ? "border-amber-500/40 bg-amber-500/10 text-amber-400"
-                    : "border-rose-500/40 bg-rose-500/10 text-rose-400"
+                      ? "border-amber-500/40 bg-amber-500/10 text-amber-400"
+                      : "border-rose-500/40 bg-rose-500/10 text-rose-400"
                 }`}
                 title={new Date(r.created_at).toLocaleString()}
               >
@@ -636,23 +608,14 @@ function PendingSection({
         )}
       </p>
       <div className="mt-4 grid gap-2 sm:grid-cols-3">
-        <SummaryTile
-          label={t("Total pending", "总计待确认")}
-          value={rows.length}
-          t={t}
-        />
+        <SummaryTile label={t("Total pending", "总计待确认")} value={rows.length} t={t} />
         <SummaryTile
           label={t("Past 24h (past due)", "已超 24h")}
           value={pastDue.length}
           accent={pastDue.length > 0 ? "warn" : "ok"}
           t={t}
         />
-        <SummaryTile
-          label={t("Sign out", "登出")}
-          value="—"
-          onClick={onClear}
-          t={t}
-        />
+        <SummaryTile label={t("Sign out", "登出")} value="—" onClick={onClear} t={t} />
       </div>
       {pastDue.length > 0 && (
         <div className="mt-4 overflow-x-auto rounded-sm border border-amber-500/30 bg-amber-500/5">
@@ -669,9 +632,7 @@ function PendingSection({
               {pastDue.slice(0, 30).map((r) => (
                 <tr key={r.attribution_id} className="border-b border-amber-500/20 last:border-0">
                   <td className="px-3 py-2 font-medium">{r.venue_name}</td>
-                  <td className="px-3 py-2 text-muted-foreground">
-                    {r.user_id.slice(0, 8)}…
-                  </td>
+                  <td className="px-3 py-2 text-muted-foreground">{r.user_id.slice(0, 8)}…</td>
                   <td className="px-3 py-2 text-muted-foreground">
                     {new Date(r.confirmed_at).toLocaleString(lang === "zh" ? "zh-CN" : "en-US")}
                   </td>
@@ -702,9 +663,11 @@ function SummaryTile({
   t: (en: string, zh: string) => string;
 }) {
   const colorClass =
-    accent === "warn" ? "border-amber-500/30 bg-amber-500/5" :
-    accent === "ok" ? "border-emerald-500/30 bg-emerald-500/5" :
-    "border-border bg-background/40";
+    accent === "warn"
+      ? "border-amber-500/30 bg-amber-500/5"
+      : accent === "ok"
+        ? "border-emerald-500/30 bg-emerald-500/5"
+        : "border-border bg-background/40";
   return (
     <div
       onClick={onClick}

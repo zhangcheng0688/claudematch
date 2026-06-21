@@ -124,10 +124,7 @@ const manifest = expectedPairs.map((base) => ({
   webp: `${base}.webp`,
   avif: `${base}.avif`,
 }));
-await writeFile(
-  join(SRC_DIR, "moments-manifest.json"),
-  JSON.stringify(manifest, null, 2),
-);
+await writeFile(join(SRC_DIR, "moments-manifest.json"), JSON.stringify(manifest, null, 2));
 console.log(`\nWrote src/assets/moments-manifest.json (${manifest.length} entries).`);
 console.log("\nNext: git add src/assets/moment-*.{webp,avif} src/assets/moments-manifest.json");
 console.log("       git commit -m 'chore(assets): generate AVIF + WebP variants'");

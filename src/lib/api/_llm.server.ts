@@ -285,18 +285,16 @@ async function llmChatOnce(
   }
 }
 
-function logError(
-  payload: {
-    reason: string;
-    provider: LLMProviderName;
-    status?: number;
-    elapsedMs: number;
-    traceId: string;
-    label?: string;
-    responseBody?: string;
-    error?: string;
-  },
-) {
+function logError(payload: {
+  reason: string;
+  provider: LLMProviderName;
+  status?: number;
+  elapsedMs: number;
+  traceId: string;
+  label?: string;
+  responseBody?: string;
+  error?: string;
+}) {
   console.error(
     JSON.stringify({
       at: "llm_call_failed",

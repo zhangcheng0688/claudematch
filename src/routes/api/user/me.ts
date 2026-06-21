@@ -54,7 +54,9 @@ export const Route = createFileRoute("/api/user/me")({
           ? {
               ...(aiProfileRow as Record<string, unknown>),
               profile_data: {
-                ...(typeof rawAi === "object" && rawAi !== null ? (rawAi as Record<string, unknown>) : {}),
+                ...(typeof rawAi === "object" && rawAi !== null
+                  ? (rawAi as Record<string, unknown>)
+                  : {}),
                 ai: migrateAiProfile(
                   typeof rawAi === "object" && rawAi !== null
                     ? (rawAi as { ai?: unknown }).ai
@@ -68,14 +70,23 @@ export const Route = createFileRoute("/api/user/me")({
         // becomes a scheduler tick. 0 cron required (架构债 I).
         drainAllQueuesFireAndForget();
 
-        return json({
-          data: {
-            user: { id: userId, email, wechat_bound: wechatBound },
-            profile: profile ?? null,
-            authorizations: authz ?? { business: false, dating: false, partner: false, discoverable: true },
-            ai_profile: aiProfile,
+        return json(
+          {
+            data: {
+              user: { id: userId, email, wechat_bound: wechatBound },
+              profile: profile ?? null,
+              authorizations: authz ?? {
+                business: false,
+                dating: false,
+                partner: false,
+                discoverable: true,
+              },
+              ai_profile: aiProfile,
+            },
           },
-        }, undefined, request);
+          undefined,
+          request,
+        );
       },
     },
   },

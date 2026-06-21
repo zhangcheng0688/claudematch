@@ -134,10 +134,12 @@ async function amapTextSearch({ keyword, city, adcode }) {
     console.error(`  [HTTP ${res.status}] ${keyword} in ${city}`);
     return [];
   }
-  const data = (await res.json());
+  const data = await res.json();
   if (data.status !== "1") {
     // AMap returns status:"0" on quota / invalid key / etc.
-    console.error(`  [API error ${data.status}] ${data.info ?? "(no info)"} ${data.infocode ?? ""} — ${keyword} in ${city}`);
+    console.error(
+      `  [API error ${data.status}] ${data.info ?? "(no info)"} ${data.infocode ?? ""} — ${keyword} in ${city}`,
+    );
     return [];
   }
   return data.pois ?? [];
@@ -184,24 +186,22 @@ function normalizePoi(poi, cityKey, keyword) {
     address: [poi.address, poi.business_area].filter(Boolean).join(" · ") || null,
     lat,
     lng,
-    cuisine_tags: Array.from(
-      new Set([...(cuisineFromType ? [cuisineFromType] : [])]),
-    ),
+    cuisine_tags: Array.from(new Set([...(cuisineFromType ? [cuisineFromType] : [])])),
     vibe_tags: [],
-    price_per_person: null,        // not in AMap
+    price_per_person: null, // not in AMap
     rating: poi.biz_ext?.rating ? Number(poi.biz_ext.rating) : null,
     review_count: null,
     tel: poi.tel && poi.tel.length >= 7 ? poi.tel : null,
     opening_hours: poi.business_time ?? null,
     photos: poi.photos?.map((p) => p.url).filter(Boolean) ?? [],
     source: "amap",
-    source_url: null,              // AMap doesn't expose a public URL; we add manually
+    source_url: null, // AMap doesn't expose a public URL; we add manually
     booking_method: "walk_in",
     commission_pct: 0,
     is_active: true,
     notes: null,
     last_verified_at: new Date().toISOString(),
-    _search_keyword: keyword,     // audit trail; not stored in DB
+    _search_keyword: keyword, // audit trail; not stored in DB
   };
 }
 
@@ -234,14 +234,18 @@ async function main() {
         addedThisRun += 1;
       }
 
-      console.log(`  ${kw.padEnd(16)}  ${pois.length.toString().padStart(3)} POIs  +${addedThisRun} new`);
+      console.log(
+        `  ${kw.padEnd(16)}  ${pois.length.toString().padStart(3)} POIs  +${addedThisRun} new`,
+      );
       totalRowsKept = seen.size;
       await sleep(RATE_LIMIT_MS);
     }
   }
 
   // Write JSON Lines (one venue per line)
-  const lines = Array.from(seen.values()).map((v) => JSON.stringify(v)).join("\n");
+  const lines = Array.from(seen.values())
+    .map((v) => JSON.stringify(v))
+    .join("\n");
   await writeFile(OUTPUT, lines + "\n", "utf8");
 
   console.log("\n────────── done ──────────");

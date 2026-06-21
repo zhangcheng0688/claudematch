@@ -88,12 +88,12 @@ node --env-file=.env.local scripts/compute-persona-embeddings.mjs
 
 We will run a 50/50 shadow test once deployed:
 
-| Metric | Old (control) | New (treatment) |
-|--------|---------------|-----------------|
-| Profile generation wall time | ~45–70s | ~20–35s |
-| Profile generation DeepSeek calls | 8 | 3 |
-| Persona match candidate selection | priority/recency | vector similarity |
-| Meet-plan venue grounding | fictional/guessed | real venues + hours + distance |
+| Metric                            | Old (control)     | New (treatment)                |
+| --------------------------------- | ----------------- | ------------------------------ |
+| Profile generation wall time      | ~45–70s           | ~20–35s                        |
+| Profile generation DeepSeek calls | 8                 | 3                              |
+| Persona match candidate selection | priority/recency  | vector similarity              |
+| Meet-plan venue grounding         | fictional/guessed | real venues + hours + distance |
 
 ### Implementation
 

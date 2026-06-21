@@ -75,9 +75,13 @@ export const Route = createFileRoute("/api/login")({
           return json({ error: safeError(error) }, { status: 400 }, request);
         }
 
-        return json({
-          message: "Login email sent. Check your inbox for the magic link or 6-digit code.",
-        }, undefined, request);
+        return json(
+          {
+            message: "Login email sent. Check your inbox for the magic link or 6-digit code.",
+          },
+          undefined,
+          request,
+        );
       },
     },
   },

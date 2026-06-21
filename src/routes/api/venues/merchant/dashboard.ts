@@ -23,7 +23,9 @@ export const Route = createFileRoute("/api/venues/merchant/dashboard")({
 
         const { data: venue, error: venueErr } = await supabaseAdmin
           .from("venues")
-          .select("id, name, city, district, address, onboarding_status, is_active, commission_pct, price_per_person, merchant_email")
+          .select(
+            "id, name, city, district, address, onboarding_status, is_active, commission_pct, price_per_person, merchant_email",
+          )
           .eq("merchant_token", token)
           .maybeSingle();
 
@@ -58,21 +60,26 @@ export const Route = createFileRoute("/api/venues/merchant/dashboard")({
         const estimatedRevenue = venue.price_per_person
           ? counts.confirmations * venue.price_per_person * 2
           : null;
-        const estimatedCommission = estimatedRevenue && venue.commission_pct
-          ? Math.round((estimatedRevenue * Number(venue.commission_pct)) / 100)
-          : null;
+        const estimatedCommission =
+          estimatedRevenue && venue.commission_pct
+            ? Math.round((estimatedRevenue * Number(venue.commission_pct)) / 100)
+            : null;
 
-        return json({
-          data: {
-            venue,
-            summary: {
-              ...counts,
-              estimated_revenue_hkd: estimatedRevenue,
-              estimated_commission_hkd: estimatedCommission,
+        return json(
+          {
+            data: {
+              venue,
+              summary: {
+                ...counts,
+                estimated_revenue_hkd: estimatedRevenue,
+                estimated_commission_hkd: estimatedCommission,
+              },
+              recent_attributions: (rows ?? []).slice(-50).reverse(),
             },
-            recent_attributions: (rows ?? []).slice(-50).reverse(),
           },
-        }, undefined, request);
+          undefined,
+          request,
+        );
       },
     },
   },

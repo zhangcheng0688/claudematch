@@ -20,7 +20,7 @@
 export function extractInterests(input: string): string[] {
   if (!input || typeof input !== "string") return [];
 
-  const chineseRuns = (input.match(/[\u4e00-\u9fa5]{2,}/g) ?? []);
+  const chineseRuns = input.match(/[\u4e00-\u9fa5]{2,}/g) ?? [];
   const englishWords = (input.match(/[a-zA-Z]{4,}/g) ?? []).map((w) => w.toLowerCase());
 
   // Combined, dedup, sort by length desc, take top 3.
@@ -48,9 +48,7 @@ export function fallbackVenueName(
   const second = interests[1];
   const c = city ?? (lang === "zh" ? "你所在城市" : "your city");
   if (lang === "zh") {
-    return second
-      ? `${c}的一家以${first}和${second}闻名的店`
-      : `${c}的一家${first}主题精品店`;
+    return second ? `${c}的一家以${first}和${second}闻名的店` : `${c}的一家${first}主题精品店`;
   }
   return second
     ? `A place in ${c} known for ${first} and ${second}`

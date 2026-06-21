@@ -19,12 +19,7 @@ export function getCityCentroid(city: string): { lat: number; lng: number } {
 /**
  * Haversine distance in kilometers.
  */
-export function haversineKm(
-  lat1: number,
-  lng1: number,
-  lat2: number,
-  lng2: number,
-): number {
+export function haversineKm(lat1: number, lng1: number, lat2: number, lng2: number): number {
   const R = 6371;
   const dLat = toRad(lat2 - lat1);
   const dLng = toRad(lng2 - lng1);
@@ -91,10 +86,7 @@ export async function geocodeCity(
  *   "10:00-14:00,17:00-22:00"
  * Returns true if we can't parse (fail-open so we don't drop venues).
  */
-export function isVenueOpenAt(
-  openingHours: string | null | undefined,
-  date: Date,
-): boolean {
+export function isVenueOpenAt(openingHours: string | null | undefined, date: Date): boolean {
   if (!openingHours || openingHours.includes("休息") || openingHours.includes("Closed")) {
     return false;
   }

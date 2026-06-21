@@ -53,18 +53,36 @@ function AuthPage() {
     });
     setLoading(false);
     if (error) {
-      setErr(t("Failed to send code. Please try again.", "发送验证码失败，请稍后再试。", "傳送驗證碼失敗，遲啲再試。"));
+      setErr(
+        t(
+          "Failed to send code. Please try again.",
+          "发送验证码失败，请稍后再试。",
+          "傳送驗證碼失敗，遲啲再試。",
+        ),
+      );
       return;
     }
     setStage("code");
-    setMsg(t("Check your email — paste the verification code below.", "请查收邮件，把验证码粘贴到下方。", "睇下你個 email，將驗證碼貼喺下面。"));
+    setMsg(
+      t(
+        "Check your email — paste the verification code below.",
+        "请查收邮件，把验证码粘贴到下方。",
+        "睇下你個 email，將驗證碼貼喺下面。",
+      ),
+    );
   };
 
   const verifyCode = async (e: React.FormEvent) => {
     e.preventDefault();
     setErr(null);
     if (!/^\d{6,10}$/.test(otp)) {
-      setErr(t("Enter the numeric code from the email.", "请输入邮件中的数字验证码。", "請輸入 email 入面嘅數字驗證碼。"));
+      setErr(
+        t(
+          "Enter the numeric code from the email.",
+          "请输入邮件中的数字验证码。",
+          "請輸入 email 入面嘅數字驗證碼。",
+        ),
+      );
       return;
     }
     setLoading(true);

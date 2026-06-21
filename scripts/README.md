@@ -14,6 +14,7 @@
    - **不要**把 key commit 到 git — 它已被 .gitignore（如果你的 .env 不在 gitignore 内，我会修）
 
 2. **拉数据**（约 1-2 分钟，~150-200 calls）
+
    ```bash
    node scripts/scrape-amap.mjs
    # 输出: scripts/output/venues-YYYY-MM-DD.jsonl
@@ -21,6 +22,7 @@
    ```
 
 3. **生成 SQL**（秒级）
+
    ```bash
    node scripts/import-venues.mjs
    # 输出: scripts/output/import-venues.sql
@@ -38,6 +40,7 @@
 ## 增量更新
 
 新店 / 信息变更时：
+
 ```bash
 node scripts/scrape-amap.mjs
 node scripts/import-venues.mjs
@@ -45,18 +48,19 @@ node scripts/import-venues.mjs
 ```
 
 `ON CONFLICT (amap_id) DO UPDATE` 语义：
+
 - **会更新**：name / address / lat / lng / tel / photos / rating / opening_hours
 - **不会更新**：commission_pct / booking_method / notes / is_active（这些是手工维护的，保留）
 
 ## 文件清单
 
-| 文件 | 角色 |
-|---|---|
-| `scrape-amap.mjs` | 调高德 Places API，写 JSONL |
-| `import-venues.mjs` | JSONL → SQL migration |
-| `output/venues-*.jsonl` | 抓的原始数据（gitignore 候选） |
-| `output/import-venues.sql` | 生成的 SQL（直接跑） |
-| `../supabase/migrations/20260609210000_venues_and_attributions.sql` | 建表 + RLS |
+| 文件                                                                | 角色                           |
+| ------------------------------------------------------------------- | ------------------------------ |
+| `scrape-amap.mjs`                                                   | 调高德 Places API，写 JSONL    |
+| `import-venues.mjs`                                                 | JSONL → SQL migration          |
+| `output/venues-*.jsonl`                                             | 抓的原始数据（gitignore 候选） |
+| `output/import-venues.sql`                                          | 生成的 SQL（直接跑）           |
+| `../supabase/migrations/20260609210000_venues_and_attributions.sql` | 建表 + RLS                     |
 
 ## 数据量预期
 
@@ -68,6 +72,7 @@ node scripts/import-venues.mjs
 ## 不抓的字段（说明）
 
 高德 API **不提供**：
+
 - `price_per_person`（人均）—— **null**，等后续手工补
 - `review_count`（评价数）—— **null**
 - 完整营业时间表（`business_time` 是单行字符串"11:00-22:00"，我们原样存）

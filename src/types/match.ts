@@ -4,7 +4,10 @@
 
 export type Scenario = "business" | "dating" | "partner";
 
-export const SCENARIO_LABEL: Record<Scenario, { en: string; zh: string; icon: "Briefcase" | "Heart" | "Users" }> = {
+export const SCENARIO_LABEL: Record<
+  Scenario,
+  { en: string; zh: string; icon: "Briefcase" | "Heart" | "Users" }
+> = {
   business: { en: "Business", zh: "工作", icon: "Briefcase" },
   dating: { en: "Dating", zh: "恋爱", icon: "Heart" },
   partner: { en: "Local friends", zh: "本地朋友", icon: "Users" },
@@ -398,24 +401,27 @@ export type MeetPlan = {
     city?: string;
     /** v3: server pre-resolves the LLM's venue_id references so the SPA
      *  doesn't have to make a follow-up fetch to /api/venues/lookup. */
-    venue_lookup?: Record<string, {
-      id: string;
-      name: string;
-      city: string;
-      district: string | null;
-      address: string | null;
-      lat: number | null;
-      lng: number | null;
-      cuisine_tags: string[];
-      vibe_tags: string[];
-      price_per_person: number | null;
-      rating: number | null;
-      tel: string | null;
-      opening_hours: string | null;
-      photos: string[];
-      booking_method: "walk_in" | "phone" | "wechat";
-      commission_pct: number;
-    }>;
+    venue_lookup?: Record<
+      string,
+      {
+        id: string;
+        name: string;
+        city: string;
+        district: string | null;
+        address: string | null;
+        lat: number | null;
+        lng: number | null;
+        cuisine_tags: string[];
+        vibe_tags: string[];
+        price_per_person: number | null;
+        rating: number | null;
+        tel: string | null;
+        opening_hours: string | null;
+        photos: string[];
+        booking_method: "walk_in" | "phone" | "wechat";
+        commission_pct: number;
+      }
+    >;
     ai_provider?: "deepseek" | "fallback";
     generated_at?: string;
   };

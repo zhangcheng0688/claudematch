@@ -22,17 +22,22 @@ export async function moderateText(
 ): Promise<ModerationResult> {
   if (text.trim().length === 0) return { safe: true };
 
-  const sys = llmLang === "zh"
-    ? "你是 linQ 的内容安全审核员。判断以下用户输入是否包含：NSFW/色情、个人隐私信息（PII）、仇恨言论、骚扰/威胁、垃圾广告。只输出 JSON，不要解释。"
-    : "You are linQ's content safety moderator. Decide if the user input contains: NSFW/porn, PII, hate speech, harassment/threats, or spam. Output JSON only, no explanation.";
+  const sys =
+    llmLang === "zh"
+      ? "你是 linQ 的内容安全审核员。判断以下用户输入是否包含：NSFW/色情、个人隐私信息（PII）、仇恨言论、骚扰/威胁、垃圾广告。只输出 JSON，不要解释。"
+      : "You are linQ's content safety moderator. Decide if the user input contains: NSFW/porn, PII, hate speech, harassment/threats, or spam. Output JSON only, no explanation.";
 
-  const user = llmLang === "zh"
-    ? `输入："""${text.slice(0, 2000)}"""\n\n输出 JSON：\n{\n  "safe": boolean,\n  "nsfw": boolean,\n  "pii": boolean,\n  "hate": boolean,\n  "harassment": boolean,\n  "spam": boolean,\n  "reason": "如果 unsafe，简短说明原因"\n}`
-    : `Input: """${text.slice(0, 2000)}"""\n\nOutput JSON:\n{\n  "safe": boolean,\n  "nsfw": boolean,\n  "pii": boolean,\n  "hate": boolean,\n  "harassment": boolean,\n  "spam": boolean,\n  "reason": "short reason if unsafe"\n}`;
+  const user =
+    llmLang === "zh"
+      ? `输入："""${text.slice(0, 2000)}"""\n\n输出 JSON：\n{\n  "safe": boolean,\n  "nsfw": boolean,\n  "pii": boolean,\n  "hate": boolean,\n  "harassment": boolean,\n  "spam": boolean,\n  "reason": "如果 unsafe，简短说明原因"\n}`
+      : `Input: """${text.slice(0, 2000)}"""\n\nOutput JSON:\n{\n  "safe": boolean,\n  "nsfw": boolean,\n  "pii": boolean,\n  "hate": boolean,\n  "harassment": boolean,\n  "spam": boolean,\n  "reason": "short reason if unsafe"\n}`;
 
   try {
     const res = await llmChatEx(
-      [{ role: "system", content: sys }, { role: "user", content: user }],
+      [
+        { role: "system", content: sys },
+        { role: "user", content: user },
+      ],
       { json: true, temperature: 0.1, max_tokens: 400, label, deadlineMs: 10_000 },
     );
     const parsed = safeParseJSON<ModerationResult>(res?.content ?? null);

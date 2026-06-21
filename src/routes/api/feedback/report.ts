@@ -32,6 +32,7 @@ export const Route = createFileRoute("/api/feedback/report")({
           return json({ error: "Cannot report yourself" }, { status: 400 }, request);
         }
 
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const { data, error } = await (supabase.from as any)("user_reports")
           .insert({
             reporter_id: userId,
