@@ -5,7 +5,7 @@
 // 给 SPA)，所以我们用 HTTP endpoint 接外部 cron 触发器：
 //
 //   curl https://claudematch.com/api/cron/drain \
-//     -H "X-Cron-Secret: $CRON_SECRET"
+//     -H "X-Cron-Secret: $LINQ_CRON_SECRET"
 //
 // 外部触发器选项（按推荐度排）：
 //   1. GitHub Actions scheduled workflow（每 6 小时跑一次，免费）
@@ -15,7 +15,7 @@
 //   4. Cloudflare Workers Cron Trigger（如果我们能上 wrangler.toml ——
 //      但 Lovable Cloud 不允许）
 //
-// SECURITY: 端点本身无 auth 风险（CRON_SECRET 在 header 里走）；
+// SECURITY: 端点本身无 auth 风险（LINQ_CRON_SECRET 在 header 里走）；
 // 没有 secret 就 401。没有 secret 的环境会 fail-closed（不会
 // 让垃圾请求意外触发邮件队列）。
 //
@@ -46,10 +46,10 @@ function checkCronAuth(request: Request): Response | null {
   }
   const provided = request.headers.get("x-cron-secret") ?? "";
   if (provided.length !== CRON_SECRET.length || provided !== CRON_SECRET) {
-    return new Response(
-      JSON.stringify({ error: "Forbidden: invalid cron secret" }),
-      { status: 403, headers: { "Content-Type": "application/json" } },
-    );
+    return new Response(JSON.stringify({ error: "Forbidden: invalid cron secret" }), {
+      status: 403,
+      headers: { "Content-Type": "application/json" },
+    });
   }
   return null;
 }
@@ -75,14 +75,18 @@ export const Route = createFileRoute("/api/cron/drain")({
             drainWeeklyDigestQueue().catch((e) => ({ sent: 0, reason: String(e) })),
           ]);
 
-          return json({
-            data: {
-              ran_at: new Date().toISOString(),
-              since_hours: sinceHours,
-              visit_confirmations: visitRes,
-              weekly_digest: digestRes,
+          return json(
+            {
+              data: {
+                ran_at: new Date().toISOString(),
+                since_hours: sinceHours,
+                visit_confirmations: visitRes,
+                weekly_digest: digestRes,
+              },
             },
-          }, undefined, request);
+            undefined,
+            request,
+          );
         } catch (e) {
           return json({ error: safeError(e) }, { status: 500 }, request);
         }

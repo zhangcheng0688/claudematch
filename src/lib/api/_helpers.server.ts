@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { timingSafeEqual } from "node:crypto";
 import type { Database } from "@/integrations/supabase/types";
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -8,9 +9,7 @@ import type { Database } from "@/integrations/supabase/types";
 // Falls back to https://claudematch.com if env is unset.
 // ─────────────────────────────────────────────────────────────────────────────
 
-const ALLOWED_ORIGINS = (
-  process.env.FRONTEND_ORIGIN ?? "https://claudematch.com"
-)
+const ALLOWED_ORIGINS = (process.env.FRONTEND_ORIGIN ?? "https://claudematch.com")
   .split(",")
   .map((s) => s.trim())
   .filter(Boolean);
@@ -24,7 +23,7 @@ function corsHeadersFor(request: Request): Record<string, string> {
   const allowOrigin = ALLOWED_ORIGINS.includes(origin) ? origin : ALLOWED_ORIGINS[0]!;
   return {
     "Access-Control-Allow-Origin": allowOrigin,
-    "Vary": "Origin",
+    Vary: "Origin",
     "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
     "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Requested-With",
     "Access-Control-Max-Age": "86400",
@@ -176,10 +175,7 @@ export function clientIp(request: Request): string {
 // fall back to a safe default.
 // ─────────────────────────────────────────────────────────────────────────────
 
-function safeRedirectUrl(
-  raw: unknown,
-  fallback: string,
-): string {
+function safeRedirectUrl(raw: unknown, fallback: string): string {
   if (typeof raw !== "string" || !raw) return fallback;
   try {
     const origin = ALLOWED_ORIGINS[0]!;
@@ -196,10 +192,7 @@ function safeRedirectUrl(
   }
 }
 
-export function safeRedirectTo(
-  raw: unknown,
-  fallbackPath = "/start",
-): string {
+export function safeRedirectTo(raw: unknown, fallbackPath = "/start"): string {
   // Always return a relative path; the caller can wrap with `new URL(s, origin)`.
   if (typeof raw !== "string" || !raw) return fallbackPath;
   if (raw.startsWith("/") && !raw.startsWith("//")) return raw;
@@ -213,11 +206,15 @@ export function safeRedirectTo(
 export async function requireUser(request: Request) {
   const auth = request.headers.get("authorization") ?? "";
   if (!auth.startsWith("Bearer ")) {
-    return { error: json({ error: "Unauthorized: missing bearer token" }, { status: 401 }, request) } as const;
+    return {
+      error: json({ error: "Unauthorized: missing bearer token" }, { status: 401 }, request),
+    } as const;
   }
   const token = auth.slice("Bearer ".length).trim();
   if (!token) {
-    return { error: json({ error: "Unauthorized: empty token" }, { status: 401 }, request) } as const;
+    return {
+      error: json({ error: "Unauthorized: empty token" }, { status: 401 }, request),
+    } as const;
   }
   const url = process.env.SUPABASE_URL;
   const key = process.env.SUPABASE_PUBLISHABLE_KEY;
@@ -230,7 +227,9 @@ export async function requireUser(request: Request) {
   });
   const { data, error } = await supabase.auth.getUser(token);
   if (error || !data.user) {
-    return { error: json({ error: "Unauthorized: invalid token" }, { status: 401 }, request) } as const;
+    return {
+      error: json({ error: "Unauthorized: invalid token" }, { status: 401 }, request),
+    } as const;
   }
   return { userId: data.user.id, email: data.user.email ?? null, supabase } as const;
 }
@@ -241,4 +240,16 @@ export function isValidEmail(value: unknown): value is string {
   const v = value.trim();
   if (v.length < 5 || v.length > 254) return false;
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v);
+}
+
+/** Constant-time string comparison to mitigate timing attacks against
+ *  shared-secret auth (founder key, cron secret, webhook secrets, etc.).
+ *  Returns false when lengths differ without delegating to timingSafeEqual. */
+export function constantTimeCompare(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  try {
+    return timingSafeEqual(Buffer.from(a), Buffer.from(b));
+  } catch {
+    return false;
+  }
 }

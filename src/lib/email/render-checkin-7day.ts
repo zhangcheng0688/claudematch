@@ -9,7 +9,8 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { createHmac } from "node:crypto";
 import { Checkin7DayEmail } from "@/lib/email/templates/checkin-7day";
 
-const NPS_SECRET = process.env.LINQ_NPS_SIGNING_SECRET ?? process.env.FOUNDER_API_KEY ?? "dev-fallback";
+const NPS_SECRET =
+  process.env.LINQ_NPS_SIGNING_SECRET ?? process.env.FOUNDER_API_KEY ?? "dev-fallback";
 
 function signNps(userId: string, score: number | "unsubscribe"): string {
   const payload = `${userId}|${score}`;
@@ -34,14 +35,16 @@ export function renderCheckin7DayEmail(args: {
     `${args.npsBaseUrl}?token=${encodeURIComponent(signNps(args.recipientUserId, score))}&score=${score}`;
   const unsubUrl = `${args.npsBaseUrl}?token=${encodeURIComponent(signNps(args.recipientUserId, "unsubscribe"))}&unsubscribe=1`;
 
-  const html = "<!DOCTYPE html>" + renderToStaticMarkup(
-    Checkin7DayEmail({
-      recipientName: args.recipientName,
-      surveyUrl: args.surveyUrl,
-      npsButton: (score) => npsButton(score),
-      unsubscribeUrl: unsubUrl,
-    }),
-  );
+  const html =
+    "<!DOCTYPE html>" +
+    renderToStaticMarkup(
+      Checkin7DayEmail({
+        recipientName: args.recipientName,
+        surveyUrl: args.surveyUrl,
+        npsButton: (score) => npsButton(score),
+        unsubscribeUrl: unsubUrl,
+      }),
+    );
 
   const text = `${subject}
 

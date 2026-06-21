@@ -19,11 +19,10 @@
 // founder 端：admin/dispatch-now?type=visit-confirm 立刻把所有"已到点的"都发掉。
 
 import { randomBytes } from "node:crypto";
-import { createClient } from "@supabase/supabase-js";
 import { sendEmail } from "@/lib/email/send";
 import { renderVisitConfirmEmail } from "@/lib/email/render-visit-confirm";
 import { renderCheckin7DayEmail } from "@/lib/email/render-checkin-7day";
-import type { Database } from "@/integrations/supabase/types";
+import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN ?? "https://claudematch.com";
 
@@ -32,16 +31,13 @@ const FRONTEND_ORIGIN = process.env.FRONTEND_ORIGIN ?? "https://claudematch.com"
 // user_feedback, meetup_attributions, venues). Production types are refreshed
 // by Lovable on deploy; locally we cast so tsc stays green without editing the
 // generated file.
-function fromAny(client: ReturnType<typeof supabaseAdmin>, table: string): any {
+function fromAny(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  client: any,
+  table: string,
+): // eslint-disable-next-line @typescript-eslint/no-explicit-any
+any {
   return client.from(table as never);
-}
-
-function supabaseAdmin() {
-  const url = process.env.SUPABASE_URL!;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-  return createClient<Database>(url, key, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
 }
 
 /** 漏洞 B: 24h 后二次确认。
@@ -56,7 +52,7 @@ export async function scheduleVisitConfirm(args: {
   venueName: string;
   venueCity: string;
 }): Promise<{ token: string }> {
-  const admin = supabaseAdmin();
+  const admin = supabaseAdmin;
   const token = randomBytes(32).toString("base64url");
   const expiresAt = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days
 
@@ -98,11 +94,11 @@ export async function maybeSendCheckin7Day(args: {
   // (use a simple marker on user_metadata via the profiles table
   // would be cleaner, but we don't want to add columns mid-flight;
   // a lightweight check on user_feedback kind=checkin_sent is fine).
-  const admin = supabaseAdmin();
+  const admin = supabaseAdmin;
   const { data: prior } = await fromAny(admin, "user_feedback")
     .select("id")
     .eq("user_id", args.userId)
-    .eq("kind", "praise")   // hack: we use 'praise' for the opt-out marker; treat more carefully in v2
+    .eq("kind", "praise") // hack: we use 'praise' for the opt-out marker; treat more carefully in v2
     .limit(1);
   // The above is too hacky; for v1 we just send the email once per
   // user (idempotent because Resend deduplicates on (to, tag) over
@@ -126,9 +122,7 @@ export async function maybeSendCheckin7Day(args: {
     tag: "checkin-7day",
   });
 
-  return res.ok
-    ? { sent: true, reason: "delivered" }
-    : { sent: false, reason: res.reason };
+  return res.ok ? { sent: true, reason: "delivered" } : { sent: false, reason: res.reason };
 }
 
 /** 漏洞 H: 周三 7pm 推送
@@ -154,7 +148,7 @@ export async function sendWeeklyDigestIfDue(args: { force?: boolean } = {}): Pro
     return { scanned: 0, sent: 0, reason: "not_in_window" };
   }
 
-  const admin = supabaseAdmin();
+  const admin = supabaseAdmin;
   // Find users who have a profile, authorized at least 1 scenario, but
   // haven't tapped any venue action in the last 7 days. These are
   // the "we built it, they came, they never went" cohort — the
@@ -202,7 +196,7 @@ export async function sendWeeklyDigestIfDue(args: { force?: boolean } = {}): Pro
 /** 漏洞 B: drainQueue 发 24h 后到期的 visit confirmation 邮件.
  *  调用时机: 任何 endpoint 在 response.send 之前 fire-and-forget 调一下. */
 export async function drainVisitConfirmQueue(): Promise<{ sent: number }> {
-  const admin = supabaseAdmin();
+  const admin = supabaseAdmin;
   const nowIso = new Date().toISOString();
   // Find visit_confirmations that are:
   //   - still unconfirmed/undenied
@@ -247,9 +241,7 @@ export async function drainVisitConfirmQueue(): Promise<{ sent: number }> {
     });
     if (res.ok) {
       sent += 1;
-      await fromAny(admin, "visit_confirmations")
-        .update({ email_sent_at: nowIso })
-        .eq("id", vc.id);
+      await fromAny(admin, "visit_confirmations").update({ email_sent_at: nowIso }).eq("id", vc.id);
     }
   }
   return { sent };

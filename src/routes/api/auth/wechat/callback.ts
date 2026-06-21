@@ -20,8 +20,7 @@
 
 import { createFileRoute } from "@tanstack/react-router";
 import { createHmac, randomUUID } from "node:crypto";
-import { createClient } from "@supabase/supabase-js";
-import type { Database } from "@/integrations/supabase/types";
+import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 const STATE_TTL_MS = 5 * 60 * 1000; // 5 min
 
@@ -78,8 +77,7 @@ export const Route = createFileRoute("/api/auth/wechat/callback")({
         const appSecret = process.env.WECHAT_APP_SECRET;
         const supabaseUrl = process.env.SUPABASE_URL;
         const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-        const frontendOrigin =
-          process.env.FRONTEND_ORIGIN ?? "https://claudematch.com";
+        const frontendOrigin = process.env.FRONTEND_ORIGIN ?? "https://claudematch.com";
 
         // All-in-one error redirect: send the user back to the SPA with
         // ?wechat=error&reason=... so the client can show a friendly message.
@@ -137,9 +135,7 @@ export const Route = createFileRoute("/api/auth/wechat/callback")({
         // 3) Find existing user via wechat_auth (canonical) or profiles
         // (legacy). The wechat_auth path is the new fast-path; profiles
         // exists for users bound before the migration.
-        const admin = createClient<Database>(supabaseUrl, serviceKey, {
-          auth: { persistSession: false, autoRefreshToken: false },
-        });
+        const admin = supabaseAdmin;
 
         const { data: waRow } = await admin
           .from("wechat_auth")
@@ -175,15 +171,14 @@ export const Route = createFileRoute("/api/auth/wechat/callback")({
             // non-deliverable internal placeholder email. The real
             // identity from here on is the openid via wechat_auth.
             const email = placeholderEmail(tokenData.openid);
-            const { data: created, error: createErr } =
-              await admin.auth.admin.createUser({
-                email,
-                email_confirm: true,
-                user_metadata: {
-                  auth_method: "wechat",
-                  wechat_openid: tokenData.openid,
-                },
-              });
+            const { data: created, error: createErr } = await admin.auth.admin.createUser({
+              email,
+              email_confirm: true,
+              user_metadata: {
+                auth_method: "wechat",
+                wechat_openid: tokenData.openid,
+              },
+            });
             if (createErr || !created.user) {
               return fail(`Failed to create user: ${createErr?.message ?? "unknown"}`);
             }
@@ -196,18 +191,16 @@ export const Route = createFileRoute("/api/auth/wechat/callback")({
         // erroring. The uniq constraint on openid protects against the
         // (very unlikely) case of two users trying to claim the same
         // openid — the loser gets a 23505 which we surface as a fail().
-        const { error: waErr } = await admin
-          .from("wechat_auth")
-          .upsert(
-            {
-              user_id: userId,
-              openid: tokenData.openid,
-              unionid: wxProfile.unionid ?? null,
-              nickname: wxProfile.nickname ?? null,
-              avatar: wxProfile.headimgurl ?? null,
-            },
-            { onConflict: "user_id" },
-          );
+        const { error: waErr } = await admin.from("wechat_auth").upsert(
+          {
+            user_id: userId,
+            openid: tokenData.openid,
+            unionid: wxProfile.unionid ?? null,
+            nickname: wxProfile.nickname ?? null,
+            avatar: wxProfile.headimgurl ?? null,
+          },
+          { onConflict: "user_id" },
+        );
         if (waErr && (waErr as { code?: string }).code === "23505") {
           // openid already bound to a *different* user. Refuse — the
           // attacker scenario we're guarding against looks like this.
@@ -252,12 +245,11 @@ export const Route = createFileRoute("/api/auth/wechat/callback")({
         // actually leaves the server. We extract the token from the URL
         // in-band and hand it to the SPA via the redirect.
         const userEmail = placeholderEmail(tokenData.openid);
-        const { data: linkData, error: linkErr } =
-          await admin.auth.admin.generateLink({
-            type: "magiclink",
-            email: userEmail,
-            options: { redirectTo: `${frontendOrigin}${st.redirectTo}` },
-          });
+        const { data: linkData, error: linkErr } = await admin.auth.admin.generateLink({
+          type: "magiclink",
+          email: userEmail,
+          options: { redirectTo: `${frontendOrigin}${st.redirectTo}` },
+        });
         if (linkErr || !linkData?.properties?.action_link) {
           return fail(`Failed to issue session: ${linkErr?.message ?? "unknown"}`);
         }

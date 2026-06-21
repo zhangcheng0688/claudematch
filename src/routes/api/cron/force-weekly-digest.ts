@@ -5,7 +5,7 @@
 // the rendering + check that the recipient list looks right.
 
 import { createFileRoute } from "@tanstack/react-router";
-import { json, preflight, safeError } from "@/lib/api/_helpers.server";
+import { json, preflight, safeError, constantTimeCompare } from "@/lib/api/_helpers.server";
 import { sendWeeklyDigestIfDue } from "@/lib/email/scheduler";
 
 const FOUNDER_KEY = process.env.FOUNDER_API_KEY;
@@ -18,11 +18,11 @@ function checkAuth(request: Request): Response | null {
     );
   }
   const provided = request.headers.get("x-founder-key") ?? "";
-  if (provided.length !== FOUNDER_KEY.length || provided !== FOUNDER_KEY) {
-    return new Response(
-      JSON.stringify({ error: "Forbidden: invalid founder key" }),
-      { status: 403, headers: { "Content-Type": "application/json" } },
-    );
+  if (!constantTimeCompare(provided, FOUNDER_KEY)) {
+    return new Response(JSON.stringify({ error: "Forbidden: invalid founder key" }), {
+      status: 403,
+      headers: { "Content-Type": "application/json" },
+    });
   }
   return null;
 }

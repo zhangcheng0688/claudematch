@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as TrustRouteImport } from './routes/trust'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
+import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as FounderRouteImport } from './routes/founder'
 import { Route as DpaRouteImport } from './routes/dpa'
@@ -44,7 +45,6 @@ import { Route as ApiFeedbackPatternRouteImport } from './routes/api/feedback/pa
 import { Route as ApiFeedbackNpsRouteImport } from './routes/api/feedback/nps'
 import { Route as ApiFeedbackMeetRouteImport } from './routes/api/feedback/meet'
 import { Route as ApiEmailVisitConfirmRouteImport } from './routes/api/email/visit-confirm'
-import { Route as ApiCronSendScheduledEmailsRouteImport } from './routes/api/cron/send-scheduled-emails'
 import { Route as ApiCronForceWeeklyDigestRouteImport } from './routes/api/cron/force-weekly-digest'
 import { Route as ApiCronDrainRouteImport } from './routes/api/cron/drain'
 import { Route as ApiAiMeetPlanRouteImport } from './routes/api/ai/meet-plan'
@@ -74,6 +74,11 @@ const TermsRoute = TermsRouteImport.update({
 const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
   id: '/sitemap.xml',
   path: '/sitemap.xml',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RobotsDottxtRoute = RobotsDottxtRouteImport.update({
+  id: '/robots.txt',
+  path: '/robots.txt',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PrivacyRoute = PrivacyRouteImport.update({
@@ -235,12 +240,6 @@ const ApiEmailVisitConfirmRoute = ApiEmailVisitConfirmRouteImport.update({
   path: '/api/email/visit-confirm',
   getParentRoute: () => rootRouteImport,
 } as any)
-const ApiCronSendScheduledEmailsRoute =
-  ApiCronSendScheduledEmailsRouteImport.update({
-    id: '/api/cron/send-scheduled-emails',
-    path: '/api/cron/send-scheduled-emails',
-    getParentRoute: () => rootRouteImport,
-  } as any)
 const ApiCronForceWeeklyDigestRoute =
   ApiCronForceWeeklyDigestRouteImport.update({
     id: '/api/cron/force-weekly-digest',
@@ -328,6 +327,7 @@ export interface FileRoutesByFullPath {
   '/dpa': typeof DpaRoute
   '/founder': typeof FounderRoute
   '/privacy': typeof PrivacyRoute
+  '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/trust': typeof TrustRoute
@@ -350,7 +350,6 @@ export interface FileRoutesByFullPath {
   '/api/ai/meet-plan': typeof ApiAiMeetPlanRoute
   '/api/cron/drain': typeof ApiCronDrainRoute
   '/api/cron/force-weekly-digest': typeof ApiCronForceWeeklyDigestRoute
-  '/api/cron/send-scheduled-emails': typeof ApiCronSendScheduledEmailsRoute
   '/api/email/visit-confirm': typeof ApiEmailVisitConfirmRoute
   '/api/feedback/meet': typeof ApiFeedbackMeetRoute
   '/api/feedback/nps': typeof ApiFeedbackNpsRoute
@@ -380,6 +379,7 @@ export interface FileRoutesByTo {
   '/dpa': typeof DpaRoute
   '/founder': typeof FounderRoute
   '/privacy': typeof PrivacyRoute
+  '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/trust': typeof TrustRoute
@@ -402,7 +402,6 @@ export interface FileRoutesByTo {
   '/api/ai/meet-plan': typeof ApiAiMeetPlanRoute
   '/api/cron/drain': typeof ApiCronDrainRoute
   '/api/cron/force-weekly-digest': typeof ApiCronForceWeeklyDigestRoute
-  '/api/cron/send-scheduled-emails': typeof ApiCronSendScheduledEmailsRoute
   '/api/email/visit-confirm': typeof ApiEmailVisitConfirmRoute
   '/api/feedback/meet': typeof ApiFeedbackMeetRoute
   '/api/feedback/nps': typeof ApiFeedbackNpsRoute
@@ -434,6 +433,7 @@ export interface FileRoutesById {
   '/dpa': typeof DpaRoute
   '/founder': typeof FounderRoute
   '/privacy': typeof PrivacyRoute
+  '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/trust': typeof TrustRoute
@@ -456,7 +456,6 @@ export interface FileRoutesById {
   '/api/ai/meet-plan': typeof ApiAiMeetPlanRoute
   '/api/cron/drain': typeof ApiCronDrainRoute
   '/api/cron/force-weekly-digest': typeof ApiCronForceWeeklyDigestRoute
-  '/api/cron/send-scheduled-emails': typeof ApiCronSendScheduledEmailsRoute
   '/api/email/visit-confirm': typeof ApiEmailVisitConfirmRoute
   '/api/feedback/meet': typeof ApiFeedbackMeetRoute
   '/api/feedback/nps': typeof ApiFeedbackNpsRoute
@@ -488,6 +487,7 @@ export interface FileRouteTypes {
     | '/dpa'
     | '/founder'
     | '/privacy'
+    | '/robots.txt'
     | '/sitemap.xml'
     | '/terms'
     | '/trust'
@@ -510,7 +510,6 @@ export interface FileRouteTypes {
     | '/api/ai/meet-plan'
     | '/api/cron/drain'
     | '/api/cron/force-weekly-digest'
-    | '/api/cron/send-scheduled-emails'
     | '/api/email/visit-confirm'
     | '/api/feedback/meet'
     | '/api/feedback/nps'
@@ -540,6 +539,7 @@ export interface FileRouteTypes {
     | '/dpa'
     | '/founder'
     | '/privacy'
+    | '/robots.txt'
     | '/sitemap.xml'
     | '/terms'
     | '/trust'
@@ -562,7 +562,6 @@ export interface FileRouteTypes {
     | '/api/ai/meet-plan'
     | '/api/cron/drain'
     | '/api/cron/force-weekly-digest'
-    | '/api/cron/send-scheduled-emails'
     | '/api/email/visit-confirm'
     | '/api/feedback/meet'
     | '/api/feedback/nps'
@@ -593,6 +592,7 @@ export interface FileRouteTypes {
     | '/dpa'
     | '/founder'
     | '/privacy'
+    | '/robots.txt'
     | '/sitemap.xml'
     | '/terms'
     | '/trust'
@@ -615,7 +615,6 @@ export interface FileRouteTypes {
     | '/api/ai/meet-plan'
     | '/api/cron/drain'
     | '/api/cron/force-weekly-digest'
-    | '/api/cron/send-scheduled-emails'
     | '/api/email/visit-confirm'
     | '/api/feedback/meet'
     | '/api/feedback/nps'
@@ -647,6 +646,7 @@ export interface RootRouteChildren {
   DpaRoute: typeof DpaRoute
   FounderRoute: typeof FounderRoute
   PrivacyRoute: typeof PrivacyRoute
+  RobotsDottxtRoute: typeof RobotsDottxtRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TermsRoute: typeof TermsRoute
   TrustRoute: typeof TrustRoute
@@ -663,7 +663,6 @@ export interface RootRouteChildren {
   ApiAiMeetPlanRoute: typeof ApiAiMeetPlanRoute
   ApiCronDrainRoute: typeof ApiCronDrainRoute
   ApiCronForceWeeklyDigestRoute: typeof ApiCronForceWeeklyDigestRoute
-  ApiCronSendScheduledEmailsRoute: typeof ApiCronSendScheduledEmailsRoute
   ApiEmailVisitConfirmRoute: typeof ApiEmailVisitConfirmRoute
   ApiFeedbackMeetRoute: typeof ApiFeedbackMeetRoute
   ApiFeedbackNpsRoute: typeof ApiFeedbackNpsRoute
@@ -705,6 +704,13 @@ declare module '@tanstack/react-router' {
       path: '/sitemap.xml'
       fullPath: '/sitemap.xml'
       preLoaderRoute: typeof SitemapDotxmlRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/robots.txt': {
+      id: '/robots.txt'
+      path: '/robots.txt'
+      fullPath: '/robots.txt'
+      preLoaderRoute: typeof RobotsDottxtRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/privacy': {
@@ -931,13 +937,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiEmailVisitConfirmRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/api/cron/send-scheduled-emails': {
-      id: '/api/cron/send-scheduled-emails'
-      path: '/api/cron/send-scheduled-emails'
-      fullPath: '/api/cron/send-scheduled-emails'
-      preLoaderRoute: typeof ApiCronSendScheduledEmailsRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/api/cron/force-weekly-digest': {
       id: '/api/cron/force-weekly-digest'
       path: '/api/cron/force-weekly-digest'
@@ -1117,6 +1116,7 @@ const rootRouteChildren: RootRouteChildren = {
   DpaRoute: DpaRoute,
   FounderRoute: FounderRoute,
   PrivacyRoute: PrivacyRoute,
+  RobotsDottxtRoute: RobotsDottxtRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
   TermsRoute: TermsRoute,
   TrustRoute: TrustRoute,
@@ -1133,7 +1133,6 @@ const rootRouteChildren: RootRouteChildren = {
   ApiAiMeetPlanRoute: ApiAiMeetPlanRoute,
   ApiCronDrainRoute: ApiCronDrainRoute,
   ApiCronForceWeeklyDigestRoute: ApiCronForceWeeklyDigestRoute,
-  ApiCronSendScheduledEmailsRoute: ApiCronSendScheduledEmailsRoute,
   ApiEmailVisitConfirmRoute: ApiEmailVisitConfirmRoute,
   ApiFeedbackMeetRoute: ApiFeedbackMeetRoute,
   ApiFeedbackNpsRoute: ApiFeedbackNpsRoute,
@@ -1156,13 +1155,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { startInstance } from './start.ts'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-    config: Awaited<ReturnType<typeof startInstance.getOptions>>
-  }
-}
