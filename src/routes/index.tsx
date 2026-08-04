@@ -26,20 +26,20 @@ import {
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "linQ — The Claude-native matching platform" },
+      { title: "linQ — 深圳·香港 AI 婚恋匹配｜每周三，约一场真实见面" },
       {
         name: "description",
         content:
-          "AI-powered matching for work, love, and life. Business, dating, and local friends — one AI connection covers them all.",
+          "跟 AI 聊 5 分钟，每周三晚 7 点为你匹配一个人、订好一家真实餐厅。不滑动、不尬聊、不放鸽子。首期开放深圳与香港。",
       },
-      { property: "og:title", content: "linQ — The Claude-native matching platform" },
-      { property: "og:description", content: "AI-powered matching for work, love, and life." },
+      { property: "og:title", content: "linQ — 深圳·香港 AI 婚恋匹配" },
+      { property: "og:description", content: "每周三，约一场真实见面。AI 匹配 + 真实餐厅，你只管赴约。" },
       { property: "og:url", content: "https://claudematch.com" },
       { property: "og:type", content: "website" },
       { property: "og:image", content: `https://claudematch.com${ogImageUrl}` },
       { name: "twitter:card", content: "summary_large_image" },
-      { name: "twitter:title", content: "linQ — Claude-powered connections" },
-      { name: "twitter:description", content: "No forms. No tags. Just the real you." },
+      { name: "twitter:title", content: "linQ — AI matchmaking for Shenzhen & Hong Kong" },
+      { name: "twitter:description", content: "A real date, arranged every Wednesday. No swiping, no small talk." },
       { name: "twitter:image", content: `https://claudematch.com${ogImageUrl}` },
     ],
     links: [{ rel: "canonical", href: "https://claudematch.com" }],
@@ -51,7 +51,8 @@ export const Route = createFileRoute("/")({
           "@type": "Organization",
           name: "linQ",
           url: "https://claudematch.com",
-          description: "The Claude-native matching platform for business, dating, and local life.",
+          description:
+            "AI matchmaking for Shenzhen & Hong Kong. One curated match and one booked restaurant every Wednesday.",
         }),
       },
       {
@@ -62,7 +63,7 @@ export const Route = createFileRoute("/")({
           name: "linQ",
           url: "https://claudematch.com",
           description:
-            "AI-powered matching for work, love, and life. Business, dating, and local friends — one Claude-native connection covers them all.",
+            "深圳与香港的 AI 婚恋匹配平台。每周三晚 7 点，一次匹配、一家真实餐厅。",
         }),
       },
     ],
@@ -169,6 +170,7 @@ function Hero() {
               <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
             </a>
           </div>
+          <p className="mt-5 text-xs text-muted-foreground">{t("hero_secondary")}</p>
         </div>
       </div>
     </section>
@@ -191,12 +193,13 @@ function useCountdown(target: Date) {
 }
 
 function nextWednesday() {
+  // Match Day is Wednesday 19:00 Asia/Shanghai (UTC+8) == 11:00 UTC.
   const now = new Date();
   const day = now.getUTCDay();
   const daysUntil = (3 - day + 7) % 7 || 7;
   const next = new Date(now);
   next.setUTCDate(now.getUTCDate() + daysUntil);
-  next.setUTCHours(19, 0, 0, 0);
+  next.setUTCHours(11, 0, 0, 0);
   return next;
 }
 
@@ -210,7 +213,7 @@ function WeeklyDate() {
     year: "numeric",
   });
   const now = new Date();
-  const isMatchDay = now.getUTCDay() === 3 && now.getUTCHours() < 19;
+  const isMatchDay = now.getUTCDay() === 3 && now.getUTCHours() < 11;
   return (
     <section
       id="weekly"
@@ -299,7 +302,7 @@ function WeeklyDate() {
                   Match Day · Wed
                 </div>
                 <div className="mt-1 text-sm font-medium" style={{ color: "oklch(0.2 0.03 260)" }}>
-                  Jay & Priya
+                  示例场景 · 非真实用户
                 </div>
               </figcaption>
             </figure>
@@ -549,11 +552,26 @@ function Moments() {
           <div className="marquee px-6">
             {loop.map((m, i) => (
               <figure key={i} className={`polaroid ${m.rotate} w-[220px] shrink-0 md:w-[260px]`}>
-                <MomentsImg
-                  base={m.base}
-                  alt={`${m.name} — ${m.tag}`}
-                  className="aspect-square w-full object-cover"
-                />
+                <div
+                  className="flex aspect-square w-full flex-col items-center justify-center gap-2 p-4"
+                  style={{
+                    background:
+                      "linear-gradient(160deg, oklch(0.96 0.03 90), oklch(0.9 0.04 260))",
+                  }}
+                >
+                  <div
+                    className="text-[10px] font-medium uppercase tracking-[0.2em]"
+                    style={{ color: "oklch(0.5 0.03 260)" }}
+                  >
+                    {lang === "zh" ? "共鸣" : lang === "yue" ? "共鳴" : "Resonance"}
+                  </div>
+                  <div
+                    className="font-display text-6xl leading-none"
+                    style={{ color: "oklch(0.35 0.08 260)" }}
+                  >
+                    {m.score}
+                  </div>
+                </div>
                 <figcaption className="mt-3 px-1 text-left">
                   <div
                     className="text-[10px] font-medium uppercase tracking-wider"
@@ -687,12 +705,20 @@ function Footer() {
                   </a>
                 </li>
                 <li>
-                  <a
-                    href="#values"
+                  <Link
+                    to="/manifesto"
                     className="inline-flex items-center gap-1 text-foreground/80 transition-colors hover:text-primary"
                   >
                     {t("footer_manifesto")} <ArrowRight className="h-3 w-3 -rotate-45" />
-                  </a>
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    to="/for-restaurants"
+                    className="inline-flex items-center gap-1 text-foreground/80 transition-colors hover:text-primary"
+                  >
+                    {t("footer_restaurants")} <ArrowRight className="h-3 w-3 -rotate-45" />
+                  </Link>
                 </li>
                 <li>
                   <a

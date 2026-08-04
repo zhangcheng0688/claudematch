@@ -14,7 +14,9 @@ import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as RobotsDottxtRouteImport } from './routes/robots[.]txt'
 import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as ManifestoRouteImport } from './routes/manifesto'
 import { Route as FounderRouteImport } from './routes/founder'
+import { Route as ForRestaurantsRouteImport } from './routes/for-restaurants'
 import { Route as DpaRouteImport } from './routes/dpa'
 import { Route as CookiesRouteImport } from './routes/cookies'
 import { Route as BlogRouteImport } from './routes/blog'
@@ -86,9 +88,19 @@ const PrivacyRoute = PrivacyRouteImport.update({
   path: '/privacy',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ManifestoRoute = ManifestoRouteImport.update({
+  id: '/manifesto',
+  path: '/manifesto',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const FounderRoute = FounderRouteImport.update({
   id: '/founder',
   path: '/founder',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ForRestaurantsRoute = ForRestaurantsRouteImport.update({
+  id: '/for-restaurants',
+  path: '/for-restaurants',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DpaRoute = DpaRouteImport.update({
@@ -325,7 +337,9 @@ export interface FileRoutesByFullPath {
   '/blog': typeof BlogRoute
   '/cookies': typeof CookiesRoute
   '/dpa': typeof DpaRoute
+  '/for-restaurants': typeof ForRestaurantsRoute
   '/founder': typeof FounderRoute
+  '/manifesto': typeof ManifestoRoute
   '/privacy': typeof PrivacyRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -377,7 +391,9 @@ export interface FileRoutesByTo {
   '/blog': typeof BlogRoute
   '/cookies': typeof CookiesRoute
   '/dpa': typeof DpaRoute
+  '/for-restaurants': typeof ForRestaurantsRoute
   '/founder': typeof FounderRoute
+  '/manifesto': typeof ManifestoRoute
   '/privacy': typeof PrivacyRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -431,7 +447,9 @@ export interface FileRoutesById {
   '/blog': typeof BlogRoute
   '/cookies': typeof CookiesRoute
   '/dpa': typeof DpaRoute
+  '/for-restaurants': typeof ForRestaurantsRoute
   '/founder': typeof FounderRoute
+  '/manifesto': typeof ManifestoRoute
   '/privacy': typeof PrivacyRoute
   '/robots.txt': typeof RobotsDottxtRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -485,7 +503,9 @@ export interface FileRouteTypes {
     | '/blog'
     | '/cookies'
     | '/dpa'
+    | '/for-restaurants'
     | '/founder'
+    | '/manifesto'
     | '/privacy'
     | '/robots.txt'
     | '/sitemap.xml'
@@ -537,7 +557,9 @@ export interface FileRouteTypes {
     | '/blog'
     | '/cookies'
     | '/dpa'
+    | '/for-restaurants'
     | '/founder'
+    | '/manifesto'
     | '/privacy'
     | '/robots.txt'
     | '/sitemap.xml'
@@ -590,7 +612,9 @@ export interface FileRouteTypes {
     | '/blog'
     | '/cookies'
     | '/dpa'
+    | '/for-restaurants'
     | '/founder'
+    | '/manifesto'
     | '/privacy'
     | '/robots.txt'
     | '/sitemap.xml'
@@ -644,7 +668,9 @@ export interface RootRouteChildren {
   BlogRoute: typeof BlogRoute
   CookiesRoute: typeof CookiesRoute
   DpaRoute: typeof DpaRoute
+  ForRestaurantsRoute: typeof ForRestaurantsRoute
   FounderRoute: typeof FounderRoute
+  ManifestoRoute: typeof ManifestoRoute
   PrivacyRoute: typeof PrivacyRoute
   RobotsDottxtRoute: typeof RobotsDottxtRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
@@ -720,11 +746,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof PrivacyRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/manifesto': {
+      id: '/manifesto'
+      path: '/manifesto'
+      fullPath: '/manifesto'
+      preLoaderRoute: typeof ManifestoRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/founder': {
       id: '/founder'
       path: '/founder'
       fullPath: '/founder'
       preLoaderRoute: typeof FounderRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/for-restaurants': {
+      id: '/for-restaurants'
+      path: '/for-restaurants'
+      fullPath: '/for-restaurants'
+      preLoaderRoute: typeof ForRestaurantsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/dpa': {
@@ -1114,7 +1154,9 @@ const rootRouteChildren: RootRouteChildren = {
   BlogRoute: BlogRoute,
   CookiesRoute: CookiesRoute,
   DpaRoute: DpaRoute,
+  ForRestaurantsRoute: ForRestaurantsRoute,
   FounderRoute: FounderRoute,
+  ManifestoRoute: ManifestoRoute,
   PrivacyRoute: PrivacyRoute,
   RobotsDottxtRoute: RobotsDottxtRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,
@@ -1155,3 +1197,13 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
