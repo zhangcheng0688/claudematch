@@ -1,60 +1,48 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ArrowRight, Mail, Loader2, CheckCircle2 } from "lucide-react";
 import { LanguageProvider, useLang } from "@/lib/i18n";
+import { supabase } from "@/integrations/supabase/client";
 
 const BASE_URL = "https://claudematch.com";
 
-function buildBlogSchema(lang: "en" | "zh" | "yue") {
-  return {
-    "@context": "https://schema.org",
-    "@type": "Blog",
-    name: lang === "zh" ? "linQ 笔记" : lang === "yue" ? "linQ 筆記" : "linQ Journal",
-    url: `${BASE_URL}/blog`,
-    description:
-      lang === "zh"
-        ? "linQ 团队关于 AI 匹配、隐私优先和 Claude-native 产品构建的第一手笔记。"
-        : lang === "yue"
-          ? "linQ 團隊關於 AI 配對、私隱優先同 Claude-native 產品構建嘅第一手筆記。"
-          : "Field notes from the linQ team on AI matching, privacy by default, and Claude-native product building.",
-    publisher: {
-      "@type": "Organization",
-      name: "linQ",
-      url: BASE_URL,
-    },
-    blogPost: DRAFTS.map((p, i) => ({
-      "@type": "BlogPosting",
-      headline: p.title[lang],
-      description: p.excerpt[lang],
-      author: { "@type": "Organization", name: "linQ" },
-      publisher: { "@type": "Organization", name: "linQ", url: BASE_URL },
-      url: `${BASE_URL}/blog/${i}`,
-      inLanguage: lang === "yue" ? "zh-Hant" : lang,
-    })),
-  };
-}
+type PostListItem = {
+  slug: string;
+  locale: string;
+  title: string;
+  excerpt: string | null;
+  author: string | null;
+  published_at: string | null;
+};
 
 export const Route = createFileRoute("/blog")({
   head: () => ({
     meta: [
-      { title: "Journal — linQ" },
+      { title: "linQ 笔记 — AI 婚恋匹配的第一手思考" },
       {
         name: "description",
         content:
-          "Notes from the linQ team on AI matching, privacy by default, and what we're learning shipping a Claude-native platform.",
+          "linQ 团队关于 AI 匹配、每周三约会机制、隐私优先和深圳/香港冷启动的第一手笔记。",
       },
-      { property: "og:title", content: "linQ Journal" },
+      { property: "og:title", content: "linQ 笔记" },
       {
         property: "og:description",
-        content: "Field notes on AI matching, privacy, and Claude-native product building.",
+        content: "AI 匹配、每周三约会机制、隐私优先 —— linQ 团队的第一手笔记。",
       },
-      { property: "og:url", content: "https://claudematch.com/blog" },
+      { property: "og:url", content: `${BASE_URL}/blog` },
     ],
-    links: [{ rel: "canonical", href: "https://claudematch.com/blog" }],
+    links: [{ rel: "canonical", href: `${BASE_URL}/blog` }],
     scripts: [
       {
         type: "application/ld+json",
-        children: JSON.stringify(buildBlogSchema("en")),
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "Blog",
+          name: "linQ 笔记",
+          url: `${BASE_URL}/blog`,
+          description: "linQ 团队关于 AI 匹配与隐私优先产品构建的第一手笔记。",
+          publisher: { "@type": "Organization", name: "linQ", url: BASE_URL },
+        }),
       },
     ],
   }),
@@ -65,92 +53,32 @@ export const Route = createFileRoute("/blog")({
   ),
 });
 
-type DraftPost = {
-  title: { en: string; zh: string; yue: string };
-  kicker: { en: string; zh: string; yue: string };
-  excerpt: { en: string; zh: string; yue: string };
-  minutes: number;
-  status: "draft" | "in-review" | "shipping-soon";
-};
-
-const DRAFTS: DraftPost[] = [
-  {
-    title: {
-      en: "Why we built linQ around 'one-tap matching' instead of swipes",
-      zh: "为什么 linQ 选 '一键匹配'，而不是左滑右滑",
-      yue: "點解 linQ 揀「一撳配對」，唔係左掃右掃",
-    },
-    kicker: {
-      en: "Product story",
-      zh: "产品故事",
-      yue: "產品故事",
-    },
-    excerpt: {
-      en: "Swipes optimize for volume, not fit. We wanted the opposite: a slow, deliberate, weekly cadence that respects both people's time. Here's the thesis behind the Wednesday match.",
-      zh: "左滑右滑优化的是数量，不是契合度。我们要的是反面——一个慢的、慎重的、每周一次的对接节奏。这篇文章讲我们怎么从「周三约会」倒推出整套产品形态。",
-      yue: "左掃右掃優化緊嘅係數量，唔係夾唔夾。我哋想要嘅係反面 —— 一個慢嘅、慎重嘅、每個禮拜一次嘅配對節奏。呢篇講我哋點樣由「禮拜三約會」倒推成個產品形態。",
-    },
-    minutes: 6,
-    status: "shipping-soon",
-  },
-  {
-    title: {
-      en: "How AI profile inference actually works (and why we forbid verbatim quotes)",
-      zh: "AI 画像推断到底是怎么做的（以及为什么我们禁止逐字复述）",
-      yue: "AI 檔案推斷到底點做（仲有點解我哋禁咗逐字複述）",
-    },
-    kicker: {
-      en: "Engineering",
-      zh: "工程笔记",
-      yue: "工程筆記",
-    },
-    excerpt: {
-      en: "The hardest part of the AI profile isn't structure — it's teaching the model to see what the user didn't say. A walk through the prompt, the patterns array, and the 'why' behind each dimension score.",
-      zh: "AI 画像最难的部分不是结构化——是教会模型「看到用户没说的事」。本文走查 prompt 的设计、patterns 数组的用法，以及每个维度评分背后的「why」。",
-      yue: "AI 檔案最難嗰部分唔係結構化 —— 係教個模型「睇到用戶無講嘅嘢」。呢篇行勻個 prompt、patterns 陣嘅用法，再加每個維度評分背後嘅「why」。",
-    },
-    minutes: 9,
-    status: "in-review",
-  },
-  {
-    title: {
-      en: "Privacy by default: what we DON'T collect",
-      zh: "默认隐私：我们不收集什么",
-      yue: "預設私隱：我哋唔收集咩",
-    },
-    kicker: {
-      en: "Trust & safety",
-      zh: "信任与安全",
-      yue: "信任同安全",
-    },
-    excerpt: {
-      en: "Most platforms brag about what they encrypt. We'd rather list the data we never touch — your social graph, your contacts, your location history, your photos. The shorter this list stays, the better the product gets.",
-      zh: "大多数平台吹自己加密了什么。我们更愿意列出「永远不碰」的数据——你的社交图谱、通讯录、位置历史、照片。这个清单越短，产品越好。",
-      yue: "大部分平台吹自己加密咗咩。我哋寧願列出「永遠唔掂」嘅資料 —— 你嘅社交圖譜、通訊錄、位置歷史、相。呢個清單越短，產品越好。",
-    },
-    minutes: 4,
-    status: "draft",
-  },
-];
-
-function statusLabel(s: DraftPost["status"], lang: "en" | "zh" | "yue") {
-  if (s === "shipping-soon") {
-    return { en: "Shipping this month", zh: "本月发布", yue: "本月出街" }[lang];
-  }
-  if (s === "in-review") {
-    return { en: "In review", zh: "评审中", yue: "評審中" }[lang];
-  }
-  return { en: "Draft", zh: "草稿", yue: "草稿" }[lang];
-}
-
 function BlogPage() {
   const { lang } = useLang();
   const t = (en: string, zh: string, yue: string) =>
     lang === "yue" ? yue : lang === "zh" ? zh : en;
 
+  const [posts, setPosts] = useState<PostListItem[] | null>(null);
   const [email, setEmail] = useState("");
   const [state, setState] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [msg, setMsg] = useState<string | null>(null);
+
+  useEffect(() => {
+    supabase
+      .from("blog_posts")
+      .select("slug, locale, title, excerpt, author, published_at")
+      .eq("status", "published")
+      .order("published_at", { ascending: false })
+      .limit(50)
+      .then(({ data }) => setPosts((data as PostListItem[] | null) ?? []));
+  }, []);
+
+  // Prefer the active locale; fall back to zh (our primary writing locale),
+  // then to whatever exists.
+  const all = posts ?? [];
+  const inLang = all.filter((p) => p.locale === lang);
+  const inZh = all.filter((p) => p.locale === "zh");
+  const list = inLang.length ? inLang : inZh.length ? inZh : all;
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -170,9 +98,9 @@ function BlogPage() {
       setState("success");
       setMsg(
         t(
-          "Done. We'll send the first post the day it ships.",
-          "搞定，第一篇发布当天就送到。",
-          "搞掂，第一篇出街當日就送到。",
+          "Done. We'll send the next post the day it ships.",
+          "搞定，下一篇发布当天就送到。",
+          "搞掂，下一篇出街當日就送到。",
         ),
       );
       setEmail("");
@@ -204,46 +132,59 @@ function BlogPage() {
         </h1>
         <p className="mt-4 text-[15px] leading-[1.75] text-muted-foreground sm:text-base">
           {t(
-            "Three drafts in flight right now. Subscribe and we'll send the first one the day it ships — usually within a week or two.",
-            "目前有三篇草稿在写。订阅一下，第一篇发布当天就送到邮箱——通常一到两周内。",
-            "而家有 three 篇草稿寫緊。訂閱一下，第一篇出街當日就送到 email —— 通常一兩個禮拜內。",
+            "On AI matching, the Wednesday cadence, and building a privacy-first dating product for Shenzhen & Hong Kong.",
+            "关于 AI 匹配、每周三约会机制，以及一个为深圳和香港打造的隐私优先婚恋产品。",
+            "關於 AI 配對、每個禮拜三約會機制，同一個為深圳同香港打造嘅私隱優先婚戀產品。",
           )}
         </p>
 
-        <ul className="mt-12 space-y-8">
-          {DRAFTS.map((p, i) => (
-            <li
-              key={i}
-              className="group relative rounded-sm border border-border bg-background/40 p-6 transition-colors hover:border-primary/40"
-            >
-              <div className="flex items-center gap-2 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
-                <span>{p.kicker[lang]}</span>
-                <span>·</span>
-                <span>
-                  {p.minutes} {t("min read", "分钟阅读", "分鐘閱讀")}
-                </span>
-                <span>·</span>
-                <span className="text-primary">{statusLabel(p.status, lang)}</span>
-              </div>
-              <h2 className="mt-3 font-display text-2xl font-semibold leading-snug tracking-tight">
-                {p.title[lang]}
-              </h2>
-              <p className="mt-3 text-[15px] leading-[1.75] text-muted-foreground">
-                {p.excerpt[lang]}
-              </p>
-              <div className="mt-4 flex items-center gap-1 text-xs text-muted-foreground">
-                <span>
-                  {t(
-                    "Subscribe below to read it first.",
-                    "订阅即可第一时间阅读。",
-                    "訂閱即可第一時間睇。",
+        {posts === null ? (
+          <div className="mt-16 flex justify-center text-muted-foreground">
+            <Loader2 className="h-5 w-5 animate-spin" />
+          </div>
+        ) : list.length === 0 ? (
+          <p className="mt-16 text-sm text-muted-foreground">
+            {t(
+              "First post is on its way — subscribe below.",
+              "第一篇正在路上 —— 在下方订阅。",
+              "第一篇就嚟出街 —— 喺下面訂閱。",
+            )}
+          </p>
+        ) : (
+          <ul className="mt-12 space-y-8">
+            {list.map((p) => (
+              <li key={`${p.locale}-${p.slug}`}>
+                <Link
+                  to="/blog/$slug"
+                  params={{ slug: p.slug }}
+                  className="group block rounded-sm border border-border bg-background/40 p-6 transition-colors hover:border-primary/40"
+                >
+                  <div className="flex items-center gap-2 text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+                    <span>{p.author ?? "linQ"}</span>
+                    {p.published_at && (
+                      <>
+                        <span>·</span>
+                        <span>{p.published_at.slice(0, 10)}</span>
+                      </>
+                    )}
+                  </div>
+                  <h2 className="mt-3 font-display text-2xl font-semibold leading-snug tracking-tight">
+                    {p.title}
+                  </h2>
+                  {p.excerpt && (
+                    <p className="mt-3 text-[15px] leading-[1.75] text-muted-foreground">
+                      {p.excerpt}
+                    </p>
                   )}
-                </span>
-                <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" />
-              </div>
-            </li>
-          ))}
-        </ul>
+                  <div className="mt-4 flex items-center gap-1 text-xs text-primary">
+                    <span>{t("Read", "阅读全文", "閱讀全文")}</span>
+                    <ArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" />
+                  </div>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
 
         {/* Newsletter signup */}
         <div className="mt-16 rounded-2xl border border-border/60 bg-secondary/40 p-6 sm:p-8">

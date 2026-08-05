@@ -23,6 +23,7 @@ import { Route as BlogRouteImport } from './routes/blog'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as BlogSlugRouteImport } from './routes/blog.$slug'
 import { Route as AuthWxCallbackRouteImport } from './routes/auth/wx-callback'
 import { Route as ApiWaitlistRouteImport } from './routes/api/waitlist'
 import { Route as ApiStatsRouteImport } from './routes/api/stats'
@@ -131,6 +132,11 @@ const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
+} as any)
+const BlogSlugRoute = BlogSlugRouteImport.update({
+  id: '/$slug',
+  path: '/$slug',
+  getParentRoute: () => BlogRoute,
 } as any)
 const AuthWxCallbackRoute = AuthWxCallbackRouteImport.update({
   id: '/wx-callback',
@@ -334,7 +340,7 @@ const ApiAuthWechatCallbackRoute = ApiAuthWechatCallbackRouteImport.update({
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRouteWithChildren
-  '/blog': typeof BlogRoute
+  '/blog': typeof BlogRouteWithChildren
   '/cookies': typeof CookiesRoute
   '/dpa': typeof DpaRoute
   '/for-restaurants': typeof ForRestaurantsRoute
@@ -356,6 +362,7 @@ export interface FileRoutesByFullPath {
   '/api/stats': typeof ApiStatsRoute
   '/api/waitlist': typeof ApiWaitlistRoute
   '/auth/wx-callback': typeof AuthWxCallbackRoute
+  '/blog/$slug': typeof BlogSlugRoute
   '/match/$id': typeof AuthenticatedMatchIdRoute
   '/api/admin/reconciliation': typeof ApiAdminReconciliationRoute
   '/api/ai/generate-profile': typeof ApiAiGenerateProfileRoute
@@ -388,7 +395,7 @@ export interface FileRoutesByFullPath {
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRouteWithChildren
-  '/blog': typeof BlogRoute
+  '/blog': typeof BlogRouteWithChildren
   '/cookies': typeof CookiesRoute
   '/dpa': typeof DpaRoute
   '/for-restaurants': typeof ForRestaurantsRoute
@@ -410,6 +417,7 @@ export interface FileRoutesByTo {
   '/api/stats': typeof ApiStatsRoute
   '/api/waitlist': typeof ApiWaitlistRoute
   '/auth/wx-callback': typeof AuthWxCallbackRoute
+  '/blog/$slug': typeof BlogSlugRoute
   '/match/$id': typeof AuthenticatedMatchIdRoute
   '/api/admin/reconciliation': typeof ApiAdminReconciliationRoute
   '/api/ai/generate-profile': typeof ApiAiGenerateProfileRoute
@@ -444,7 +452,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRouteWithChildren
-  '/blog': typeof BlogRoute
+  '/blog': typeof BlogRouteWithChildren
   '/cookies': typeof CookiesRoute
   '/dpa': typeof DpaRoute
   '/for-restaurants': typeof ForRestaurantsRoute
@@ -466,6 +474,7 @@ export interface FileRoutesById {
   '/api/stats': typeof ApiStatsRoute
   '/api/waitlist': typeof ApiWaitlistRoute
   '/auth/wx-callback': typeof AuthWxCallbackRoute
+  '/blog/$slug': typeof BlogSlugRoute
   '/_authenticated/match/$id': typeof AuthenticatedMatchIdRoute
   '/api/admin/reconciliation': typeof ApiAdminReconciliationRoute
   '/api/ai/generate-profile': typeof ApiAiGenerateProfileRoute
@@ -522,6 +531,7 @@ export interface FileRouteTypes {
     | '/api/stats'
     | '/api/waitlist'
     | '/auth/wx-callback'
+    | '/blog/$slug'
     | '/match/$id'
     | '/api/admin/reconciliation'
     | '/api/ai/generate-profile'
@@ -576,6 +586,7 @@ export interface FileRouteTypes {
     | '/api/stats'
     | '/api/waitlist'
     | '/auth/wx-callback'
+    | '/blog/$slug'
     | '/match/$id'
     | '/api/admin/reconciliation'
     | '/api/ai/generate-profile'
@@ -631,6 +642,7 @@ export interface FileRouteTypes {
     | '/api/stats'
     | '/api/waitlist'
     | '/auth/wx-callback'
+    | '/blog/$slug'
     | '/_authenticated/match/$id'
     | '/api/admin/reconciliation'
     | '/api/ai/generate-profile'
@@ -665,7 +677,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRouteWithChildren
-  BlogRoute: typeof BlogRoute
+  BlogRoute: typeof BlogRouteWithChildren
   CookiesRoute: typeof CookiesRoute
   DpaRoute: typeof DpaRoute
   ForRestaurantsRoute: typeof ForRestaurantsRoute
@@ -808,6 +820,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/'
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/blog/$slug': {
+      id: '/blog/$slug'
+      path: '/$slug'
+      fullPath: '/blog/$slug'
+      preLoaderRoute: typeof BlogSlugRouteImport
+      parentRoute: typeof BlogRoute
     }
     '/auth/wx-callback': {
       id: '/auth/wx-callback'
@@ -1123,6 +1142,16 @@ const AuthRouteChildren: AuthRouteChildren = {
 
 const AuthRouteWithChildren = AuthRoute._addFileChildren(AuthRouteChildren)
 
+interface BlogRouteChildren {
+  BlogSlugRoute: typeof BlogSlugRoute
+}
+
+const BlogRouteChildren: BlogRouteChildren = {
+  BlogSlugRoute: BlogSlugRoute,
+}
+
+const BlogRouteWithChildren = BlogRoute._addFileChildren(BlogRouteChildren)
+
 interface ApiMatchRouteChildren {
   ApiMatchIdRoute: typeof ApiMatchIdRoute
 }
@@ -1151,7 +1180,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRouteWithChildren,
-  BlogRoute: BlogRoute,
+  BlogRoute: BlogRouteWithChildren,
   CookiesRoute: CookiesRoute,
   DpaRoute: DpaRoute,
   ForRestaurantsRoute: ForRestaurantsRoute,
