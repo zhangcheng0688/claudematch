@@ -28,9 +28,12 @@ CREATE OR REPLACE FUNCTION public.set_user_profile_coords(
 RETURNS void LANGUAGE sql SECURITY DEFINER SET search_path = public AS $$
   UPDATE public.user_profiles
   SET lat = p_lat, lng = p_lng
-  WHERE user_id = p_user_id
-  ORDER BY created_at DESC
-  LIMIT 1;
+  WHERE id = (
+    SELECT id FROM public.user_profiles
+    WHERE user_id = p_user_id
+    ORDER BY created_at DESC
+    LIMIT 1
+  );
 $$;
 
 -- RPC: find venues near a point, filtered by scenario vibes and

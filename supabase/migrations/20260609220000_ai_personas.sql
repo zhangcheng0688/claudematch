@@ -52,10 +52,10 @@ CREATE TABLE IF NOT EXISTS public.ai_personas (
 );
 
 -- The hot path: "give me 30 active personas in this city for this
--- scenario, ordered by priority + recency". The composite covers it.
+-- scenario, ordered by priority + recency". GIN covers the array
+-- containment on scenario_tags; city/is_active filter is cheap on top.
 CREATE INDEX IF NOT EXISTS ai_personas_city_scenario_idx
-  ON public.ai_personas (city, scenario_tags, is_active)
-  USING GIN (scenario_tags);
+  ON public.ai_personas USING GIN (scenario_tags);
 
 -- For display sorting when scoring is similar.
 CREATE INDEX IF NOT EXISTS ai_personas_priority_idx

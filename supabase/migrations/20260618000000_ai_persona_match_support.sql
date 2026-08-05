@@ -45,10 +45,13 @@ GRANT SELECT ON public.user_persona_matches TO authenticated;
 
 ALTER TABLE public.user_persona_matches ENABLE ROW LEVEL SECURITY;
 
-CREATE POLICY IF NOT EXISTS "user_persona_matches_select_own"
-  ON public.user_persona_matches
-  FOR SELECT TO authenticated
-  USING (auth.uid() = user_id);
+DO $$ BEGIN
+  CREATE POLICY "user_persona_matches_select_own"
+    ON public.user_persona_matches
+    FOR SELECT TO authenticated
+    USING (auth.uid() = user_id);
+EXCEPTION WHEN duplicate_object THEN NULL;
+END $$;
 
 -- 7) RPC to atomically increment a persona's match_count and update
 --    last_matched_at. Used by /api/ai/match when an AI persona is

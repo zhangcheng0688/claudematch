@@ -554,7 +554,7 @@ async function main() {
     `-- Count: ${totalGenerated} AI personas (${CITIES.length} cities, 1000 total)`,
     "",
     "BEGIN;",
-    "TRUNCATE public.ai_personas CASCADE RESTART IDENTITY;",
+    "TRUNCATE public.ai_personas RESTART IDENTITY CASCADE;",
     "",
   ].join("\n");
 
