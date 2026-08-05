@@ -15,7 +15,7 @@ type PostListItem = {
   published_at: string | null;
 };
 
-export const Route = createFileRoute("/blog")({
+export const Route = createFileRoute("/blog/")({
   head: () => ({
     meta: [
       { title: "linQ 笔记 — AI 婚恋匹配的第一手思考" },
