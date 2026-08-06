@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import {
   ArrowRight,
+  ArrowDown,
   Check,
   Minus,
   Headphones,
@@ -9,7 +10,7 @@ import {
   Sparkles,
   Loader2,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { CookieBanner } from "@/components/CookieBanner";
 import { MomentsImg } from "@/components/shared/MomentsImg";
 const ogImageUrl = "/og-image.jpg";
@@ -128,49 +129,206 @@ function Nav() {
   );
 }
 
+function BokehCanvas() {
+  const ref = useRef<HTMLCanvasElement>(null);
+  useEffect(() => {
+    const canvas = ref.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    let raf = 0;
+    let w = 0;
+    let h = 0;
+    type P = {
+      x: number; y: number; r: number; hue: number; sat: number; light: number;
+      a: number; vx: number; vy: number; ph: number; sp: number;
+    };
+    let parts: P[] = [];
+    const resize = () => {
+      const rect = canvas.getBoundingClientRect();
+      w = rect.width;
+      h = rect.height;
+      canvas.width = w * dpr;
+      canvas.height = h * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const n = Math.round(Math.min(30, Math.max(16, w / 48)));
+      parts = Array.from({ length: n }, () => ({
+        x: Math.random() * w,
+        y: Math.random() * h,
+        r: 18 + Math.random() * 90,
+        hue: 34 + Math.random() * 14,
+        sat: 55 + Math.random() * 30,
+        light: 45 + Math.random() * 20,
+        a: 0.05 + Math.random() * 0.16,
+        vx: (Math.random() - 0.5) * 0.12,
+        vy: (Math.random() - 0.5) * 0.08 - 0.02,
+        ph: Math.random() * Math.PI * 2,
+        sp: 0.001 + Math.random() * 0.002,
+      }));
+    };
+    const draw = (time: number) => {
+      ctx.clearRect(0, 0, w, h);
+      ctx.globalCompositeOperation = "lighter";
+      for (const p of parts) {
+        const pulse = 0.75 + 0.25 * Math.sin(p.ph + time * p.sp * 2);
+        const x = p.x + Math.sin(p.ph + time * p.sp) * 18;
+        const y = p.y + Math.cos(p.ph * 1.3 + time * p.sp) * 12;
+        const g = ctx.createRadialGradient(x, y, 0, x, y, p.r);
+        g.addColorStop(0, `hsla(${p.hue} ${p.sat}% ${p.light}% / ${p.a * pulse})`);
+        g.addColorStop(1, "hsla(40 60% 50% / 0)");
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(x, y, p.r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    };
+    const tick = (time: number) => {
+      for (const p of parts) {
+        p.x += p.vx;
+        p.y += p.vy;
+        if (p.x < -p.r) p.x = w + p.r;
+        if (p.x > w + p.r) p.x = -p.r;
+        if (p.y < -p.r) p.y = h + p.r;
+        if (p.y > h + p.r) p.y = -p.r;
+      }
+      draw(time);
+      raf = requestAnimationFrame(tick);
+    };
+    resize();
+    window.addEventListener("resize", resize);
+    if (reduced) {
+      draw(0);
+    } else {
+      raf = requestAnimationFrame(tick);
+    }
+    return () => {
+      cancelAnimationFrame(raf);
+      window.removeEventListener("resize", resize);
+    };
+  }, []);
+  return <canvas ref={ref} className="bokeh-canvas" aria-hidden="true" />;
+}
+
 function Hero() {
   const { t, lang } = useLang();
+  const [waitlist, setWaitlist] = useState<number | null>(null);
+  useEffect(() => {
+    fetch("/api/stats")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        const n = d?.data?.waitlist_count;
+        if (typeof n === "number") setWaitlist(n);
+      })
+      .catch(() => {});
+  }, []);
+  const delay = (ms: number) => ({ animationDelay: `${ms}ms` });
+  const display = lang === "en" ? "font-display italic" : "font-display";
+  const L = (en: string, zh: string, yue: string) =>
+    lang === "yue" ? yue : lang === "zh" ? zh : en;
   return (
-    <section className="relative border-b border-border/60 overflow-hidden">
-      <div className="mx-auto max-w-6xl px-5 py-20 sm:px-6 sm:py-28 md:py-40">
-        <div className="mx-auto max-w-4xl text-center">
-          <div className="mb-6 sm:mb-8 inline-flex items-center gap-2 rounded-full border border-border bg-background/40 px-3 py-1 text-[11px] sm:text-xs text-muted-foreground backdrop-blur">
+    <section className="relative flex min-h-[calc(100svh-4rem)] flex-col justify-end overflow-hidden border-b border-border/60">
+      <BokehCanvas />
+      <div className="hero-bottom-blur" aria-hidden="true" />
+      <div className="relative z-10 mx-auto w-full max-w-6xl px-5 pb-8 pt-24 sm:px-6 md:pb-12">
+        <div
+          className="animate-blur-fade-up flex flex-wrap items-center gap-x-5 gap-y-2 text-xs text-muted-foreground sm:text-sm"
+          style={delay(100)}
+        >
+          <span className="inline-flex items-center gap-2">
             <span className="h-1.5 w-1.5 rounded-full bg-primary" />
             {t("hero_badge")}
+          </span>
+        </div>
+        <h1
+          className="animate-blur-fade-up mt-6 max-w-4xl text-[2.6rem] font-semibold leading-[1.08] tracking-tight sm:text-6xl md:text-7xl"
+          style={delay(220)}
+        >
+          <span className={`${display} text-gold-glow`}>{t("hero_claude")}</span>{" "}
+          <span className={`${display} text-gold-glow`}>{t("hero_connections")}</span>
+          <br />
+          <span className="mt-4 inline-block text-[0.48em] font-medium leading-snug tracking-normal text-foreground/70 sm:mt-5">
+            {t("hero_for")}
+            <span className="text-[#e0655a]">{t("hero_love")}</span>
+          </span>
+        </h1>
+        <p
+          className="animate-blur-fade-up mt-6 max-w-2xl whitespace-pre-line text-[15px] leading-[1.75] text-muted-foreground sm:text-base md:text-lg"
+          style={delay(340)}
+        >
+          {t("hero_desc")}
+        </p>
+        <div
+          className="animate-blur-fade-up mt-9 flex flex-wrap items-center gap-3 sm:gap-4"
+          style={delay(460)}
+        >
+          <a
+            href="/auth"
+            className="btn-fill group inline-flex h-14 items-center gap-3 rounded-full bg-primary pl-6 pr-6 text-sm font-medium text-primary-foreground shadow-[0_20px_60px_-12px_oklch(0.85_0.17_90/0.65),0_0_0_1px_oklch(0.85_0.17_90/0.4),inset_0_1px_0_oklch(1_0_0/0.35)] transition-shadow hover:shadow-[0_28px_80px_-12px_oklch(0.85_0.17_90/0.8),0_0_0_1px_oklch(0.85_0.17_90/0.6),inset_0_1px_0_oklch(1_0_0/0.45)]"
+          >
+            <span className="font-display text-base leading-none text-primary-foreground/95">
+              {lang === "zh"
+                ? "每周三晚 7 点"
+                : lang === "yue"
+                  ? "每個禮拜三晚 7 點"
+                  : "Every Wed · 7pm"}
+            </span>
+            <span className="h-6 w-px bg-primary-foreground/25" />
+            <span className="uppercase tracking-wide">{t("hero_joinNow")}</span>
+            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+          </a>
+          <a
+            href="#how"
+            className="liquid-glass inline-flex h-14 items-center gap-2 rounded-full px-6 text-sm font-medium text-foreground/90 transition-colors hover:text-foreground"
+          >
+            {t("nav_how")}
+            <ArrowDown className="h-4 w-4" />
+          </a>
+        </div>
+        <p className="animate-blur-fade-up mt-5 text-xs text-muted-foreground" style={delay(540)}>
+          {t("hero_secondary")}
+        </p>
+
+        <div
+          className="animate-blur-fade-up mt-10 grid grid-cols-2 gap-x-6 gap-y-4 border-t border-border/60 pt-5 sm:mt-14 sm:grid-cols-4"
+          style={delay(640)}
+        >
+          <div>
+            <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+              {L("Cities", "城市", "城市")}
+            </p>
+            <p className="mt-1.5 text-sm text-foreground">
+              {L("Shenzhen · Hong Kong", "深圳 · 香港", "深圳 · 香港")}
+            </p>
           </div>
-          <h1 className="text-[2.5rem] sm:text-5xl font-semibold leading-[1.1] sm:leading-[1.05] tracking-tight md:text-7xl">
-            <span className="font-display text-gold-glow">{t("hero_claude")}</span>{" "}
-            <span className="font-display text-gold-glow">{t("hero_connections")}</span>
-            <br />
-            <span className="font-display text-foreground/50">{t("hero_for")}</span>{" "}
-            <span className="font-display text-[#3b82f6]">{t("hero_work")}</span>
-            <span className="font-display text-foreground/30"> </span>{" "}
-            <span className="font-display text-[#ef4444]">{t("hero_love")}</span>
-            <span className="font-display text-foreground/30"> </span>{" "}
-            <span className="font-display text-[#22c55e]">{t("hero_life")}</span>
-            <span className="font-display text-foreground/30"> </span>
-          </h1>
-          <p className="mx-auto mt-6 sm:mt-8 max-w-2xl text-[15px] leading-[1.75] sm:leading-relaxed text-muted-foreground sm:text-base md:text-lg whitespace-pre-line">
-            {t("hero_desc")}
-          </p>
-          <div className="mt-10 sm:mt-12 flex items-center justify-center">
+          <div>
+            <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+              {L("Match day", "匹配日", "配對日")}
+            </p>
+            <p className="mt-1.5 text-sm text-foreground">
+              {L("Wednesday · 7:00 PM", "每周三 · 19:00", "每個禮拜三 · 19:00")}
+            </p>
+          </div>
+          <div>
+            <p className="text-[10px] font-medium uppercase tracking-[0.18em] text-muted-foreground">
+              {L("Waitlist", "候补名单", "候補名單")}
+            </p>
+            <p className="mt-1.5 text-sm tabular-nums text-foreground">
+              {waitlist === null
+                ? "—"
+                : L(`${waitlist} people`, `${waitlist} 人`, `${waitlist} 人`)}
+            </p>
+          </div>
+          <div className="flex items-end sm:justify-end">
             <a
-              href="/auth"
-              className="group relative inline-flex h-14 items-center gap-3 rounded-sm bg-primary pl-3 pr-6 text-sm font-medium text-primary-foreground shadow-[0_20px_60px_-12px_oklch(0.85_0.17_90/0.65),0_0_0_1px_oklch(0.85_0.17_90/0.4),inset_0_1px_0_oklch(1_0_0/0.35)] transition-all hover:-translate-y-0.5 hover:shadow-[0_28px_80px_-12px_oklch(0.85_0.17_90/0.8),0_0_0_1px_oklch(0.85_0.17_90/0.6),inset_0_1px_0_oklch(1_0_0/0.45)]"
+              href="#weekly"
+              className="inline-flex items-center gap-1.5 text-xs text-muted-foreground transition-colors hover:text-primary"
             >
-              <span className="font-display text-base leading-none text-primary-foreground/95">
-                {lang === "zh"
-                  ? "每周三晚 7 点"
-                  : lang === "yue"
-                    ? "每個禮拜三晚 7 點"
-                    : "Every Wed · 7pm"}
-              </span>
-              <span className="h-6 w-px bg-primary-foreground/25" />
-              <span className="tracking-wide uppercase">{t("hero_joinNow")}</span>
-              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+              {L("See how it works", "了解匹配机制", "了解配對機制")}
+              <ArrowDown className="h-3.5 w-3.5 animate-bounce" />
             </a>
           </div>
-          <p className="mt-5 text-xs text-muted-foreground">{t("hero_secondary")}</p>
         </div>
       </div>
     </section>
@@ -229,7 +387,7 @@ function WeeklyDate() {
       />
       <div className="mx-auto max-w-6xl px-5 py-20 sm:px-6 sm:py-24 md:py-32">
         <div className="grid items-center gap-14 sm:gap-12 md:grid-cols-2">
-          <div>
+          <div data-reveal>
             <p className="text-xs font-medium uppercase tracking-[0.18em] text-primary">
               {t("weekly_kicker")}
             </p>
@@ -280,7 +438,11 @@ function WeeklyDate() {
             </div>
           </div>
 
-          <div className="relative mx-auto flex h-[420px] w-full max-w-md items-center justify-center md:h-[480px]">
+          <div
+            data-reveal
+            style={{ "--reveal-delay": "140ms" } as React.CSSProperties}
+            className="relative mx-auto flex h-[420px] w-full max-w-md items-center justify-center md:h-[480px]"
+          >
             <div
               className="absolute inset-0 -z-10 blur-3xl opacity-50"
               style={{
@@ -325,7 +487,7 @@ function SendRealYou() {
   return (
     <section id="send" className="relative overflow-hidden border-b border-border/60">
       <div className="mx-auto max-w-6xl px-5 py-20 sm:px-6 sm:py-24 md:py-32">
-        <div className="mx-auto max-w-3xl text-center">
+        <div className="mx-auto max-w-3xl text-center" data-reveal>
           <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs text-primary">
             <Sparkles className="h-3.5 w-3.5" /> {t("send_badge")}
           </div>
@@ -363,7 +525,7 @@ function Values() {
   return (
     <section id="values" className="border-b border-border/60">
       <div className="mx-auto max-w-6xl px-5 py-20 sm:px-6 sm:py-24 md:py-32">
-        <div className="max-w-2xl">
+        <div className="max-w-2xl" data-reveal>
           <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
             {t("values_kicker")}
           </p>
@@ -373,7 +535,12 @@ function Values() {
         </div>
         <div className="mt-12 sm:mt-16 grid gap-px overflow-hidden rounded-sm border border-border bg-border md:grid-cols-3">
           {values.map((v, i) => (
-            <div key={i} className="bg-background p-7 sm:p-8 md:p-10">
+            <div
+              key={i}
+              data-reveal
+              style={{ "--reveal-delay": `${i * 90}ms` } as React.CSSProperties}
+              className="bg-background p-7 sm:p-8 md:p-10"
+            >
               <div className="text-sm font-medium text-primary">0{i + 1}</div>
               <h3 className="mt-5 sm:mt-6 text-lg sm:text-xl font-semibold leading-snug tracking-tight">
                 {v.title}
@@ -395,7 +562,7 @@ function HowItWorks() {
   return (
     <section id="how" className="border-b border-border/60 bg-secondary/40">
       <div className="mx-auto max-w-6xl px-5 py-20 sm:px-6 sm:py-24 md:py-32">
-        <div className="max-w-2xl">
+        <div className="max-w-2xl" data-reveal>
           <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
             {t("how_kicker")}
           </p>
@@ -404,8 +571,12 @@ function HowItWorks() {
           </h2>
         </div>
         <div className="mt-12 sm:mt-16 grid gap-10 sm:gap-12 md:grid-cols-4 md:gap-8">
-          {steps.map((s) => (
-            <div key={s.n}>
+          {steps.map((s, i) => (
+            <div
+              key={s.n}
+              data-reveal
+              style={{ "--reveal-delay": `${i * 90}ms` } as React.CSSProperties}
+            >
               <div className="text-sm font-medium text-primary">{s.n}</div>
               <div className="mt-4 h-px w-full bg-border" />
               <h3 className="mt-5 sm:mt-6 text-lg font-semibold leading-snug tracking-tight">
@@ -428,7 +599,7 @@ function Compare() {
   return (
     <section id="compare" className="border-b border-border/60">
       <div className="mx-auto max-w-6xl px-5 py-20 sm:px-6 sm:py-24 md:py-32">
-        <div className="max-w-2xl">
+        <div className="max-w-2xl" data-reveal>
           <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
             {t("compare_kicker")}
           </p>
@@ -436,7 +607,11 @@ function Compare() {
             {t("compare_title")}
           </h2>
         </div>
-        <div className="mt-12 sm:mt-16 overflow-x-auto overflow-hidden rounded-sm border border-border">
+        <div
+          data-reveal
+          style={{ "--reveal-delay": "120ms" } as React.CSSProperties}
+          className="mt-12 sm:mt-16 overflow-x-auto overflow-hidden rounded-sm border border-border"
+        >
           <div className="grid grid-cols-3 border-b border-border bg-secondary/50 text-xs font-medium uppercase tracking-wider text-muted-foreground">
             <div className="p-5"></div>
             <div className="p-5">{t("compare_col_trad")}</div>
@@ -470,7 +645,7 @@ function Trust() {
   return (
     <section id="trust" className="border-b border-border/60 bg-secondary/40">
       <div className="mx-auto max-w-6xl px-5 py-20 sm:px-6 sm:py-24 md:py-32">
-        <div className="max-w-2xl">
+        <div className="max-w-2xl" data-reveal>
           <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
             {t("trust_kicker")}
           </p>
@@ -480,7 +655,12 @@ function Trust() {
         </div>
         <div className="mt-12 sm:mt-16 grid gap-8 sm:gap-10 md:grid-cols-3">
           {trust.map((t, i) => (
-            <div key={i} className="border-t border-foreground pt-6">
+            <div
+              key={i}
+              data-reveal
+              style={{ "--reveal-delay": `${i * 90}ms` } as React.CSSProperties}
+              className="border-t border-foreground pt-6"
+            >
               <h3 className="text-lg font-semibold leading-snug tracking-tight">{t.title}</h3>
               <p className="mt-3 text-[15px] leading-[1.7] text-muted-foreground sm:text-sm sm:leading-relaxed">
                 {t.body}
@@ -497,7 +677,10 @@ function FinalCTA() {
   const { t } = useLang();
   return (
     <section id="cta" className="border-b border-border/60">
-      <div className="mx-auto max-w-5xl px-5 py-20 text-center sm:px-6 sm:py-28 md:py-40">
+      <div
+        className="mx-auto max-w-5xl px-5 py-20 text-center sm:px-6 sm:py-28 md:py-40"
+        data-reveal
+      >
         <h2 className="text-[2.25rem] sm:text-4xl font-semibold leading-[1.1] tracking-tight md:text-6xl">
           <span className="text-gold-glow">{t("cta_start")}</span>{" "}
           <span className="font-display text-gold-glow">{t("cta_matching")}</span>.
@@ -529,7 +712,7 @@ function Moments() {
   return (
     <section id="moments" className="border-b border-border/60">
       <div className="py-20 sm:py-24 md:py-32">
-        <div className="mx-auto max-w-7xl px-5 sm:px-6 max-w-2xl">
+        <div className="mx-auto max-w-7xl px-5 sm:px-6 max-w-2xl" data-reveal>
           <p className="text-xs font-medium uppercase tracking-[0.18em] text-muted-foreground">
             {t("moments_kicker")}
           </p>
@@ -857,7 +1040,34 @@ function Footer() {
   );
 }
 
+function useReveal() {
+  useEffect(() => {
+    const check = () => {
+      for (const el of Array.from(
+        document.querySelectorAll("[data-reveal]:not(.revealed)"),
+      )) {
+        const r = el.getBoundingClientRect();
+        if (r.top < window.innerHeight * 0.92 && r.bottom > 0) {
+          el.classList.add("revealed");
+        }
+      }
+    };
+    check();
+    const onScroll = () => check();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+    // Safety net: reveal anything in view even if scroll/resize never fires.
+    const net = window.setInterval(check, 1200);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+      window.clearInterval(net);
+    };
+  }, []);
+}
+
 function Index() {
+  useReveal();
   return (
     <LanguageProvider>
       <div className="min-h-screen bg-background text-foreground">
@@ -866,12 +1076,6 @@ function Index() {
           <div className="aurora-extra-2" />
           <div className="aurora-extra-3" />
         </div>
-        <div className="stars" aria-hidden="true" />
-        <span className="orb orb-1" aria-hidden="true" />
-        <span className="orb orb-2" aria-hidden="true" />
-        <span className="orb orb-3" aria-hidden="true" />
-        <span className="orb orb-4" aria-hidden="true" />
-        <span className="orb orb-5" aria-hidden="true" />
         <div className="grain" aria-hidden="true" />
         <Nav />
         <main>

@@ -63,20 +63,21 @@
 
 :root {
   --radius: 0.25rem;
-  --background: oklch(0.16 0.03 260);
-  --foreground: oklch(0.97 0 0);
-  --card: oklch(0.2 0.035 260);
-  --card-foreground: oklch(0.97 0 0);
-  --popover: oklch(0.2 0.035 260);
-  --popover-foreground: oklch(0.97 0 0);
+  --ease-pop: cubic-bezier(0.785, 0.135, 0.15, 1);
+  --background: oklch(0.17 0.012 75);
+  --foreground: oklch(0.95 0.025 85);
+  --card: oklch(0.21 0.015 75);
+  --card-foreground: oklch(0.95 0.025 85);
+  --popover: oklch(0.21 0.015 75);
+  --popover-foreground: oklch(0.95 0.025 85);
   --primary: oklch(0.85 0.17 90);
-  --primary-foreground: oklch(0.16 0.03 260);
-  --secondary: oklch(0.22 0.035 260);
-  --secondary-foreground: oklch(0.97 0 0);
-  --muted: oklch(0.22 0.035 260);
-  --muted-foreground: oklch(0.7 0.02 260);
-  --accent: oklch(0.22 0.035 260);
-  --accent-foreground: oklch(0.97 0 0);
+  --primary-foreground: oklch(0.17 0.02 75);
+  --secondary: oklch(0.23 0.015 75);
+  --secondary-foreground: oklch(0.95 0.025 85);
+  --muted: oklch(0.23 0.015 75);
+  --muted-foreground: oklch(0.66 0.035 75);
+  --accent: oklch(0.23 0.015 75);
+  --accent-foreground: oklch(0.95 0.025 85);
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(0.984 0 0);
   --border: oklch(1 0 0 / 10%);
@@ -155,7 +156,7 @@
     letter-spacing: -0.01em;
     background-image:
       radial-gradient(ellipse 80% 50% at 50% -10%, oklch(0.85 0.17 90 / 0.12), transparent 60%),
-      radial-gradient(ellipse 60% 40% at 90% 10%, oklch(0.55 0.18 270 / 0.18), transparent 60%),
+      radial-gradient(ellipse 60% 40% at 90% 10%, oklch(0.75 0.13 60 / 0.12), transparent 60%),
       url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='40' height='40' viewBox='0 0 40 40'><path d='M0 39.5H40M39.5 0V40' stroke='white' stroke-opacity='0.035' stroke-width='1'/></svg>");
     background-attachment: fixed, fixed, fixed;
   }
@@ -168,9 +169,16 @@
   }
 
   .font-display {
-    font-family: "Instrument Serif", "Times New Roman", ui-serif, Georgia, serif;
+    font-family:
+      "Instrument Serif",
+      "Songti SC",
+      "Noto Serif SC",
+      "STSong",
+      "Times New Roman",
+      ui-serif,
+      Georgia,
+      serif;
     letter-spacing: -0.02em;
-    font-style: italic;
     font-weight: 400;
   }
 
@@ -454,4 +462,129 @@
   to {
     transform: translateX(-50%);
   }
+}
+
+/* ============ Cinematic motion system ============ */
+
+/* Staggered blur-fade-up entrance (hero choreography) */
+@keyframes blurFadeUp {
+  from {
+    opacity: 0;
+    filter: blur(20px);
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    filter: blur(0);
+    transform: translateY(0);
+  }
+}
+.animate-blur-fade-up {
+  opacity: 0;
+  animation: blurFadeUp 1s ease-out forwards;
+}
+
+/* Scroll-driven reveal: translateY + blur, offset stagger via --reveal-delay */
+[data-reveal] {
+  opacity: 0;
+  transform: translateY(25%);
+  filter: blur(6px);
+  transition:
+    opacity 0.9s var(--ease-pop),
+    transform 0.9s var(--ease-pop),
+    filter 0.9s var(--ease-pop);
+  transition-delay: var(--reveal-delay, 0ms);
+  will-change: opacity, transform, filter;
+}
+[data-reveal].revealed {
+  opacity: 1;
+  transform: translateY(0);
+  filter: blur(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-blur-fade-up {
+    animation: none;
+    opacity: 1;
+  }
+  [data-reveal] {
+    opacity: 1;
+    transform: none;
+    filter: none;
+    transition: none;
+  }
+}
+
+/* Bottom-only backdrop blur over hero canvas — mask fades blur upward,
+   no dark gradient (keeps bokeh colors intact) */
+.hero-bottom-blur {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  pointer-events: none;
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  mask-image: linear-gradient(to top, black 0%, transparent 45%);
+  -webkit-mask-image: linear-gradient(to top, black 0%, transparent 45%);
+}
+
+.bokeh-canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* Liquid glass — near-transparent white + blur + gradient border stroke */
+.liquid-glass {
+  position: relative;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.01);
+  background-blend-mode: luminosity;
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border: none;
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.1);
+}
+.liquid-glass::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.4px;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.45) 0%,
+    rgba(255, 255, 255, 0.15) 20%,
+    rgba(255, 255, 255, 0) 40%,
+    rgba(255, 255, 255, 0) 60%,
+    rgba(255, 255, 255, 0.15) 80%,
+    rgba(255, 255, 255, 0.45) 100%
+  );
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* Fill-wipe button: background wipes up from bottom on hover (ease-pop) */
+.btn-fill {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.btn-fill::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-color: rgba(0, 0, 0, 0.14);
+  clip-path: polygon(0 100%, 100% 100%, 100% 100%, 0 100%);
+  transition: clip-path 0.35s var(--ease-pop);
+}
+.btn-fill:hover::before {
+  clip-path: polygon(0 0%, 100% 0%, 100% 100%, 0 100%);
 }
