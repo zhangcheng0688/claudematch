@@ -200,6 +200,7 @@ function StartPage() {
       }>("/api/ai/interview-questions", {
         method: "POST",
         body: JSON.stringify({ input, scenario, lang }),
+        timeoutMs: 45_000, // LLM calls take 10-30s; default 8s aborts them client-side
       });
       setInterviewQuestions(res.data ?? []);
       setInterviewAnswers({});
@@ -224,6 +225,7 @@ function StartPage() {
         {
           method: "POST",
           body: JSON.stringify(body),
+          timeoutMs: 90_000, // 3 chained LLM calls (perceive→synth→refine); server deadline is higher
         },
       );
       setProfile(res.data);
@@ -256,6 +258,7 @@ function StartPage() {
       }>("/api/ai/match", {
         method: "POST",
         body: JSON.stringify({ scenario, lang }),
+        timeoutMs: 90_000, // matching runs multiple LLM passes + meet plan generation
       });
       setMatches(res.data ?? []);
       setMatchedType(res.matched_type ?? null);
@@ -285,6 +288,7 @@ function StartPage() {
       const res = await authedFetch<{ data: MeetPlan }>("/api/ai/meet-plan", {
         method: "POST",
         body: JSON.stringify({ match_id: m.id, lang }),
+        timeoutMs: 60_000, // LLM venue planning; server deadline 50s
       });
       setPlan(res.data);
     } catch (e) {

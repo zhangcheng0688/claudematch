@@ -70,6 +70,7 @@ function MatchDetailPage() {
       const res = await authedFetch<{ data: MeetPlan }>("/api/ai/meet-plan", {
         method: "POST",
         body: JSON.stringify({ match_id: id, lang }),
+        timeoutMs: 60_000, // LLM venue planning; server deadline 50s
       });
       setPlan(res.data);
     } catch (e) {

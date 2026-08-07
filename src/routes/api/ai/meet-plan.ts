@@ -125,7 +125,7 @@ export const Route = createFileRoute("/api/ai/meet-plan")({
         const match_id = body.match_id;
         const lang: "en" | "zh" | "yue" =
           body.lang === "yue" ? "yue" : body.lang === "en" ? "en" : "zh";
-        const llmLang: "en" | "zh" = lang === "en" ? "en" : "zh";
+        const llmLang: "en" | "zh" | "yue" = lang;
         if (typeof match_id !== "string" || match_id.length < 8) {
           return json({ error: "match_id is required" }, { status: 400 }, request);
         }
@@ -261,7 +261,7 @@ export const Route = createFileRoute("/api/ai/meet-plan")({
           // venue options are *real* restaurants and the model must
           // pick from them (not invent).
           const sys =
-            llmLang === "zh"
+            llmLang !== "en"
               ? `你是 linQ 的 AI 见面策划师 —— 一个比朋友更懂这两人的角色。
 
 任务：为这对匹配设计 **3 套备选见面方案**（plan A / B / C），让用户能选。
@@ -307,7 +307,7 @@ Strict JSON output.`;
 
           // User prompt: scenario + match details + candidate venue list.
           const candidatesBlock = hasVenues
-            ? llmLang === "zh"
+            ? llmLang !== "en"
               ? `\n\n候选餐厅清单（必须从下面选，**不要**自己编）：\n${candidates
                   .map(
                     (v, i) =>
@@ -320,7 +320,7 @@ Strict JSON output.`;
                       `[${i}] venue_id=${v.id}\n    name=${v.name}\n    district=${v.district ?? "?"}\n    cuisine=${v.cuisine_tags.join("/")}\n    vibe=${v.vibe_tags.join("/")}\n    price_per_person=${v.price_per_person ?? "?"} CNY\n    rating=${v.rating ?? "?"}`,
                   )
                   .join("\n\n")}`
-            : lang === "zh"
+            : lang !== "en"
               ? "\n\n注意：当前城市的餐厅数据尚未入库。请输出 venue_options 为空数组，activity_design 仍然生成。"
               : "\n\nNote: no venue data available for this city. Output venue_options as an empty array, but still generate activity_design.";
 
@@ -362,7 +362,7 @@ Return JSON of shape:
     }
   ] (exactly 3 plans: A, B, C)
 }
-${llmLang === "zh" ? "全部用中文表达" : "Express in English"}.`;
+${llmLang === "yue" ? "全部用香港粵語口語、繁體字表達，唔好用普通話句式或簡體字" : llmLang === "zh" ? "全部用简体中文（普通话）表达，禁止使用繁体字或粤语用词" : "Express in English"}.`;
 
           const llmRes = await llmChatEx(
             [
@@ -467,7 +467,7 @@ ${llmLang === "zh" ? "全部用中文表达" : "Express in English"}.`;
         // actual input + city instead of the generic coffee shop string.
         const userInput = (myProfile?.profile_data as { input?: string } | null)?.input ?? "";
         const interests = extractInterests(userInput);
-        const fallbackVenue = fallbackVenueName(myCity, interests, llmLang);
+        const fallbackVenue = fallbackVenueName(myCity, interests, llmLang === "en" ? "en" : "zh");
 
         const next = new Date();
         next.setUTCDate(next.getUTCDate() + 3);

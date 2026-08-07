@@ -1,3 +1,14 @@
+/**
+ * Hard output-language directive (same policy as _profile-prompts):
+ * zh → Simplified Mandarin; yue → HK Cantonese Traditional.
+ */
+function outLangDirective(lang: "zh" | "en" | "yue"): string {
+  if (lang === "yue") {
+    return "\n\n【輸出語言 — 最高優先級】所有輸出（包括 JSON 裡面的每一個字符串值）必須用香港粵語口語、繁體字書寫（嘅／喺／唔／咗／啲／佢等），唔好用普通話句式或簡體字。";
+  }
+  return "\n\n【输出语言 — 最高优先级】所有输出（包括 JSON 里的每一个字符串值）必须使用简体中文、普通话表达，禁止使用繁体字或粤语用词（如「嘅」「喺」「唔」「咗」）。";
+}
+
 export function buildMatchSys(version = "v5"): string {
   void version; // reserved for A/B variants
   return "你是 linQ 的 AI 关系匹配引擎 v5。\n\n你看到的不是简历，而是两份「人格 X 光」：里面有每个人的 paradoxes（矛盾）、attachment_signals（依恋信号）、stress_response（压力反应）、decision_fingerprints（决策指纹）、growth_edge（成长边缘）。\n\n任务：\n1. 从候选人中挑出最匹配的 1 位\n2. 不要写「你们都喜歡旅行」这种表面理由。要写的是：\n   - A 的哪个 paradox 会被 B 松动？\n   - A 的 attachment_signals 和 B 的 attachment_signals 会怎么共振或摩擦？\n   - A 在压力下的反应，B 能不能接住？\n   - 两人的 decision_fingerprints 在核心领域（爱/事业/金钱/朋友）是互补还是冲突？\n3. 用 5 个维度打分：resonance / complementarity / friction_risk / chemistry / growth_potential\n4. 输出一句 compatibility_equation：用一句人话解释「为什么是你们两个」\n5. 生成首次见面方案\n\n要讓 A 覺得：「這不是隨機配對，是 AI 真的看懂了我和他。」嚴格輸出 JSON。";
@@ -39,7 +50,7 @@ ${candidates.map((c, i) => `[${i}] ${JSON.stringify(c.profile_data)}`).join("\n"
 全部用中文表达。`;
 }
 
-export function buildDeepSys(lang: "zh" | "en", version = "v5"): string {
+export function buildDeepSys(lang: "zh" | "en" | "yue", version = "v5"): string {
   void version; // reserved for A/B variants
   const zh = `你是 linQ 的关系动力学引擎 v5。
 
@@ -70,11 +81,11 @@ Task: based on A's profile (paradoxes, attachment signals, stress response, deci
 Critical: all output must be specific to these two people.
 Strict JSON output.`;
 
-  return lang === "en" ? en : zh;
+  return lang === "en" ? en : zh + outLangDirective(lang);
 }
 
 export function buildDeepUser(
-  lang: "zh" | "en",
+  lang: "zh" | "en" | "yue",
   latestProfile: { profile_data: unknown },
   bestIndex: number,
   candidates: Array<{ profile_data: unknown }>,
@@ -114,5 +125,5 @@ Output v5 fields JSON:
   "long_term_health": { "a_must_adjust": "...", "b_must_adjust": "...", "shared_practice": "..." }
 }`;
 
-  return lang === "en" ? en : zh;
+  return lang === "en" ? en : zh + outLangDirective(lang);
 }

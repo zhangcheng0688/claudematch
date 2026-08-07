@@ -139,7 +139,7 @@ export const Route = createFileRoute("/api/ai/match")({
             : "dating";
         const lang: "zh" | "en" | "yue" =
           body.lang === "en" ? "en" : body.lang === "yue" ? "yue" : "zh";
-        const llmLang: "zh" | "en" = lang === "en" ? "en" : "zh";
+        const llmLang: "zh" | "en" | "yue" = lang;
         const promptVersion = selectPromptVersion("match", userId);
 
         // 1) Load my latest AI profile and registered email.

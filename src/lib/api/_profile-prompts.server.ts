@@ -10,9 +10,24 @@
  *   - model cognition, emotion, relationship, decision, and stress patterns
  */
 
-export type ProfileLang = "zh" | "en";
+export type ProfileLang = "zh" | "en" | "yue";
 
 export type InterviewAnswer = { question: string; answer: string };
+
+/**
+ * Hard output-language directive appended to every Chinese prompt.
+ * Without this, the model mirrors the prompt's script — and several of
+ * our prompts are written in Traditional Chinese, so zh (简体) users
+ * were getting Traditional / Cantonese-flavoured output. Now:
+ *   zh  → Simplified Mandarin only
+ *   yue → Hong Kong Cantonese (Traditional, colloquial) only
+ */
+function outLangDirective(lang: ProfileLang): string {
+  if (lang === "yue") {
+    return "\n\n【輸出語言 — 最高優先級】所有輸出（包括 JSON 裡面的每一個字符串值）必須用香港粵語口語、繁體字書寫（嘅／喺／唔／咗／啲／佢等），唔好用普通話句式或簡體字。";
+  }
+  return "\n\n【输出语言 — 最高优先级】所有输出（包括 JSON 里的每一个字符串值）必须使用简体中文、普通话表达，禁止使用繁体字或粤语用词（如「嘅」「喺」「唔」「咗」）。";
+}
 
 export function buildPerceiveSys(lang: ProfileLang, scenario: string, version = "v5"): string {
   void version; // reserved for A/B variants
@@ -56,7 +71,7 @@ Output principles:
 
 Strict JSON output.`;
 
-  return lang === "en" ? en : zh;
+  return lang === "en" ? en : zh + outLangDirective(lang);
 }
 
 export function buildPerceiveUser(
@@ -150,7 +165,7 @@ Output complete perception JSON:
   }
 }`;
 
-  return lang === "en" ? en : zh;
+  return lang === "en" ? en : zh + outLangDirective(lang);
 }
 
 export function buildSynthSys(lang: ProfileLang, version = "v5"): string {
@@ -179,7 +194,7 @@ Requirements:
 
 Strict JSON output.`;
 
-  return lang === "en" ? en : zh;
+  return lang === "en" ? en : zh + outLangDirective(lang);
 }
 
 export function buildSynthUser(
@@ -226,7 +241,7 @@ Output final profile JSON:
   ] (exactly 5 items, all keys present, same order as above)
 }`;
 
-  return lang === "en" ? en : zh;
+  return lang === "en" ? en : zh + outLangDirective(lang);
 }
 
 export function buildRefineSys(lang: ProfileLang, version = "v5"): string {
@@ -271,7 +286,7 @@ Revision principles:
 
 Strict JSON output.`;
 
-  return lang === "en" ? en : zh;
+  return lang === "en" ? en : zh + outLangDirective(lang);
 }
 
 export function buildRefineUser(
@@ -343,5 +358,5 @@ Output JSON:
 
 Notes: final_revision wins over critique; only output fields that need changing.`;
 
-  return lang === "en" ? en : zh;
+  return lang === "en" ? en : zh + outLangDirective(lang);
 }

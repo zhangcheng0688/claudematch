@@ -9,6 +9,7 @@ import {
   buildRefineUser,
   buildSynthSys,
   buildSynthUser,
+  type ProfileLang,
 } from "@/lib/api/_profile-prompts.server";
 import { selectPromptVersion } from "@/lib/api/_prompt-versions.server";
 import { moderateText } from "@/lib/api/_moderation.server";
@@ -115,8 +116,8 @@ async function saveProfile(
   });
 }
 
-export function buildFallbackProfile(input: string, llmLang: "zh" | "en"): Record<string, unknown> {
-  return llmLang === "zh"
+export function buildFallbackProfile(input: string, llmLang: ProfileLang): Record<string, unknown> {
+  return llmLang !== "en"
     ? {
         headline: "独一无二的你",
         narrative:
@@ -174,20 +175,20 @@ export function buildFallbackProfile(input: string, llmLang: "zh" | "en"): Recor
         },
         growth_edge: {
           area: "信任",
-          what: "太快把对方的犹豫解读为「不夠懂我」",
-          invitation: "如果願意給多一兩次解釋的機會，關係會深很多",
+          what: "太快把对方的犹豫解读为「不够懂我」",
+          invitation: "如果愿意多给一两次解释的机会，关系会深很多",
         },
         attachment_signals: {
-          trust_build: "透過對方記得細節來建立信任",
-          need_expression: "傾向暗示多過直接開口",
-          distance_response: "會先退後觀察，確定安全再靠近",
-          repair_style: "需要對方主動開口，但很難主動破冰",
+          trust_build: "通过对方记得细节来建立信任",
+          need_expression: "倾向暗示多过直接开口",
+          distance_response: "会先退后观察，确定安全再靠近",
+          repair_style: "需要对方主动开口，但很难主动破冰",
         },
         stress_response: {
-          early_signal: "話變少，開始分析而非感受",
-          escalation: "進入「算了」模式，表面冷靜但內心撤退",
-          repair: "獨處、寫東西、或聽熟悉的音樂",
-          support_need: "不需要建議，只需要被問「你現在怎樣」",
+          early_signal: "话变少，开始分析而非感受",
+          escalation: "进入「算了」模式，表面冷静但内心撤退",
+          repair: "独处、写东西、或听熟悉的音乐",
+          support_need: "不需要建议，只需要被问「你现在怎样」",
         },
         life_themes: [{ name: "寻找连接", evidence: "你写下了这段话，本身就是寻找的一部分" }],
         scene_predictions: [
@@ -412,7 +413,7 @@ export const Route = createFileRoute("/api/ai/generate-profile")({
             : "dating";
         const lang: "zh" | "en" | "yue" =
           body.lang === "en" ? "en" : body.lang === "yue" ? "yue" : "zh";
-        const llmLang: "zh" | "en" = lang === "en" ? "en" : "zh";
+        const llmLang: ProfileLang = lang === "en" ? "en" : lang === "yue" ? "yue" : "zh";
         const promptVersion = selectPromptVersion("profile", userId);
 
         const followUpAnswers = Array.isArray(body.follow_up_answers)
@@ -424,7 +425,11 @@ export const Route = createFileRoute("/api/ai/generate-profile")({
         const fullInput = [input, ...followUpAnswers.map((a) => `${a.question} ${a.answer}`)].join(
           "\n",
         );
-        const moderation = await moderateText(fullInput, llmLang, "generate-profile");
+        const moderation = await moderateText(
+          fullInput,
+          llmLang === "en" ? "en" : "zh",
+          "generate-profile",
+        );
         if (!moderation.safe) {
           return json(
             { error: "Input violates content policy", moderation },
@@ -435,7 +440,7 @@ export const Route = createFileRoute("/api/ai/generate-profile")({
 
         const interviewBlock =
           followUpAnswers.length > 0
-            ? llmLang === "zh"
+            ? llmLang !== "en"
               ? `\n\n【用戶對追問的回答】\n${followUpAnswers.map((a, i) => `${i + 1}. 問題：${a.question}\n   回答：${a.answer}`).join("\n\n")}\n`
               : `\n\n[User's follow-up answers]\n${followUpAnswers.map((a, i) => `${i + 1}. Q: ${a.question}\n   A: ${a.answer}`).join("\n\n")}\n`
             : "";
@@ -470,7 +475,7 @@ export const Route = createFileRoute("/api/ai/generate-profile")({
 
         const feedbackContextBlock =
           feedbackContext.agrees.length > 0 || feedbackContext.disagrees.length > 0
-            ? llmLang === "zh"
+            ? llmLang !== "en"
               ? `\n\n【用户过去反馈 - 必须参考】\n用户过去同意过的洞察方向（这些方向应该强化）：\n${feedbackContext.agrees.map((s) => `  - ${s}`).join("\n")}\n用户过去否定过的洞察方向（这些方向应该避开或换角度）：\n${feedbackContext.disagrees.map((s) => `  - ${s}`).join("\n")}\n`
               : `\n\n[User's past feedback — must consider]\nDirections the user agreed with (lean into these):\n${feedbackContext.agrees.map((s) => `  - ${s}`).join("\n")}\nDirections the user disagreed with (avoid or reframe these):\n${feedbackContext.disagrees.map((s) => `  - ${s}`).join("\n")}\n`
             : "";
@@ -528,7 +533,7 @@ export const Route = createFileRoute("/api/ai/generate-profile")({
           "conflict_mode",
           "ideal_match",
         ];
-        const dimensionKeys = llmLang === "zh" ? dimensionKeysZh : dimensionKeysEn;
+        const dimensionKeys = llmLang !== "en" ? dimensionKeysZh : dimensionKeysEn;
 
         const perceiveSys = buildPerceiveSys(llmLang, scenario, promptVersion);
         const perceiveUser = buildPerceiveUser(
