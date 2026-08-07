@@ -56,7 +56,7 @@ const OUTPUT = process.env.SCRAPE_OUTPUT ?? "scripts/output/venues-2026-06-09.js
 // depending on keyword richness.
 const CITIES = [
   { key: "shenzhen", adcodes: ["440300"], center: [114.0579, 22.5431] },
-  { key: "shanghai", adcodes: ["310100"], center: [121.4737, 31.2304] },
+  { key: "hongkong", adcodes: ["810000"], center: [114.1694, 22.3193] },
 ];
 
 // Keywords grouped by 菜系. Each row is searched in turn within each
@@ -147,9 +147,9 @@ async function amapTextSearch({ keyword, city, adcode }) {
 
 function adcodeToCityName(adcode) {
   // We use the city key directly; the AMap API also accepts the
-  // Chinese city name (深圳 / 上海). Keep the mapping for the
+  // Chinese city name (深圳 / 香港). Keep the mapping for the
   // `city` param call.
-  return adcode === "440300" ? "深圳" : adcode === "310100" ? "上海" : "全国";
+  return adcode === "440300" ? "深圳" : adcode === "810000" ? "香港" : "全国";
 }
 
 /**
@@ -188,7 +188,7 @@ function normalizePoi(poi, cityKey, keyword) {
     lng,
     cuisine_tags: Array.from(new Set([...(cuisineFromType ? [cuisineFromType] : [])])),
     vibe_tags: [],
-    price_per_person: null, // not in AMap
+    price_per_person: poi.biz_ext?.cost ? Number(poi.biz_ext.cost) : null, // AMap biz_ext.cost (需要 extensions=all)
     rating: poi.biz_ext?.rating ? Number(poi.biz_ext.rating) : null,
     review_count: null,
     tel: poi.tel && poi.tel.length >= 7 ? poi.tel : null,

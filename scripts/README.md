@@ -18,7 +18,7 @@
    ```bash
    node scripts/scrape-amap.mjs
    # 输出: scripts/output/venues-YYYY-MM-DD.jsonl
-   # 预计 250-450 行（深圳 + 上海，加上去重）
+   # 预计 250-450 行（深圳 + 香港，加上去重）
    ```
 
 3. **生成 SQL**（秒级）
@@ -66,8 +66,8 @@ node scripts/import-venues.mjs
 
 - 高德免费 tier：6000 calls/天
 - 30 关键词 × 2 城市 = ~60 calls（首次 1-2 分钟）
-- 25 results/call × 60 calls = 1500 原始 POI → 去重后预计 **250-450** 家
-- 目标：每城市 200 家（2 城市 400 家）
+- 25 results/call × 60 calls = 1500 原始 POI → 去重后实测 953 家（深圳 532 + 香港 421）
+- 目标：每城市 200 家（2 城市约 950 家）
 
 ## 不抓的字段（说明）
 
