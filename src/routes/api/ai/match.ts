@@ -368,7 +368,7 @@ export const Route = createFileRoute("/api/ai/match")({
         const candidateSignature = candidates.map((c) => c.user_id).sort();
         const matchCacheKey = await hashInputs("match", userId, scenario, lang, candidateSignature);
         type CachedMatch = { parsed: ParsedT; deep: DeepT; provider?: string };
-        const cachedMatch = await getCachedResponse<CachedMatch>(supabase, matchCacheKey);
+        const cachedMatch = await getCachedResponse<CachedMatch>(supabaseAdmin, matchCacheKey);
         let parsed: ParsedT = cachedMatch?.response?.parsed ?? {};
         let deep: DeepT = cachedMatch?.response?.deep ?? {};
         let matchProvider = cachedMatch?.response?.provider;
@@ -387,6 +387,7 @@ export const Route = createFileRoute("/api/ai/match")({
               max_tokens: 2400,
               label: "match:round-1",
               traceId: `${userId}:${scenario}:r1`,
+              timeoutMs: 40_000, // long-form: full profiles + candidates — 8s default aborts it
               deadlineMs: 50_000,
             },
           );
@@ -538,6 +539,7 @@ export const Route = createFileRoute("/api/ai/match")({
               max_tokens: 2000,
               label: "match:round-2",
               traceId: `${userId}:${scenario}:r2`,
+              timeoutMs: 40_000, // long-form — 8s default aborts it
               deadlineMs: 50_000,
             },
           );
@@ -547,7 +549,7 @@ export const Route = createFileRoute("/api/ai/match")({
           // Persist the expensive two-round analysis so retries with the
           // same candidate set don't re-call the model.
           await setCachedResponse(
-            supabase,
+            supabaseAdmin,
             matchCacheKey,
             "match",
             matchCacheKey,

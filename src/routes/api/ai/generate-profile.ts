@@ -502,7 +502,7 @@ export const Route = createFileRoute("/api/ai/generate-profile")({
           feedback_used: { agrees_count: number; disagrees_count: number };
           ai_provider: string;
         };
-        const cachedProfile = await getCachedResponse<CachedProfileData>(supabase, profileCacheKey);
+        const cachedProfile = await getCachedResponse<CachedProfileData>(supabaseAdmin, profileCacheKey);
         if (cachedProfile?.response) {
           const cachedData = cachedProfile.response;
           const profile_data = {
@@ -785,7 +785,7 @@ export const Route = createFileRoute("/api/ai/generate-profile")({
         // re-call the model pipeline. TTL is short (1h) because feedback
         // and user state evolve quickly.
         await setCachedResponse(
-          supabase,
+          supabaseAdmin,
           profileCacheKey,
           "profile",
           profileCacheKey,

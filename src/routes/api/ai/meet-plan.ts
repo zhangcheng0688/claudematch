@@ -258,7 +258,7 @@ export const Route = createFileRoute("/api/ai/meet-plan")({
             };
           }>;
         };
-        const cached = await getCachedResponse<MeetPlanParsed>(supabase, cacheKey);
+        const cached = await getCachedResponse<MeetPlanParsed>(supabaseAdmin, cacheKey);
         let parsed: MeetPlanParsed | undefined = cached?.response;
         let planProvider = cached?.provider;
 
@@ -381,6 +381,7 @@ ${llmLang === "yue" ? "全部用香港粵語口語、繁體字表達，唔好用
               max_tokens: 2800,
               label: "meet-plan",
               traceId: `${userId}:${match_id}`,
+              timeoutMs: 40_000, // long-form venue planning — 8s default aborts it
               deadlineMs: 50_000,
             },
           );
@@ -419,7 +420,7 @@ ${llmLang === "yue" ? "全部用香港粵語口語、繁體字表達，唔好用
           // Persist the expensive LLM result so future identical requests
           // (e.g. user refreshing the plan page) don't re-call the model.
           await setCachedResponse(
-            supabase,
+            supabaseAdmin,
             cacheKey,
             "meet-plan",
             cacheKey,

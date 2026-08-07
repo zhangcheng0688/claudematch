@@ -106,6 +106,7 @@ Strict JSON output.`;
             temperature: 0.85,
             max_tokens: 1200,
             label: "interview-questions",
+            timeoutMs: 25_000, // long-form LLM call — default 8s per-attempt aborts it
             deadlineMs: 30_000,
           },
         );
