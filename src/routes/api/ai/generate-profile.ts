@@ -13,6 +13,7 @@ import {
 import { selectPromptVersion } from "@/lib/api/_prompt-versions.server";
 import { moderateText } from "@/lib/api/_moderation.server";
 import { embedText, profileToEmbeddingText } from "@/lib/api/_embeddings.server";
+import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
 async function saveProfile(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -26,15 +27,18 @@ async function saveProfile(
   promptVersion?: string,
 ) {
   // Upsert scenario authorization so /api/ai/match can find this user.
+  // SECURITY: flag columns are revoked from the authenticated role, so
+  // all user_authorizations writes must go through the service-role client
+  // here on the server (user_id is always the authenticated caller's own).
   const flags = { business: false, dating: false, partner: false } as Record<string, boolean>;
   flags[scenario] = true;
-  const { data: existingAuth } = await supabase
+  const { data: existingAuth } = await supabaseAdmin
     .from("user_authorizations")
     .select("id, business, dating, partner")
     .eq("user_id", userId)
     .maybeSingle();
   if (existingAuth) {
-    await supabase
+    await supabaseAdmin
       .from("user_authorizations")
       .update({
         business: existingAuth.business || flags.business,
@@ -44,7 +48,7 @@ async function saveProfile(
       })
       .eq("id", existingAuth.id);
   } else {
-    await supabase.from("user_authorizations").insert({ user_id: userId, ...flags });
+    await supabaseAdmin.from("user_authorizations").insert({ user_id: userId, ...flags });
   }
 
   // Compute vector embedding for the profile so match.ts can do
@@ -87,7 +91,7 @@ async function saveProfile(
   if (embedding && !error) {
     try {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (supabase.rpc as any)("set_user_profile_embedding", {
+      await (supabaseAdmin.rpc as any)("set_user_profile_embedding", {
         p_user_id: userId,
         p_embedding: embedding,
       });
