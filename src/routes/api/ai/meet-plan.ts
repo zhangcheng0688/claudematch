@@ -56,6 +56,9 @@ type VenueCandidate = {
   rating: number | null;
   opening_hours: string | null;
   distance_km: number;
+  /** 种子TOP50 — 平台精选约会餐厅（venues.notes 含「种子」）。
+   *  这些是我们筛过的人均/评分/氛围都适合的店，推荐时优先。 */
+  is_seed: boolean;
 };
 
 async function loadVenuesNearMidpoint(
@@ -88,14 +91,17 @@ async function loadVenuesNearMidpoint(
     rating: v.rating ? Number(v.rating) : null,
     opening_hours: v.opening_hours ? String(v.opening_hours) : null,
     distance_km: Number(v.distance_km),
+    is_seed: v.is_seed === true,
   }));
 
   const scored = rows.map((v) => {
     const vibeScore = preferredVibes.some((tag) => v.vibe_tags.includes(tag)) ? 1 : 0;
     const openScore = isVenueOpenAt(v.opening_hours, planTime) ? 1 : 0;
+    // 种子餐厅 +2：平台精选的约会餐厅在同等条件下优先进入候选清单。
+    const seedScore = v.is_seed ? 2 : 0;
     return {
       ...v,
-      score: vibeScore + openScore,
+      score: vibeScore + openScore + seedScore,
     };
   });
 
@@ -308,16 +314,16 @@ Strict JSON output.`;
           // User prompt: scenario + match details + candidate venue list.
           const candidatesBlock = hasVenues
             ? llmLang !== "en"
-              ? `\n\n候选餐厅清单（必须从下面选，**不要**自己编）：\n${candidates
+              ? `\n\n候选餐厅清单（必须从下面选，**不要**自己编；标注「平台精选」的是 linQ 种子约会餐厅，同等条件下优先选它们）：\n${candidates
                   .map(
                     (v, i) =>
-                      `[${i}] venue_id=${v.id}\n    name=${v.name}\n    district=${v.district ?? "?"}\n    cuisine=${v.cuisine_tags.join("/")}\n    vibe=${v.vibe_tags.join("/")}\n    price_per_person=${v.price_per_person ?? "?"} 元\n    rating=${v.rating ?? "?"}`,
+                      `[${i}] venue_id=${v.id}${v.is_seed ? "  ★平台精选" : ""}\n    name=${v.name}\n    district=${v.district ?? "?"}\n    cuisine=${v.cuisine_tags.join("/")}\n    vibe=${v.vibe_tags.join("/")}\n    price_per_person=${v.price_per_person ?? "?"} 元\n    rating=${v.rating ?? "?"}`,
                   )
                   .join("\n\n")}`
-              : `\n\nCandidate venues (pick from this list — DO NOT invent):\n${candidates
+              : `\n\nCandidate venues (pick from this list — DO NOT invent; entries marked "linQ pick" are our curated date restaurants — prefer them when all else is equal):\n${candidates
                   .map(
                     (v, i) =>
-                      `[${i}] venue_id=${v.id}\n    name=${v.name}\n    district=${v.district ?? "?"}\n    cuisine=${v.cuisine_tags.join("/")}\n    vibe=${v.vibe_tags.join("/")}\n    price_per_person=${v.price_per_person ?? "?"} CNY\n    rating=${v.rating ?? "?"}`,
+                      `[${i}] venue_id=${v.id}${v.is_seed ? "  ★linQ pick" : ""}\n    name=${v.name}\n    district=${v.district ?? "?"}\n    cuisine=${v.cuisine_tags.join("/")}\n    vibe=${v.vibe_tags.join("/")}\n    price_per_person=${v.price_per_person ?? "?"} CNY\n    rating=${v.rating ?? "?"}`,
                   )
                   .join("\n\n")}`
             : lang !== "en"
