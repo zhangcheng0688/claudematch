@@ -13,6 +13,7 @@ import {
 import { useEffect, useRef, useState } from "react";
 import { CookieBanner } from "@/components/CookieBanner";
 import { MomentsImg } from "@/components/shared/MomentsImg";
+import { delay, useReveal } from "@/lib/reveal";
 const ogImageUrl = "/og-image.jpg";
 import {
   LanguageProvider,
@@ -223,7 +224,6 @@ function Hero() {
       })
       .catch(() => {});
   }, []);
-  const delay = (ms: number) => ({ animationDelay: `${ms}ms` });
   const display = lang === "en" ? "font-display italic" : "font-display";
   const L = (en: string, zh: string, yue: string) =>
     lang === "yue" ? yue : lang === "zh" ? zh : en;
@@ -1038,32 +1038,6 @@ function Footer() {
       </div>
     </footer>
   );
-}
-
-function useReveal() {
-  useEffect(() => {
-    const check = () => {
-      for (const el of Array.from(
-        document.querySelectorAll("[data-reveal]:not(.revealed)"),
-      )) {
-        const r = el.getBoundingClientRect();
-        if (r.top < window.innerHeight * 0.92 && r.bottom > 0) {
-          el.classList.add("revealed");
-        }
-      }
-    };
-    check();
-    const onScroll = () => check();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll);
-    // Safety net: reveal anything in view even if scroll/resize never fires.
-    const net = window.setInterval(check, 1200);
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
-      window.clearInterval(net);
-    };
-  }, []);
 }
 
 function Index() {

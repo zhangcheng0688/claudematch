@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { LanguageProvider, useLang } from "@/lib/i18n";
 import { supabase } from "@/integrations/supabase/client";
+import { delay, revealDelay, useReveal } from "@/lib/reveal";
 
 const BASE_URL = "https://claudematch.com";
 
@@ -51,23 +52,27 @@ function Body({ body }: { body: string }) {
   return (
     <article className="mt-10 max-w-none text-[15px] leading-[1.85] text-foreground/90">
       {blocks.map((b, i) => {
+        const reveal = {
+          "data-reveal": true,
+          style: revealDelay(Math.min(i * 40, 240)),
+        } as const;
         if (b.startsWith("### ")) {
           return (
-            <h3 key={i} className="mt-8 text-base font-semibold text-foreground">
+            <h3 key={i} className="mt-8 text-base font-semibold text-foreground" {...reveal}>
               {renderInline(b.slice(4))}
             </h3>
           );
         }
         if (b.startsWith("## ")) {
           return (
-            <h2 key={i} className="mt-10 text-xl font-semibold text-foreground">
+            <h2 key={i} className="mt-10 text-xl font-semibold text-foreground" {...reveal}>
               {renderInline(b.slice(3))}
             </h2>
           );
         }
         if (b.split("\n").every((l) => l.trim().startsWith("- "))) {
           return (
-            <ul key={i} className="mt-4 list-disc pl-6 text-muted-foreground">
+            <ul key={i} className="mt-4 list-disc pl-6 text-muted-foreground" {...reveal}>
               {b.split("\n").map((l, j) => (
                 <li key={j} className="mt-1.5">
                   {renderInline(l.trim().slice(2))}
@@ -77,7 +82,7 @@ function Body({ body }: { body: string }) {
           );
         }
         return (
-          <p key={i} className="mt-4 text-muted-foreground">
+          <p key={i} className="mt-4 text-muted-foreground" {...reveal}>
             {renderInline(b)}
           </p>
         );
@@ -89,6 +94,7 @@ function Body({ body }: { body: string }) {
 function PostPage() {
   const { slug } = Route.useParams();
   const { lang } = useLang();
+  useReveal();
   const [post, setPost] = useState<Post | null>(null);
   const [state, setState] = useState<"loading" | "ok" | "missing">("loading");
 
@@ -144,20 +150,32 @@ function PostPage() {
         )}
         {state === "ok" && post && (
           <>
-            <p className="text-xs font-medium uppercase tracking-[0.18em] text-primary">
+            <p
+              className="animate-blur-fade-up text-xs font-medium uppercase tracking-[0.18em] text-primary"
+              style={delay(100)}
+            >
               {post.author ?? "linQ"}
               {post.published_at ? ` · ${post.published_at.slice(0, 10)}` : ""}
             </p>
-            <h1 className="mt-3 font-display text-3xl leading-tight tracking-tight text-gold-glow md:text-5xl">
+            <h1
+              className="animate-blur-fade-up mt-3 font-display text-3xl leading-tight tracking-tight text-gold-glow md:text-5xl"
+              style={delay(220)}
+            >
               {post.title}
             </h1>
             {post.excerpt && (
-              <p className="mt-4 text-base leading-relaxed text-muted-foreground">
+              <p
+                className="animate-blur-fade-up mt-4 text-base leading-relaxed text-muted-foreground"
+                style={delay(340)}
+              >
                 {post.excerpt}
               </p>
             )}
             <Body body={post.body} />
-            <div className="mt-16 border-t border-border/60 pt-8 text-sm text-muted-foreground">
+            <div
+              className="mt-16 border-t border-border/60 pt-8 text-sm text-muted-foreground"
+              data-reveal
+            >
               想每周三收到一个真实的约会？{" "}
               <Link to="/auth" className="text-primary hover:underline">
                 加入 linQ

@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { ArrowRight, Mail, Loader2, CheckCircle2 } from "lucide-react";
 import { LanguageProvider, useLang } from "@/lib/i18n";
 import { supabase } from "@/integrations/supabase/client";
+import { delay, revealDelay, useReveal } from "@/lib/reveal";
 
 const BASE_URL = "https://claudematch.com";
 
@@ -55,6 +56,7 @@ export const Route = createFileRoute("/blog/")({
 
 function BlogPage() {
   const { lang } = useLang();
+  useReveal();
   const t = (en: string, zh: string, yue: string) =>
     lang === "yue" ? yue : lang === "zh" ? zh : en;
 
@@ -124,13 +126,22 @@ function BlogPage() {
       </header>
 
       <main className="mx-auto max-w-3xl px-6 py-16 sm:py-24">
-        <p className="text-xs font-medium uppercase tracking-[0.18em] text-primary">
+        <p
+          className="animate-blur-fade-up text-xs font-medium uppercase tracking-[0.18em] text-primary"
+          style={delay(100)}
+        >
           {t("Journal", "笔记", "筆記")}
         </p>
-        <h1 className="mt-3 font-display text-4xl leading-tight tracking-tight text-gold-glow md:text-5xl">
+        <h1
+          className="animate-blur-fade-up mt-3 font-display text-4xl leading-tight tracking-tight text-gold-glow md:text-5xl"
+          style={delay(220)}
+        >
           {t("Field notes from the linQ team", "linQ 团队的第一手笔记", "linQ 團隊嘅第一手筆記")}
         </h1>
-        <p className="mt-4 text-[15px] leading-[1.75] text-muted-foreground sm:text-base">
+        <p
+          className="animate-blur-fade-up mt-4 text-[15px] leading-[1.75] text-muted-foreground sm:text-base"
+          style={delay(340)}
+        >
           {t(
             "On AI matching, the Wednesday cadence, and building a privacy-first dating product for Shenzhen & Hong Kong.",
             "关于 AI 匹配、每周三约会机制，以及一个为深圳和香港打造的隐私优先婚恋产品。",
@@ -152,8 +163,12 @@ function BlogPage() {
           </p>
         ) : (
           <ul className="mt-12 space-y-8">
-            {list.map((p) => (
-              <li key={`${p.locale}-${p.slug}`}>
+            {list.map((p, i) => (
+              <li
+                key={`${p.locale}-${p.slug}`}
+                data-reveal
+                style={revealDelay(Math.min(i * 90, 360))}
+              >
                 <Link
                   to="/blog/$slug"
                   params={{ slug: p.slug }}
@@ -187,7 +202,11 @@ function BlogPage() {
         )}
 
         {/* Newsletter signup */}
-        <div className="mt-16 rounded-2xl border border-border/60 bg-secondary/40 p-6 sm:p-8">
+        <div
+          className="mt-16 rounded-2xl border border-border/60 bg-secondary/40 p-6 sm:p-8"
+          data-reveal
+          style={revealDelay(120)}
+        >
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
               <h3 className="font-display text-xl font-semibold text-foreground">
@@ -220,7 +239,7 @@ function BlogPage() {
               <button
                 type="submit"
                 disabled={state === "loading"}
-                className="inline-flex h-10 items-center gap-1.5 rounded-sm bg-primary px-4 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-60"
+                className="btn-fill inline-flex h-10 items-center gap-1.5 rounded-full bg-primary px-4 text-sm font-medium text-primary-foreground transition-shadow hover:shadow-[0_12px_36px_-10px_oklch(0.85_0.17_90/0.6)] disabled:opacity-60"
               >
                 {state === "loading" ? (
                   <Loader2 className="h-3.5 w-3.5 animate-spin" />
