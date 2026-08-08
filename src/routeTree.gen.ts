@@ -35,6 +35,7 @@ import { Route as AuthenticatedStartRouteImport } from './routes/_authenticated/
 import { Route as AuthenticatedSettingsRouteImport } from './routes/_authenticated/settings'
 import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticated/profile'
 import { Route as AuthenticatedMatchRouteImport } from './routes/_authenticated/match'
+import { Route as AuthenticatedMatchIndexRouteImport } from './routes/_authenticated/match.index'
 import { Route as ApiVenuesTrackRouteImport } from './routes/api/venues/track'
 import { Route as ApiVenuesOnboardRouteImport } from './routes/api/venues/onboard'
 import { Route as ApiVenuesLookupRouteImport } from './routes/api/venues/lookup'
@@ -192,6 +193,11 @@ const AuthenticatedMatchRoute = AuthenticatedMatchRouteImport.update({
   id: '/match',
   path: '/match',
   getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedMatchIndexRoute = AuthenticatedMatchIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => AuthenticatedMatchRoute,
 } as any)
 const ApiVenuesTrackRoute = ApiVenuesTrackRouteImport.update({
   id: '/api/venues/track',
@@ -384,6 +390,7 @@ export interface FileRoutesByFullPath {
   '/api/venues/lookup': typeof ApiVenuesLookupRoute
   '/api/venues/onboard': typeof ApiVenuesOnboardRoute
   '/api/venues/track': typeof ApiVenuesTrackRoute
+  '/match/': typeof AuthenticatedMatchIndexRoute
   '/api/auth/wechat/callback': typeof ApiAuthWechatCallbackRoute
   '/api/auth/wechat/start': typeof ApiAuthWechatStartRoute
   '/api/auth/wechat/unbind': typeof ApiAuthWechatUnbindRoute
@@ -405,7 +412,6 @@ export interface FileRoutesByTo {
   '/sitemap.xml': typeof SitemapDotxmlRoute
   '/terms': typeof TermsRoute
   '/trust': typeof TrustRoute
-  '/match': typeof AuthenticatedMatchRouteWithChildren
   '/profile': typeof AuthenticatedProfileRoute
   '/settings': typeof AuthenticatedSettingsRoute
   '/start': typeof AuthenticatedStartRoute
@@ -439,6 +445,7 @@ export interface FileRoutesByTo {
   '/api/venues/lookup': typeof ApiVenuesLookupRoute
   '/api/venues/onboard': typeof ApiVenuesOnboardRoute
   '/api/venues/track': typeof ApiVenuesTrackRoute
+  '/match': typeof AuthenticatedMatchIndexRoute
   '/api/auth/wechat/callback': typeof ApiAuthWechatCallbackRoute
   '/api/auth/wechat/start': typeof ApiAuthWechatStartRoute
   '/api/auth/wechat/unbind': typeof ApiAuthWechatUnbindRoute
@@ -496,6 +503,7 @@ export interface FileRoutesById {
   '/api/venues/lookup': typeof ApiVenuesLookupRoute
   '/api/venues/onboard': typeof ApiVenuesOnboardRoute
   '/api/venues/track': typeof ApiVenuesTrackRoute
+  '/_authenticated/match/': typeof AuthenticatedMatchIndexRoute
   '/api/auth/wechat/callback': typeof ApiAuthWechatCallbackRoute
   '/api/auth/wechat/start': typeof ApiAuthWechatStartRoute
   '/api/auth/wechat/unbind': typeof ApiAuthWechatUnbindRoute
@@ -553,6 +561,7 @@ export interface FileRouteTypes {
     | '/api/venues/lookup'
     | '/api/venues/onboard'
     | '/api/venues/track'
+    | '/match/'
     | '/api/auth/wechat/callback'
     | '/api/auth/wechat/start'
     | '/api/auth/wechat/unbind'
@@ -574,7 +583,6 @@ export interface FileRouteTypes {
     | '/sitemap.xml'
     | '/terms'
     | '/trust'
-    | '/match'
     | '/profile'
     | '/settings'
     | '/start'
@@ -608,6 +616,7 @@ export interface FileRouteTypes {
     | '/api/venues/lookup'
     | '/api/venues/onboard'
     | '/api/venues/track'
+    | '/match'
     | '/api/auth/wechat/callback'
     | '/api/auth/wechat/start'
     | '/api/auth/wechat/unbind'
@@ -664,6 +673,7 @@ export interface FileRouteTypes {
     | '/api/venues/lookup'
     | '/api/venues/onboard'
     | '/api/venues/track'
+    | '/_authenticated/match/'
     | '/api/auth/wechat/callback'
     | '/api/auth/wechat/start'
     | '/api/auth/wechat/unbind'
@@ -906,6 +916,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedMatchRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/match/': {
+      id: '/_authenticated/match/'
+      path: '/'
+      fullPath: '/match/'
+      preLoaderRoute: typeof AuthenticatedMatchIndexRouteImport
+      parentRoute: typeof AuthenticatedMatchRoute
+    }
     '/api/venues/track': {
       id: '/api/venues/track'
       path: '/api/venues/track'
@@ -1107,10 +1124,12 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedMatchRouteChildren {
   AuthenticatedMatchIdRoute: typeof AuthenticatedMatchIdRoute
+  AuthenticatedMatchIndexRoute: typeof AuthenticatedMatchIndexRoute
 }
 
 const AuthenticatedMatchRouteChildren: AuthenticatedMatchRouteChildren = {
   AuthenticatedMatchIdRoute: AuthenticatedMatchIdRoute,
+  AuthenticatedMatchIndexRoute: AuthenticatedMatchIndexRoute,
 }
 
 const AuthenticatedMatchRouteWithChildren =
